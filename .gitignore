@@ -1,0 +1,12 @@
+data/raw/
+data/processed/
+results/runs/*/predictions*
+*.faiss
+*.pkl
+.env
+.env.*
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+.pytest_cache/
+.ruff_cache/
