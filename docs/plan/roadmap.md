@@ -18,8 +18,8 @@ Research behind each choice: `docs/notes/01`–`04`.
 
 | Week | Do |
 |---|---|
-| **W1** 10-31 → 11-08 (Big Data slides 11-08) | Group 0 baseline · EDA · crawl pilot · pipeline as modules + YAML |
-| **W2** 11-09 → 11-15 | Groups 1–4: dataset, chunking, stores (incl. graph variants), retrieval |
+| **W1** 10-31 → 11-08 (Big Data slides 11-08) | Group 0 baseline · EDA · start the crawler (runs in background all month) · pipeline as modules + YAML |
+| **W2** 11-09 → 11-15 | Groups 1–4: dataset, chunking, stores (incl. graph variants), retrieval · continued pretraining starts on the crawled corpus |
 | **W3** 11-16 → 11-22 | Groups 5–7: query rewrite, models, prompt, copy-bias, SFT → RAFT → DPO → GRPO, extra layers |
 | **W4** 11-23 → 11-29 | Group 8–9: agents + conversation, final combo on `test`, docker, demo, report |
 
@@ -45,7 +45,7 @@ Research behind each choice: `docs/notes/01`–`04`.
 | K5 LightRAG, K6 MS GraphRAG, K7 Graphiti, H5 Mem0 | < 4B extractors break JSON; MS GraphRAG has no delete | extract with the offline large model on a subset; MS GraphRAG as comparison only, not production |
 | T4 GRPO | reward hacking (copy whole articles, padding), collapse | anti-copy + length terms; 10-step timing trial; early stop |
 | T6 verl | heavy setup (Ray, FSDP), multi-GPU | timebox 1 day; if not running → TRL/Unsloth result stands |
-| A4 extra layers, A8 continued pretraining | forgetting, 24 GB memory | short sequences; compare with T2 on the same test |
+| P-1 continued pretraining (LoRA-CPT, extra layers, full CPT) | forgetting, 24 GB memory | short sequences; compare with T2 on the same test |
 | R10 embedding fine-tune, Q8 trained rewriter | overfit to 2.4k train | evaluate on dev only, report on test once |
 | D11 crawl legal Q&A / advice pages | may contain the `test` reference answers → inflated scores; some sites forbid scraping | sites that allow it; 13-gram decontamination vs `test` (+ `dev`); kept as its own data version; report with / without |
 
