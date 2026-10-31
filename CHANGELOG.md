@@ -33,3 +33,9 @@
 - **Decided:** 3 Modal accounts (~90 USD), multi-L4 allowed; almost every idea is planned. Risky ones run with guards
   (offline large extractor, anti-copy reward, verl timebox). Skipped only: web lookup at answer time, crawling Q&A
   sites (answer leakage), xRAG, Self-RAG, answering with a model ≥ 4B.
+
+## Step 6 — Continued pretraining on a large crawled legal corpus (2026-10-31)
+
+- **Decided:** crawl a large legal pretraining corpus (D10, all official texts, target ≥ 300M tokens) and legal Q&A pages
+  (D11, guarded by 13-gram decontamination vs test/dev, own data version). Continued pretraining P-1: LoRA-CPT,
+  extra layers, full CPT of a ≤ 1.7B model on 2–4 L4, then SFT on top.

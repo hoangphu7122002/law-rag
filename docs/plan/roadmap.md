@@ -28,13 +28,13 @@ Research behind each choice: `docs/notes/01`–`04`.
 | Group | Items |
 |---|---|
 | 0 Baseline | B0 as-is · B1 answer-only scoring · B2 gold-context ceiling · B3 copy nearest train answer |
-| 1 Data | D1 missing laws (.gov) · D2 2025–2026 laws · D3 versions + amends/replaces/repeals + effective dates · D4 consolidated texts (VBHN) · D5 Zalo/ALQAC/VLQA/BKAI · D7 clean + metadata · D8 decontaminate vs `test` · D9 versions v0–v3 on HF · ◇ D6 general knowledge |
+| 1 Data | D1 missing laws (.gov) · D2 2025–2026 laws · D10 large legal pretraining corpus (all official texts, gazette, all years; target ≥ 300M tokens) · D11 legal Q&A pages (guarded, below) · D3 versions + amends/replaces/repeals + effective dates · D4 consolidated texts (VBHN) · D5 Zalo/ALQAC/VLQA/BKAI · D7 clean + metadata · D8 decontaminate vs `test` · D9 versions v0–v3 on HF · ◇ D6 general knowledge |
 | 2 Chunking | C1 2000 chars · C2 300–500 tokens · C3 Điều/Khoản · C4 parent–child · C5 heading prefix · C6 semantic |
 | 3 Stores | K1 flat vectors (Qdrant) · K2 tree · K3 Neo4j rule graph (MERGE insert/update/delete) · K4 temporal graph · K5 LightRAG · K6 MS GraphRAG (subset, comparison only) · K7 Graphiti (temporal) · K8 train QA memory · K9 doc2query · K10 metadata filter |
 | 4 Retrieval | R1 embeddings (sbert, bge-m3, Vietnamese_Embedding, e5) · R2 BM25 · R3 hybrid RRF · R4 reranker · R5 k · R6 MMR · R7 graph expansion · R8 context order · R9 compression · R10 fine-tuned embedding |
 | 5 Query rewrite | Q0 none · Q1 normalize · Q2 multi-query + RRF · Q3 HyDE · Q4 step-back · Q5 decomposition · Q6 law id/article/date extraction · Q7 query2doc · ◇ Q8 trained rewriter |
 | 6 Models + prompt | M1 Qwen1.5-1.8B · M2 Qwen2.5-1.5B/3B · M3 Qwen3-1.7B · M4 Llama-3.2-3B, Gemma < 4B · M5 Vi-Qwen2-3B-RAG, ViLegalQwen · P1 "Căn cứ…" template · P2 nearest examples · P3 length · P4 verbatim quoting |
-| 7 Model changes + post-train | A1 copy-bias logits · A6 constrained citations · T1 SFT LoRA · T2 RAFT · T3 DPO · T4 GRPO (reward = metrics + citation − copy − length) · A4 extra layers (LLaMA-Pro) · A8 continued pretraining (vs A4) · T6 verl GRPO on 2–4 L4 (vs TRL/Unsloth) · T7 compare all |
+| 7 Model changes + pretrain + post-train | **P-1 continued pretraining** on D10 (+D11): (a) LoRA-CPT, (b) A4 extra layers (LLaMA-Pro), (c) full CPT of a ≤ 1.7B model on 2–4 L4 (FSDP) — then SFT on top · A1 copy-bias logits · A6 constrained citations · T1 SFT LoRA · T2 RAFT · T3 DPO · T4 GRPO (reward = metrics + citation − copy − length) · T6 verl GRPO on 2–4 L4 (vs TRL/Unsloth) · T7 compare all |
 | 8 Agents + conversation | H1 fixed LangGraph flow · H2 history-aware rewrite · H3 slots · H4 session summary + user facts · H5 Mem0/Graphiti memory (vs H4) · H6 20–30 multi-turn chains · H7 guided JSON + fallback · H8 in-force check · G1 router · G2 CRAG · G4 verifier · G5 refuse when no basis · G7 time agent |
 | 9 Production | X1 one code path · X2 docker compose (FastAPI, vLLM, Qdrant, Neo4j, Gradio) · X3 incremental crawler · X4 citations · X5 /metrics · X6 CI eval gate |
 
@@ -47,13 +47,13 @@ Research behind each choice: `docs/notes/01`–`04`.
 | T6 verl | heavy setup (Ray, FSDP), multi-GPU | timebox 1 day; if not running → TRL/Unsloth result stands |
 | A4 extra layers, A8 continued pretraining | forgetting, 24 GB memory | short sequences; compare with T2 on the same test |
 | R10 embedding fine-tune, Q8 trained rewriter | overfit to 2.4k train | evaluate on dev only, report on test once |
+| D11 crawl legal Q&A / advice pages | may contain the `test` reference answers → inflated scores; some sites forbid scraping | sites that allow it; 13-gram decontamination vs `test` (+ `dev`); kept as its own data version; report with / without |
 
 ## Skip (risky, and why)
 
 | Item | Why |
 |---|---|
 | G6 web lookup at answer time | leaks reference answers from Q&A sites, slow, not reproducible → crawl offline instead (D1) |
-| Crawling Q&A / advice websites | likely contains the `test` answers → inflated, unfair scores |
 | A5 xRAG projector | needs far more aligned data than 2.4k pairs; high chance of no result in 4 weeks |
 | G3 Self-RAG | needs reflection tokens trained into the model; G2 CRAG covers the idea |
 | Answering with a model ≥ 4B (incl. Qwen3-4B = 4.0B) | breaks the assignment rule |
@@ -63,10 +63,10 @@ Research behind each choice: `docs/notes/01`–`04`.
 | Account | Use | USD |
 |---|---|---|
 | 1 | baseline, retrieval, embeddings, query rewrite, model sweep | ~15–20 |
-| 2 | SFT, RAFT, DPO, GRPO, extra layers, continued pretraining | ~30–40 |
+| 2 | continued pretraining (LoRA-CPT, extra layers, full CPT), SFT, RAFT, DPO, GRPO | ~35–45 |
 | 3 | offline large model (graph extraction: LightRAG/MS GraphRAG/Graphiti/Mem0), verl, final runs, reserve | ~20–30 |
 
 ## Cut order if late
 
-◇ items → T6 verl → K6 MS GraphRAG → A8 → H5 → K7 → docker polish (keep `make demo`).
+◇ items → T6 verl → K6 MS GraphRAG → P-1(c) full CPT → H5 → K7 → docker polish (keep `make demo`).
 Never cut: baseline, dataset, store comparison, SFT/RAFT, final table, manual.
