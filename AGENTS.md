@@ -26,14 +26,22 @@ This file is the entry point for every coding agent. `CLAUDE.md` points here.
 
 1. **Fair comparison.** Every number is computed by `src/evaluate/metrics.py`, a line-for-line port of the
    baseline notebook metrics. Never change a metric to make a method look better.
-2. **Fixed split.** `data/processed/split.json` (seeded) fixes `test` (≥ 100 questions, the number is reported),
-   `dev`, `train`. Tune on `dev`, report on `test`, train/fine-tune only on `train`. Never read `test` answers
-   while designing a method.
-3. **LLM < 4B parameters.** Write the parameter count next to every model in `config/models.yaml`.
-4. **Data stays out of git.** `data/raw/` and `data/processed/` are gitignored; `make data` rebuilds them.
-5. **No GPU / Modal spend without the user's word.** Log every run in `docs/ops/compute-log.md`.
-6. **Never print secrets** (`.env`: HF token, Modal profile).
-7. Every merged change / result / decision adds a step to [`CHANGELOG.md`](CHANGELOG.md).
+2. **Fixed split.** `data/processed/split.json` (seeded) fixes `test` (200, reported), `dev` (100), `train`.
+   Tune on `dev`, report on `test`. Never read `test` answers while designing a method.
+3. **No test knowledge in any weights.** Nothing the model is *trained* on (pretraining corpus, SFT, RAFT, DPO, GRPO,
+   embedding / reranker fine-tune) may contain knowledge tied to `test` (and `dev`) questions:
+   - drop the test/dev QA pairs themselves;
+   - drop every train pair citing the same (law id, Điều) as a test/dev answer;
+   - drop every train pair or crawled passage sharing a non-boilerplate 13-gram with a test/dev answer
+     (boilerplate = 13-gram found in > 3 answers);
+   - drop the crawled text of every (law id, Điều) cited by test/dev.
+   The **RAG store may contain everything** (full laws, crawled data, train QA) except the test/dev QA pairs themselves.
+   The filter lives in one module (`src/corpus/decontam.py`) and every training set records the filter report.
+4. **LLM < 4B parameters.** Write the parameter count next to every model in `config/models.yaml`.
+5. **Data stays out of git.** `data/raw/` and `data/processed/` are gitignored; `make data` rebuilds them.
+6. **No GPU / Modal spend without the user's word.** Log every run in `docs/ops/compute-log.md`.
+7. **Never print secrets** (`.env`: HF token, Modal profile).
+8. Every merged change / result / decision adds a step to [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Layout
 

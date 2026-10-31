@@ -39,3 +39,11 @@
 - **Decided:** crawl a large legal pretraining corpus (D10, all official texts, target ≥ 300M tokens) and legal Q&A pages
   (D11, guarded by 13-gram decontamination vs test/dev, own data version). Continued pretraining P-1: LoRA-CPT,
   extra layers, full CPT of a ≤ 1.7B model on 2–4 L4, then SFT on top.
+
+## Step 7 — Rule: no test knowledge in any trained weights (2026-10-31)
+
+- **Decided:** training data (pretraining, SFT/RAFT/DPO/GRPO, embedding fine-tune) excludes test/dev QA, train pairs
+  citing the same (law, Điều) as test/dev, anything sharing a non-boilerplate 13-gram with test/dev answers, and the
+  crawled text of test/dev-cited articles. The RAG store may hold everything except the test/dev QA pairs.
+- **Measured on train (test only):** same (law, Điều) removes 16 % (keeps 2,050 / 2,445); rare 13-gram (in ≤ 3 answers)
+  removes 20 % (keeps 1,966); dropping whole laws would keep only 57 % (too strict, not used). Dev filter still to measure.
