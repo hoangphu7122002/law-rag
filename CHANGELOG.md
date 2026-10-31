@@ -14,3 +14,10 @@
   ("Không trích xuất được"); of the 1,973 with an id (314 distinct, mostly 2024–2025 banking circulars such as
   52/2024/NĐ-CP, 17/2024/TT-NHNN), only 8 ids / 51 rows match a corpus file name, and the top 5 ids appear in no
   corpus file text. Retrieval over the corpus alone cannot find the gold article for most questions.
+
+## Step 3 — Research directions and the train-overlap finding (2026-10-31)
+
+- **Finding:** 93 % of test questions with a law id cite a law also present in `train`, 57 % the same (law, Điều).
+- **Research:** ranked directions in `docs/notes/01-research-directions.md`: LoRA/RAFT SFT on `train`, train-QA
+  memory, hybrid + Điều chunking + reranker, a cheap regex law graph as the Graph RAG part. Default generator
+  Qwen2.5-3B-Instruct (3.09B); Qwen3-4B (4.0B) is not under 4B.
