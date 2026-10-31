@@ -5,7 +5,7 @@
 Mac (MPS) for what fits. Every run logged in `docs/ops/compute-log.md`.
 **Real limit = time (4 weeks, solo, Big Data in parallel), not money.** Parallel agent PRs like Triton.
 
-**Method rule:** change one axis at a time, keep the best, move on. Tune on `dev` (100), report on `test` (200).
+**Method rule:** change one axis at a time, keep the best, move on. Tune on `dev` (300), report on `test` (200).
 Metrics: 5 baseline metrics + law hit@k + latency + cost/question, split by question group
 (law in corpus or not, has law id or not, time-dependent or not).
 
@@ -22,6 +22,16 @@ Research behind each choice: `docs/notes/01`–`04`.
 | **W2** 11-09 → 11-15 | Groups 1–4: dataset, chunking, stores (incl. graph variants), retrieval · continued pretraining starts on the crawled corpus |
 | **W3** 11-16 → 11-22 | Groups 5–7: query rewrite, models, prompt, copy-bias, SFT → RAFT → DPO → GRPO, extra layers |
 | **W4** 11-23 → 11-29 | Group 8–9: agents + conversation, final combo on `test`, docker, demo, report |
+
+## Tuning method
+
+- **Grid search** for discrete knobs (k, chunk size, embedding, reranker, LR, LoRA rank, epochs).
+- **Agent tuning loop** (Karpathy autoresearch style) for open spaces (prompts, query rewrite, context packing,
+  GRPO reward, verifier rules): fixed `eval_dev.py` (agent cannot edit, loads `dev` only) → agent edits only the
+  pipeline config / prompts → run with a time + cost cap → keep if better, revert if not → log every run to `results.tsv`.
+- **Guards:** the agent never sees `test` (human runs it once at the end); one objective = mean of the 5 metrics on
+  `dev`, all 5 logged; a change is kept only if the gain beats noise (paired bootstrap on `dev`, 95 %);
+  per-run and per-night caps; repo hard rules still apply.
 
 ## Experiments (all planned; ◇ = run last, cut first if late)
 

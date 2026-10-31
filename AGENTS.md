@@ -26,7 +26,7 @@ This file is the entry point for every coding agent. `CLAUDE.md` points here.
 
 1. **Fair comparison.** Every number is computed by `src/evaluate/metrics.py`, a line-for-line port of the
    baseline notebook metrics. Never change a metric to make a method look better.
-2. **Fixed split.** `data/processed/split.json` (seeded) fixes `test` (200, reported), `dev` (100), `train`.
+2. **Fixed split.** `data/processed/split.json` (seeded) fixes `test` (200, reported), `dev` (300), `train` (2,245).
    Tune on `dev`, report on `test`. Never read `test` answers while designing a method.
 3. **No test knowledge in any weights.** Nothing the model is *trained* on (pretraining corpus, SFT, RAFT, DPO, GRPO,
    embedding / reranker fine-tune) may contain knowledge tied to `test` questions:

@@ -49,3 +49,9 @@
   removes 20 % (keeps 1,966); dropping whole laws would keep only 57 % (too strict, not used). Dev filter still to measure.
 - **Amended:** the knowledge filter is against `test` only. `dev` pairs are held out while tuning, then the final
   model is retrained on train + dev (also filtered against test).
+
+## Step 8 — Dev 300 and the tuning method (2026-10-31)
+
+- **Decided:** split test/dev/train = 200/300/2,245 (dev grew from 100 to cut selection noise). Tuning = grid search for
+  discrete knobs + an autoresearch-style agent loop on `dev` only; a change is kept only if its gain passes a paired
+  bootstrap test on `dev`. `test` is run once, by hand, at the end.

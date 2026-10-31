@@ -13,7 +13,7 @@ import polars as pl
 RAW = Path("data/raw")
 OUT = Path("data/processed")
 SEED = 20261031
-N_TEST, N_DEV = 200, 100  # the assignment needs >= 100 test questions
+N_TEST, N_DEV = 200, 300  # the assignment needs >= 100 test questions
 
 COLUMNS = {
     "Câu Hỏi": "question",
