@@ -21,3 +21,9 @@
 - **Research:** ranked directions in `docs/notes/01-research-directions.md`: LoRA/RAFT SFT on `train`, train-QA
   memory, hybrid + Điều chunking + reranker, a cheap regex law graph as the Graph RAG part. Default generator
   Qwen2.5-3B-Instruct (3.09B); Qwen3-4B (4.0B) is not under 4B.
+
+## Step 4 — Roadmap settled (2026-10-31)
+
+- **Decided:** due 2026-11-29; compute = Modal 1× L4 only. Roadmap in `docs/plan/roadmap.md`: core items, if-time items
+  (DPO, GRPO, extra layers, LightRAG, …) and skipped items with reasons (verl multi-GPU, MS GraphRAG no delete,
+  Graphiti/Mem0 need strong JSON LLMs, xRAG too little data, web lookup leaks answers).
