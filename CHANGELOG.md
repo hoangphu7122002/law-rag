@@ -27,3 +27,9 @@
 - **Decided:** due 2026-11-29; compute = Modal 1× L4 only. Roadmap in `docs/plan/roadmap.md`: core items, if-time items
   (DPO, GRPO, extra layers, LightRAG, …) and skipped items with reasons (verl multi-GPU, MS GraphRAG no delete,
   Graphiti/Mem0 need strong JSON LLMs, xRAG too little data, web lookup leaks answers).
+
+## Step 5 — Roadmap widened to 90 USD, multi-L4 allowed (2026-10-31)
+
+- **Decided:** 3 Modal accounts (~90 USD), multi-L4 allowed; almost every idea is planned. Risky ones run with guards
+  (offline large extractor, anti-copy reward, verl timebox). Skipped only: web lookup at answer time, crawling Q&A
+  sites (answer leakage), xRAG, Self-RAG, answering with a model ≥ 4B.
