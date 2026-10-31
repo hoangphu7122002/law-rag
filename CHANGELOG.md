@@ -55,3 +55,16 @@
 - **Decided:** split test/dev/train = 200/300/2,245 (dev grew from 100 to cut selection noise). Tuning = grid search for
   discrete knobs + an autoresearch-style agent loop on `dev` only; a change is kept only if its gain passes a paired
   bootstrap test on `dev`. `test` is run once, by hand, at the end.
+
+## Step 9 — First GPU runs on expiring Modal credit (2026-10-31)
+
+- **Ran:** 4 jobs in parallel on 3 accounts (`scripts/vendors/modal/app.py`), ~4.0 USD, until each account's
+  credit ran out. Log: `docs/ops/compute-log.md`. Outputs: `results/runs/20261031_modal/`.
+- **Baseline on dev (300, vLLM, answer-only):** Qwen1.5-1.8B + course prompt, 256 tokens: cosine 0.592, Jaccard 0.163,
+  token overlap 0.184, BLEU-1 0.126, ROUGE-L 0.155. With 768 tokens: token overlap 0.231, BLEU-1 0.116, ROUGE-L 0.132.
+- **Prompt echo confirmed:** the course notebook pipeline returns prompt + answer on 25/25 test rows. Scored as-is (B0)
+  token overlap is 0.778 vs 0.314 answer-only (B1); report both and use B1 as the fair baseline. The HF fp32 pipeline
+  takes ~118 s/question, so the full B0/B1 rerun moves to vLLM or fp16 with the saved FAISS index.
+- **CPT cost:** LoRA r64, seq 1024, one L4: 1.5B 1,537 tok/s, 3B 954 tok/s. 428 MB corpus ≈ 114M tokens →
+  ~21 h (1.5B) / ~33 h (3B) per epoch. Full-corpus CPT on 3B is too costly; use 1.5B or a filtered 20–30M-token subset.
+- **Embeddings cached** on the account-1 volume: c2000 × {bge-m3, Vietnamese_Embedding}, 188,228 chunks.

@@ -1,0 +1,23 @@
+{
+ "files_used": 16439,
+ "Qwen/Qwen2.5-1.5B": {
+  "batch": 8,
+  "seq": 1024,
+  "steps": 113,
+  "tokens_per_s": 1536.5331791069698,
+  "last_loss": 1.6542575359344482,
+  "peak_gb": 22.2432,
+  "chars_per_token": 2.898175909290719
+ },
+ "Qwen/Qwen2.5-3B__oom_bs8": true,
+ "Qwen/Qwen2.5-3B": {
+  "batch": 4,
+  "seq": 1024,
+  "steps": 140,
+  "tokens_per_s": 954.3985771473872,
+  "last_loss": 1.4806329011917114,
+  "peak_gb": 22.2432,
+  "chars_per_token": 2.898175909290719
+ },
+ "corpus_bytes": 428578184
+}
