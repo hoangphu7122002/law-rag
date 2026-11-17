@@ -1,0 +1,5 @@
+# No server: the fake LLM answers with the first retrieved passage. For tests and smoke runs.
+name: fake
+base_url: fake
+api_key: EMPTY
+device: cpu

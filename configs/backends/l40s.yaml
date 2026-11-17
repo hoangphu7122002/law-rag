@@ -1,0 +1,20 @@
+# L40S box (2x L40S 46 GB, shared with other projects): ssh alias `l40s` = app@100.101.115.108 over Tailscale.
+# The LLM is a vLLM server started by `make box ARGS="serve <model> --gpu 0"` (GPU 0 -> port 8000, GPU 1 -> 8001).
+# From the Mac, `make box ARGS=tunnel` forwards localhost:8000/8001 to the box.
+name: l40s
+base_url: http://localhost:8000/v1
+api_key: EMPTY
+device: cuda             # where embedder / reranker run (the pipeline process)
+box:
+  ssh: l40s
+  root: /home/app/phunguyen/law_rag            # our folder; nothing outside it is touched
+  vllm: /home/app/phunguyen/vllm_env/bin/vllm   # existing vLLM install, shared, read-only use
+  hf_home: /home/app/phunguyen/hf               # shared Hugging Face cache
+  min_free_mib: 20000                           # refuse a GPU with less free memory (other jobs share it)
+  gpu_memory_utilization: 0.45
+  max_model_len: 16384
+  env:                                          # same fixes as datamate's /home/app/phunguyen/env.sh, but in our folder
+    VLLM_USE_FLASHINFER_SAMPLER: "0"            # flashinfer JIT needs a matching CUDA toolkit; the box has none
+    VLLM_CACHE_ROOT: "{root}/.cache/vllm"
+    FLASHINFER_WORKSPACE_BASE: "{root}/.cache/flashinfer"
+    TMPDIR: "{root}/.cache/tmp"

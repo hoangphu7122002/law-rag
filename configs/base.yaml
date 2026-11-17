@@ -1,0 +1,45 @@
+# Every knob of the pipeline, with its default. An experiment in configs/exp/ overrides only what it changes.
+# Flow: questions -> chunk + index -> retrieve (+ rerank) -> generate -> score.
+
+note: ""                 # free text, copied into data/runs/results.tsv
+split: dev               # dev (tune) | test (report once, by hand) | train
+limit: null              # first N questions of the split; null = all
+corpus_limit: null       # first N law files only (smoke runs); null = all 16k
+seed: 20261031
+backend: l40s            # where the LLM runs: configs/backends/<name>.yaml
+
+chunk:
+  kind: recursive        # recursive (course baseline) | dieu (one chunk per Điều, long ones split)
+  size: 2000             # characters
+  overlap: 50
+  lowercase: false       # baseline lower-cases and removes newlines before chunking
+  flatten: false         # replace newlines with spaces (baseline: true)
+
+embed:
+  model: AITeamVN/Vietnamese_Embedding   # 568M; baseline: keepitreal/vietnamese-sbert
+  query_prefix: ""       # e5 needs "query: "
+  passage_prefix: ""     # e5 needs "passage: "
+  normalize: true
+  max_len: 512
+  batch: 128
+
+retrieve:
+  kind: dense            # dense | bm25 | hybrid (reciprocal rank fusion of dense + bm25)
+  metric: ip             # ip (inner product) | l2 (LangChain FAISS default, used by the baseline)
+  k: 5                   # passages given to the LLM
+  candidates: 50         # passages fetched per retriever before fusion / rerank
+  rrf_k: 60
+
+rerank:
+  model: null            # e.g. AITeamVN/Vietnamese_Reranker; null = no rerank
+  max_len: 1024
+  batch: 32
+
+generate:
+  model: Qwen/Qwen2.5-3B-Instruct
+  params_b: 3.09         # must be < 4 (assignment rule)
+  mode: chat             # chat | completion (base models such as Qwen1.5-1.8B)
+  prompt: cancu          # src/generate/prompts/<name>.md
+  max_tokens: 768
+  temperature: 0.0
+  concurrency: 16        # parallel requests to the server

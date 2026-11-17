@@ -1,0 +1,5 @@
+# Local Mac: any OpenAI-compatible server on port 8080 (e.g. `mlx_lm.server --model <id> --port 8080`).
+name: mac
+base_url: http://localhost:8080/v1
+api_key: EMPTY
+device: mps

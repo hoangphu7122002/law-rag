@@ -1,6 +1,8 @@
-data/raw/
-data/processed/
-results/runs/*/predictions*
+data/*
+!data/runs/
+data/runs/*
+!data/runs/20261031_modal/
+!data/runs/results.tsv
 *.faiss
 *.pkl
 .env
@@ -10,3 +12,4 @@ __pycache__/
 .ipynb_checkpoints/
 .pytest_cache/
 .ruff_cache/
+.cache/

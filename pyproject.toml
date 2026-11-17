@@ -3,11 +3,21 @@ name = "law-rag"
 version = "0.1.0"
 description = "Vietnamese law QA with retrieval-augmented generation (course assignment)"
 requires-python = ">=3.11"
-dependencies = ["numpy", "polars", "pyyaml", "tqdm"]
+dependencies = [
+    "numpy", "polars", "pyyaml", "pydantic>=2", "tqdm",
+    "llama-index-core>=0.14",               # RAG framework: nodes, retrievers, query fusion, prompts
+    "llama-index-retrievers-bm25",          # BM25 (bm25s)
+    "llama-index-llms-openai-like",         # any OpenAI-compatible server (vLLM, mlx_lm, Modal)
+    "langchain-text-splitters",             # RecursiveCharacterTextSplitter, as in the course baseline
+]
 
 [project.optional-dependencies]
-rag = ["sentence-transformers", "faiss-cpu", "rank-bm25", "pyvi", "networkx", "transformers", "accelerate"]
-gpu = ["vllm", "peft", "trl", "bitsandbytes"]
+# models that run inside the pipeline process (embedder, reranker, cosine metric)
+models = [
+    "llama-index-embeddings-huggingface", "llama-index-vector-stores-faiss", "faiss-cpu",
+    "llama-index-postprocessor-sbert-rerank", "sentence-transformers", "torch>=2.7",
+]
+train = ["trl", "peft", "datasets"]          # LoRA SFT / RAFT / DPO / GRPO (runs on the GPU box)
 dev = ["pytest", "ruff"]
 
 [tool.pytest.ini_options]
@@ -16,3 +26,4 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 120
+extend-exclude = ["src/ops/modal_app.py"]  # frozen: the script that produced the Step 9 Modal runs

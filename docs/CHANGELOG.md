@@ -68,3 +68,27 @@
 - **CPT cost:** LoRA r64, seq 1024, one L4: 1.5B 1,537 tok/s, 3B 954 tok/s. 428 MB corpus ≈ 114M tokens →
   ~21 h (1.5B) / ~33 h (3B) per epoch. Full-corpus CPT on 3B is too costly; use 1.5B or a filtered 20–30M-token subset.
 - **Embeddings cached** on the account-1 volume: c2000 × {bge-m3, Vietnamese_Embedding}, 188,228 chunks.
+
+## Step 10 — Clean rebuild on LlamaIndex, L40S box, model choice (2026-11-17)
+
+- **Decided:** LlamaIndex for RAG parts, TRL + PEFT for training, vLLM for serving; class-based flat `src/`;
+  YAML + pydantic config with diff-only experiments; resumable `data/runs/<exp>__<hash>/` + `data/runs/results.tsv` ledger;
+  retrieval cached apart from generation. ADR 0002; research in `docs/notes/05-model-choice/`, `06-codebase-design/`.
+- **Moved:** `config/experiments` → `configs/exp`, `scripts/vendors/modal/app.py` → `src/ops/modal_app.py`, `results/runs` → `data/runs`, `report`/`notebooks`/`GLOSSARY`/`CHANGELOG` → `docs/`,
+  `src/cli/data.py` → `corpus.DatasetBuilder`. New: `DieuNodeParser`, `IndexStore`, `RetrieverFactory`, `Retrieval`,
+  `Prompt`, `Generator`, `RAGPipeline`, `Experiment`, `Evaluator`, `PairedBootstrap`, `Run`, `Ledger`, `RemoteBox`.
+- **Compute:** 2× L40S box (shared) reachable over Tailscale; `src/ops/box.py` (`RemoteBox`, `make box`) drives it (only `law_rag/` and `lawrag-*` tmux).
+- **Model choice (verified param counts):** answer LLM candidates Qwen2.5-3B-Instruct 3.09B (default),
+  Qwen3.5-2B 2.27B, Vi-Qwen2-3B-RAG 3.09B, Arcee-VyLinh 3.40B, Qwen3-1.7B 2.03B; Qwen3.5-4B 4.66B excluded.
+  Embedding: Vietnamese_Embedding (568M, self-reported Zalo legal Acc@1 0.727) vs bge-m3; reranker Vietnamese_Reranker.
+- **Tests:** 21 pass (unit + smoke: BM25 + fake LLM on 5 dev questions).
+- **Top level grouped by purpose:** src (code, incl. `src/ops/` for where it runs) · tests · configs (what to run) · data (inputs + outputs) · docs (to read).
+- **Next:** B0 on L40S (dev + test), then C3 Điều chunks, R1 embeddings, R3 hybrid, R4 rerank, M sweep.
+
+## Step 11 — ops moved into src/ops (2026-11-17)
+
+- **Why:** the bash scripts in `ops/l40s/` duplicated box settings and had fragile quoting; now one class shares the config.
+- **Added:** `src/ops/box.py` `RemoteBox` (push, push-data, setup, serve, run, status, stop, pull, tunnel) ·
+  `box:` block in `configs/backends/l40s.yaml` (`config.Box`; `box.env` copies datamate's vLLM fixes, caches under `law_rag/.cache/`) · `Ledger.merge` · `RemoteBox.watch` + `autosync on|off` (launchd, code pushed on every save) · `cli box` · `make box ARGS=...` · `docs/ops/l40s.md`.
+- **Moved:** `ops/modal/app.py` → `src/ops/modal_app.py` (frozen, excluded from ruff). Removed `ops/`.
+- **Top level now:** src · tests · configs · data · docs.

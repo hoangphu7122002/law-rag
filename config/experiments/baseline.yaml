@@ -1,8 +1,0 @@
-# Re-run of the course baseline on our split. Do not tune.
-name: baseline
-split: test
-chunk: {kind: recursive_chars, size: 2000, overlap: 50, lowercase: true}
-embedding: keepitreal/vietnamese-sbert
-retrieval: {kind: dense, k: 5}
-llm: {model: Qwen/Qwen1.5-1.8B, params_b: 1.8, max_new_tokens: 256, temperature: 0}
-prompt: baseline

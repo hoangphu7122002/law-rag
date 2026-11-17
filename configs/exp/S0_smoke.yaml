@@ -1,0 +1,6 @@
+# Wiring check without GPU or models: BM25 over 300 law files + fake LLM (copies the top passage), 5 dev questions.
+note: smoke test
+backend: fake
+limit: 5
+corpus_limit: 300
+retrieve: {kind: bm25}

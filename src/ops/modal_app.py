@@ -1,7 +1,7 @@
 """Modal runner for law-rag GPU jobs (1x L4 each).
 
 Data: Volume "law-rag-data" at /data holds Dataset.zip, qa.parquet, split.json (upload with `make modal-data`).
-Results: Volume "law-rag-results" at /results/<job>/... ; pull with `modal volume get law-rag-results <job> results/runs/`.
+Results: Volume "law-rag-results" at /results/<job>/... ; pull with `modal volume get law-rag-results <job> data/runs/`.
 
 Jobs (each one container, detached, timeout = hard cost cap):
     baseline   B0/B1: the course notebook pipeline (LangChain + vietnamese-sbert + FAISS + Qwen1.5-1.8B) on test + dev
@@ -9,7 +9,7 @@ Jobs (each one container, detached, timeout = hard cost cap):
     models     zero-shot model sweep on dev with vLLM (baseline retrieval), baseline prompt vs "Căn cứ" template
     trainprobe LoRA continued-pretraining throughput (tokens/s) on law text for 1.5B and 3B models
 
-    env -u MODAL_TOKEN_ID -u MODAL_TOKEN_SECRET MODAL_PROFILE=<p> modal run --detach scripts/vendors/modal/app.py::<job>
+    env -u MODAL_TOKEN_ID -u MODAL_TOKEN_SECRET MODAL_PROFILE=<p> modal run --detach src/ops/modal_app.py::<job>
 """
 import json
 import os
@@ -24,8 +24,8 @@ res_vol = modal.Volume.from_name("law-rag-results", create_if_missing=True)
 hf_cache = modal.Volume.from_name("law-rag-hf-cache", create_if_missing=True)
 VOLS = {"/data": data_vol, "/results": res_vol, "/root/.cache/huggingface": hf_cache}
 _here = Path(__file__).resolve()
-# local: <repo>/scripts/vendors/modal/app.py ; in the container the file sits at /root/app.py
-SRC = _here.parents[3] / "src" if len(_here.parents) > 3 else Path("/src")
+# local: <repo>/src/ops/modal_app.py ; in the container the file sits at /root/modal_app.py
+SRC = _here.parents[1] if _here.parent.name == "ops" else Path("/src")
 
 base = modal.Image.debian_slim(python_version="3.11").pip_install(
     "torch==2.5.1", "transformers==4.46.3", "accelerate==1.1.1", "sentence-transformers==3.3.1",
