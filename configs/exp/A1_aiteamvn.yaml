@@ -1,0 +1,14 @@
+# A1: AITeamVN stack, zero-shot, no training: Vietnamese_Embedding + Vietnamese_Reranker + Vi-Qwen2-3B-RAG.
+# Prompt = the Vi-Qwen2-RAG model card template verbatim (prompts/vi_rag.md). Compare with B0 (same split).
+note: AITeamVN stack zero-shot (vn-emb + vn-rerank 50->5 + Vi-Qwen2-3B-RAG, card prompt)
+chunk: {kind: recursive, size: 2000, overlap: 50}
+embed: {model: AITeamVN/Vietnamese_Embedding, normalize: true, max_len: 512}
+retrieve: {kind: dense, metric: ip, k: 5, candidates: 50}
+rerank: {model: AITeamVN/Vietnamese_Reranker, max_len: 1024}
+generate:
+  model: AITeamVN/Vi-Qwen2-3B-RAG
+  params_b: 3.09        # 3.086B (HF safetensors count)
+  mode: chat
+  prompt: vi_rag
+  max_tokens: 768
+  temperature: 0.0

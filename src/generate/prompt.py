@@ -1,7 +1,7 @@
 """Prompt files: generate/prompts/<name>.md
 
     ---
-    context: plain | numbered      # how passages are joined into {context}
+    context: plain | numbered | ngu_canh   # how passages are joined into {context}
     ---
     ## system                      (optional)
     ...
@@ -40,6 +40,8 @@ class Prompt:
                    context_style=meta.get("context", "plain"))
 
     def context(self, passages: list[Passage]) -> str:
+        if self.context_style == "ngu_canh":  # AITeamVN Vi-Qwen2-RAG card: "- Ngữ cảnh 1: ..."
+            return "\n\n".join(f"- Ngữ cảnh {i}: {p.text}" for i, p in enumerate(passages, 1))
         if self.context_style == "numbered":
             return "\n\n".join(f"[{i}] ({p.doc})\n{p.text}" for i, p in enumerate(passages, 1))
         return "\n".join(p.text for p in passages)

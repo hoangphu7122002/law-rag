@@ -33,7 +33,7 @@ class IndexStore:
 
     def _build_nodes(self) -> list[BaseNode]:
         c = self.cfg.chunk
-        docs = CorpusReader(lowercase=c.lowercase, flatten=c.flatten).read(self.cfg.corpus_limit)
+        docs = CorpusReader(self.cfg.sources, lowercase=c.lowercase, flatten=c.flatten).read(self.cfg.corpus_limit)
         nodes = Chunker(c).split(docs)
         store = SimpleDocumentStore()
         store.add_documents(nodes)
@@ -48,9 +48,15 @@ class IndexStore:
 
     # ---- dense vectors ----
     def embedder(self):
+        e = self.cfg.embed
+        if e.engine == "vllm":  # pooling server (prefixes unsupported here: e5-style models stay local); inputs cut to max_len tokens server-side, like the local path
+            from llama_index.embeddings.openai_like import OpenAILikeEmbedding
+
+            return OpenAILikeEmbedding(model_name=e.model, api_base=self.cfg.backend.embed_url, api_key="EMPTY",
+                                       embed_batch_size=e.batch, num_workers=8, timeout=600,
+                                       additional_kwargs={"extra_body": {"truncate_prompt_tokens": e.max_len}})
         from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
-        e = self.cfg.embed
         return HuggingFaceEmbedding(model_name=e.model, device=self.cfg.backend.device, max_length=e.max_len,
                                     normalize=e.normalize, embed_batch_size=e.batch,
                                     query_instruction=e.query_prefix or None, text_instruction=e.passage_prefix or None)
@@ -69,8 +75,8 @@ class IndexStore:
         dim = len(embed.get_text_embedding("Điều 1"))
         flat = faiss.IndexFlatL2(dim) if self.cfg.retrieve.metric == "l2" else faiss.IndexFlatIP(dim)
         storage = StorageContext.from_defaults(vector_store=FaissVectorStore(faiss_index=flat))
-        index = VectorStoreIndex(self.nodes(), storage_context=storage, embed_model=embed,
-                                 insert_batch_size=4096, show_progress=True)
+        index = VectorStoreIndex(self.nodes(), storage_context=storage, embed_model=embed, insert_batch_size=4096,
+                                 show_progress=True, use_async=self.cfg.embed.engine == "vllm")  # parallel requests
         storage.persist(persist_dir=str(faiss_dir))
         return index
 

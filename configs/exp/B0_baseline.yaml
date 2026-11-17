@@ -3,7 +3,7 @@
 # (the notebook echoes the prompt; that "as-is" score is in data/runs/20261031_modal/baseline).
 note: course baseline (sbert + FAISS L2 k=5 + Qwen1.5-1.8B base)
 chunk: {kind: recursive, size: 2000, overlap: 50, lowercase: true, flatten: true}
-embed: {model: keepitreal/vietnamese-sbert, normalize: false, max_len: 256}
+embed: {model: keepitreal/vietnamese-sbert, engine: local, normalize: false, max_len: 256}
 retrieve: {kind: dense, metric: l2, k: 5}
 generate:
   model: Qwen/Qwen1.5-1.8B

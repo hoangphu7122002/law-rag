@@ -19,3 +19,12 @@ def test_cancu_prompt_is_chat_with_numbered_context():
 
 def test_clean_drops_think_blocks():
     assert Generator.clean("<think>x\ny</think>\n Căn cứ ") == "Căn cứ"
+
+
+def test_vi_rag_uses_card_context_format():
+    from generate.prompt import Prompt
+    from records import Passage
+
+    msgs = Prompt.load("vi_rag").messages("q?", [Passage(pid="1", doc="d", text="A"), Passage(pid="2", doc="d", text="B")])
+    assert "- Ngữ cảnh 1: A\n\n- Ngữ cảnh 2: B" in msgs[1]["content"]
+    assert msgs[1]["content"].rstrip().endswith("### Trả lời :")

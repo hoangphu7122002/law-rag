@@ -8,6 +8,9 @@ help:  ## list targets
 data:  ## unzip corpus, clean res.csv, write the fixed split
 	$(CLI) data
 
+vbpl:  ## extra corpus: vbpl.vn central docs >= 2010 -> data/processed/vbpl (test-blind rule)
+	$(CLI) vbpl
+
 test:  ## unit tests
 	uv run pytest -q tests
 
@@ -29,4 +32,4 @@ compare:  ## paired bootstrap: make compare A=data/runs/<a> B=data/runs/<b> [MET
 box:  ## remote GPU box: make box ARGS="autosync on|push|setup|serve <model> --gpu 0|run <exp> [--set k=v]|status|stop <s>|pull|tunnel"
 	$(CLI) box $(ARGS)
 
-.PHONY: help data test lint smoke run score compare box
+.PHONY: help data vbpl test lint smoke run score compare box

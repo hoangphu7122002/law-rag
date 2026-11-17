@@ -4,6 +4,7 @@
 note: ""                 # free text, copied into data/runs/results.tsv
 split: dev               # dev (tune) | test (report once, by hand) | train
 limit: null              # first N questions of the split; null = all
+sources: [corpus]        # folders in data/processed/: corpus (course, 16k) | vbpl (vbpl.vn central docs >= 2010, `make vbpl`)
 corpus_limit: null       # first N law files only (smoke runs); null = all 16k
 seed: 20261031
 backend: l40s            # where the LLM runs: configs/backends/<name>.yaml
@@ -17,6 +18,7 @@ chunk:
 
 embed:
   model: AITeamVN/Vietnamese_Embedding   # 568M; baseline: keepitreal/vietnamese-sbert
+  engine: vllm           # vllm (pooling server, bf16, fast) | local (sentence-transformers in-process)
   query_prefix: ""       # e5 needs "query: "
   passage_prefix: ""     # e5 needs "passage: "
   normalize: true
@@ -32,6 +34,7 @@ retrieve:
 
 rerank:
   model: null            # e.g. AITeamVN/Vietnamese_Reranker; null = no rerank
+  engine: vllm           # vllm (pooling server /rerank) | local (CrossEncoder in-process)
   max_len: 1024
   batch: 32
 
@@ -42,4 +45,4 @@ generate:
   prompt: cancu          # src/generate/prompts/<name>.md
   max_tokens: 768
   temperature: 0.0
-  concurrency: 16        # parallel requests to the server
+  concurrency: 64        # parallel requests to the server (= vLLM --max-num-seqs)

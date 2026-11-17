@@ -30,6 +30,10 @@ class RetrieverFactory:
         r = self.cfg.rerank
         if not r.model:
             return None
+        if r.engine == "vllm":
+            from retrieve.vllm_rerank import VllmRerank
+
+            return VllmRerank(url=self.cfg.backend.rerank_url, model=r.model, top_n=self.cfg.retrieve.k, max_len=r.max_len)
         from llama_index.postprocessor.sbert_rerank import SentenceTransformerRerank
 
         return SentenceTransformerRerank(model=r.model, top_n=self.cfg.retrieve.k, device=self.cfg.backend.device,

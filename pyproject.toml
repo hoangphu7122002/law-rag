@@ -7,7 +7,7 @@ dependencies = [
     "numpy", "polars", "pyyaml", "pydantic>=2", "tqdm",
     "llama-index-core>=0.14",               # RAG framework: nodes, retrievers, query fusion, prompts
     "llama-index-retrievers-bm25",          # BM25 (bm25s)
-    "llama-index-llms-openai-like",         # any OpenAI-compatible server (vLLM, mlx_lm, Modal)
+    "llama-index-llms-openai-like", "llama-index-embeddings-openai-like", "httpx",         # any OpenAI-compatible server (vLLM, mlx_lm, Modal)
     "langchain-text-splitters",             # RecursiveCharacterTextSplitter, as in the course baseline
 ]
 

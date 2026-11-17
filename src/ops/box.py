@@ -1,14 +1,16 @@
 """A remote GPU box driven over ssh + rsync + tmux. Settings: the `box:` block of configs/backends/<name>.yaml.
 
     box = RemoteBox.from_backend("l40s")
-    box.push_code(); box.serve("Qwen/Qwen1.5-1.8B", gpu=0); box.run("configs/exp/B0_baseline.yaml"); box.pull()
+    box.push_code(); box.serve("Qwen/Qwen1.5-1.8B", gpu=0); box.serve("AITeamVN/Vietnamese_Embedding", gpu=0, kind="embed"); box.run("configs/exp/B0_baseline.yaml"); box.pull()
 
 Shared-box rules: only `box.root` and tmux sessions named `lawrag-*` are ever created or killed;
 a GPU with less than `min_free_mib` free is refused.
 """
+import re
 import shlex
 import subprocess
 from pathlib import Path
+from typing import ClassVar
 
 from config import Box, load_backend
 from runs import RUNS, Ledger
@@ -103,19 +105,26 @@ class RemoteBox:
             make test""")
 
     # ---- GPU jobs ----
-    def serve(self, model: str, gpu: int = 0) -> None:
-        """vLLM OpenAI-compatible server on one GPU, port 8000 + gpu, in tmux `lawrag-vllm-g<gpu>`."""
-        b, port, session = self.box, 8000 + gpu, f"{PREFIX}vllm-g{gpu}"
-        log = f"{b.root}/{RUNS}/logs/vllm-g{gpu}.log"
-        server = (f"{self._env()} CUDA_VISIBLE_DEVICES={gpu} HF_HOME={b.hf_home} {b.vllm} serve {model} --port {port} --seed 0 "
-                  f"--gpu-memory-utilization {b.gpu_memory_utilization} --max-model-len {b.max_model_len} 2>&1 | tee {log}")
+    PORTS: ClassVar[dict[str, int]] = {"llm": 8000, "embed": 8100, "rerank": 8200}
+
+    def serve(self, model: str, gpu: int = 0, kind: str = "llm") -> None:
+        """vLLM server in tmux `lawrag-<kind>-g<gpu>`, port PORTS[kind] + gpu. kind: llm | embed | rerank.
+
+        One GPU holds all three (gpu_share per kind); flags follow datamate (bf16, prefix caching, big batches)."""
+        b, port, session = self.box, self.PORTS[kind] + gpu, f"{PREFIX}{kind}-g{gpu}"
+        log = f"{b.root}/{RUNS}/logs/{kind}-g{gpu}.log"
+        flags = b.llm_args if kind == "llm" else ["--runner", "pooling", *b.pooling_args]
+        server = (f"{self._env()} CUDA_VISIBLE_DEVICES={gpu} HF_HOME={b.hf_home} {b.vllm} serve {model} "
+                  f"--host 127.0.0.1 --port {port} --seed 0 --gpu-memory-utilization {b.gpu_share[kind]} "
+                  f"{' '.join(flags)} 2>&1 | tee {log}")
         self.shell(f"""
-            {self._free_check(gpu)}
+            {self._free_check(gpu, kind)}
             tmux has-session -t {session} 2>/dev/null && {{ echo "already running: {session}"; exit 0; }}
             mkdir -p {b.root}/{RUNS}/logs
             tmux new -d -s {session} {shlex.quote(server)}
             for i in $(seq 1 120); do
-              curl -sf localhost:{port}/v1/models >/dev/null && {{ echo "ready: {model} on GPU {gpu}, port {port}"; exit 0; }}
+              curl -sf localhost:{port}/v1/models >/dev/null && {{ echo "ready: {kind} {model} on GPU {gpu}, port {port}"; exit 0; }}
+              tmux has-session -t {session} 2>/dev/null || {{ echo "server died, see {log}"; tail -5 {log}; exit 1; }}
               sleep 5
             done
             echo "not ready after 10 min, see {log}"; exit 1""")
@@ -123,6 +132,9 @@ class RemoteBox:
     def run(self, exp: str, gpu: int = 0, args: list[str] = ()) -> None:
         """One experiment in tmux `lawrag-run-<exp>`; the embedder / reranker use `gpu`; the LLM server must be up."""
         b, name = self.box, Path(exp).stem
+        sets = [a.split("=", 1)[1] for a in args if "=" in a and "base_url" not in a]  # e.g. split=test -> -test
+        if sets:
+            name += "-" + "-".join(re.sub(r"[^\w.]+", "_", v) for v in sets)[:40]
         argv = " ".join(shlex.quote(a) for a in args)
         job = (f"cd {b.root} && export {self._env()} PATH=$HOME/.local/bin:$PATH HF_HOME={b.hf_home} CUDA_VISIBLE_DEVICES={gpu} && "
                f"PYTHONPATH=src uv run python -m cli run {shlex.quote(exp)} {argv} 2>&1 | tee {RUNS}/logs/{name}.log")
@@ -136,12 +148,13 @@ class RemoteBox:
             echo; tail -5 {self.box.root}/{RUNS}/results.tsv 2>/dev/null | cut -f1-11 || true""")
 
     def stop(self, name: str) -> None:
-        """Kill one of OUR sessions, e.g. stop("vllm-g0") or stop("run-B0_baseline")."""
+        """Kill one of OUR sessions, e.g. stop("llm-g0") or stop("run-B0_baseline")."""
         self.shell(f"tmux kill-session -t {PREFIX}{name}")
 
     def tunnel(self) -> None:
-        """Mac -> box: localhost:8000/8001 reach the vLLM servers (blocks until Ctrl-C)."""
-        self._local(["ssh", "-N", "-L", "8000:localhost:8000", "-L", "8001:localhost:8001", self.box.ssh])
+        """Mac -> box: llm 8000/8001, embed 8100/8101, rerank 8200/8201 (blocks until Ctrl-C)."""
+        fwd = [a for p in (8000, 8001, 8100, 8101, 8200, 8201) for a in ("-L", f"{p}:localhost:{p}")]
+        self._local(["ssh", "-N", *fwd, self.box.ssh])
 
     # ---- plumbing ----
     def _code_stamp(self) -> tuple:
@@ -162,8 +175,8 @@ class RemoteBox:
         return self._local(cmd, check=False, quiet=True).returncode == 0
 
     def shell(self, script: str, check: bool = True) -> subprocess.CompletedProcess:
-        """Run a bash script on the box (login shell, stops at the first error)."""
-        return self._local(["ssh", self.box.ssh, f"bash -lc {shlex.quote('set -e; ' + script)}"], check=check)
+        """Run a bash script on the box (non-login: a login shell's .bash_logout breaks exit codes; stops at the first error)."""
+        return self._local(["ssh", self.box.ssh, f"bash -c {shlex.quote('set -e; ' + script)}"], check=check)
 
     def _env(self) -> str:
         """`box.env` as KEY=VALUE words, CUDA_HOME dropped (like datamate); the dirs it names are created first."""
@@ -173,9 +186,13 @@ class RemoteBox:
             self.shell(f"mkdir -p {dirs}")
         return " ".join(f"{k}={shlex.quote(v)}" for k, v in env.items()) + " CUDA_HOME="
 
-    def _free_check(self, gpu: int) -> str:
-        return (f"free=$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits -i {gpu}); "
-                f'[ "$free" -ge {self.box.min_free_mib} ] || {{ echo "GPU {gpu} has only $free MiB free, refusing"; exit 3; }}')
+    def _free_check(self, gpu: int, kind: str = "llm") -> str:
+        """The LLM needs min_free_mib; a pooling server needs its share of the card (+1 GiB)."""
+        q = f"nvidia-smi --format=csv,noheader,nounits -i {gpu} --query-gpu"
+        need = (str(self.box.min_free_mib) if kind == "llm"
+                else f"$(( $({q}=memory.total) * {int(self.box.gpu_share[kind] * 100)} / 100 + 1024 ))")
+        return (f"free=$({q}=memory.free); need={need}; "
+                f'[ "$free" -ge "$need" ] || {{ echo "GPU {gpu}: $free MiB free < $need needed, refusing"; exit 3; }}')
 
     @staticmethod
     def _local(cmd: list[str], check: bool = True, quiet: bool = False) -> subprocess.CompletedProcess:

@@ -92,3 +92,28 @@
   `box:` block in `configs/backends/l40s.yaml` (`config.Box`; `box.env` copies datamate's vLLM fixes, caches under `law_rag/.cache/`) · `Ledger.merge` · `RemoteBox.watch` + `autosync on|off` (launchd, code pushed on every save) · `cli box` · `make box ARGS=...` · `docs/ops/l40s.md`.
 - **Moved:** `ops/modal/app.py` → `src/ops/modal_app.py` (frozen, excluded from ruff). Removed `ops/`.
 - **Top level now:** src · tests · configs · data · docs.
+
+## Step 12 — Extra corpus from vbpl.vn, test-blind (2026-11-18)
+
+- **Why:** only 51/2745 QA rows (dev 5/300) cite a law that is in the course corpus; the corpus is mostly local QĐ/NQ
+  and old, the QA is 2024–2025 banking/finance (52/2024/NĐ-CP alone: 146 questions). The assignment does not forbid
+  extra documents ("any other improvements supported by quantitative metrics").
+- **Source:** HF `th1nhng0/vietnamese-legal-documents` (CC BY 4.0), scraped from vbpl.vn (Ministry of Justice portal):
+  171k docs metadata + HTML full text + 1M relations (amends / replaces / repeals).
+- **Rule (fixed before looking at dev/test, metadata only):** scope Trung ương/Toàn quốc, issued ≥ 2010, no English
+  translations, skip numbers already in the course corpus. 18,218 selected → 15,803 files (575 MB) in `data/processed/vbpl/`.
+  No Q&A / advice pages (they may hold reference answers). Test law ids never read.
+- **Coverage (questions with a law id whose law is in the corpus):** train 43 → 1,421 / 1,613; dev 5 → 197 / 218.
+- **Added:** `corpus/vbpl.py` `VbplImporter` · `make vbpl` · config `sources: [corpus] | [corpus, vbpl]` (in `index_key`).
+- **Report both:** course corpus only, and course + vbpl (ablation).
+
+## Step 13 — vLLM for embedding and rerank, datamate serving flags (2026-11-18)
+
+- **Why:** the AITeamVN embedder (568M, 512 tokens) ran at 77 chunks/s in sentence-transformers (fp32), so one index
+  of the course corpus took ~45 min.
+- **Measured on L40S:** vLLM pooling server 449 chunks/s (5.8x), vectors equal to local (cosine 0.9999).
+- **Added:** `embed.engine` / `rerank.engine: vllm | local` (default vllm; B0 stays local) · `backend.embed_url`,
+  `rerank_url` · `retrieve/vllm_rerank.py` `VllmRerank` (`/rerank`) · `make box ARGS="serve <m> --kind llm|embed|rerank"`
+  (ports 8000/8100/8200 + gpu, sessions `lawrag-<kind>-g<gpu>`, all three on one GPU via `gpu_share`) ·
+  LLM flags as datamate: bf16, prefix caching, 64 sequences, 16k batched tokens · `generate.concurrency` 64.
+- **Fixed:** `RemoteBox.shell` uses `bash -c`; the box's `.bash_logout` turned `exit 0` into exit 1 under `bash -l`.

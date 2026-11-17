@@ -15,6 +15,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(prog="cli")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("data")
+    sub.add_parser("vbpl", help="extra corpus from vbpl.vn (HF th1nhng0/vietnamese-legal-documents)")
     r = sub.add_parser("run")
     r.add_argument("exp")
     r.add_argument("--backend")
@@ -30,8 +31,9 @@ def main() -> None:
     b = sub.add_parser("box", help="remote GPU box: push / setup / serve / run / status / stop / pull / tunnel")
     b.add_argument("action", choices=["push", "push-data", "setup", "serve", "run", "status", "stop", "pull", "tunnel",
                                       "watch", "autosync"])
-    b.add_argument("target", nargs="?", help="serve: model id · run: exp yaml · stop: session (vllm-g0, run-<exp>) · autosync: on|off")
+    b.add_argument("target", nargs="?", help="serve: model id · run: exp yaml · stop: session (llm-g0, embed-g0, run-<exp>) · autosync: on|off")
     b.add_argument("--gpu", type=int, default=0)
+    b.add_argument("--kind", default="llm", choices=["llm", "embed", "rerank"], help="serve: which vLLM server")
     b.add_argument("--on", default="l40s", help="backend file with a `box:` block")
     args, extra = ap.parse_known_args()
     if extra and args.cmd != "box":
@@ -41,6 +43,10 @@ def main() -> None:
         from corpus import DatasetBuilder
 
         DatasetBuilder().build()
+    elif args.cmd == "vbpl":
+        from corpus.vbpl import VbplImporter
+
+        VbplImporter().build()
     elif args.cmd == "run":
         from config import load
         from pipeline import Experiment
@@ -69,7 +75,7 @@ def main() -> None:
         {
             "push": box.push_code, "push-data": box.push_data, "setup": box.setup, "status": box.status,
             "pull": box.pull, "tunnel": box.tunnel,
-            "serve": lambda: box.serve(args.target, args.gpu),
+            "serve": lambda: box.serve(args.target, args.gpu, args.kind),
             "run": lambda: box.run(args.target, args.gpu, extra),
             "stop": lambda: box.stop(args.target),
             "watch": box.watch,

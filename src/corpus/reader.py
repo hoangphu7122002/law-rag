@@ -1,15 +1,17 @@
-"""Law files -> LlamaIndex Documents. metadata["doc"] = file stem = law id with "/" -> "_"."""
+"""Law files -> LlamaIndex Documents. metadata["doc"] = file stem = law id with "/" -> "_".
+Sources = folders under data/processed/: corpus (course, 16k files) and optionally vbpl (`make vbpl`)."""
 from pathlib import Path
 
 from llama_index.core import Document
 
 
 class CorpusReader:
-    def __init__(self, folder: Path = Path("data/processed/corpus"), lowercase: bool = False, flatten: bool = False):
-        self.folder, self.lowercase, self.flatten = Path(folder), lowercase, flatten
+    def __init__(self, sources: list[str] = ("corpus",), lowercase: bool = False, flatten: bool = False):
+        self.folders = [Path("data/processed") / s for s in sources]
+        self.lowercase, self.flatten = lowercase, flatten
 
     def files(self) -> list[Path]:
-        return sorted(self.folder.glob("*.txt"))
+        return [f for folder in self.folders for f in sorted(folder.glob("*.txt"))]
 
     def read(self, limit: int | None = None) -> list[Document]:
         """limit = first N files only (smoke runs)."""

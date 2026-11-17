@@ -29,6 +29,7 @@ class Chunk(Strict):
 
 class Embed(Strict):
     model: str
+    engine: str = "local"   # local (sentence-transformers in this process) | vllm (server at backend.embed_url)
     query_prefix: str = ""
     passage_prefix: str = ""
     normalize: bool = True
@@ -46,6 +47,7 @@ class Retrieve(Strict):
 
 class Rerank(Strict):
     model: str | None = None
+    engine: str = "local"   # local (CrossEncoder) | vllm (server at backend.rerank_url)
     max_len: int = 1024
     batch: int = 32
 
@@ -73,9 +75,10 @@ class Box(Strict):
     root: str
     vllm: str
     hf_home: str
-    min_free_mib: int = 20000
-    gpu_memory_utilization: float = 0.45
-    max_model_len: int = 16384
+    min_free_mib: int = 20000          # LLM server; pooling servers need gpu_share[kind] of the card instead
+    gpu_share: dict[str, float] = {"llm": 0.45, "embed": 0.15, "rerank": 0.15}
+    llm_args: list[str] = []           # extra `vllm serve` flags for the LLM server
+    pooling_args: list[str] = []       # extra flags for embed / rerank servers
     env: dict[str, str] = {}  # exported for every job on the box (serve and run); {root} expands
 
 
@@ -84,6 +87,8 @@ class Backend(Strict):
     base_url: str
     api_key: str = "EMPTY"
     device: str = "cpu"
+    embed_url: str | None = None    # vLLM pooling server for embed.engine=vllm
+    rerank_url: str | None = None   # vLLM pooling server for rerank.engine=vllm
     box: Box | None = None
 
 
@@ -97,6 +102,7 @@ class Config(Strict):
     split: Literal["train", "dev", "test"] = "dev"
     limit: int | None = None
     corpus_limit: int | None = None
+    sources: list[str] = ["corpus"]
     seed: int = 20261031
     backend: Backend
     chunk: Chunk
@@ -107,7 +113,10 @@ class Config(Strict):
 
     # --- hashes: same inputs -> same name, so reruns resume and caches are reused ---
     def index_key(self) -> str:
-        return _hash(self.corpus_limit, self.chunk, self.embed.model, self.embed.passage_prefix, self.embed.normalize, self.embed.max_len,
+        extra = [] if self.sources == ["corpus"] else [self.sources]  # keeps the hash of course-corpus indexes
+        if self.embed.engine != "local":
+            extra.append(self.embed.engine)
+        return _hash(self.corpus_limit, *extra, self.chunk, self.embed.model, self.embed.passage_prefix, self.embed.normalize, self.embed.max_len,
                      self.retrieve.metric)
 
     def retrieval_key(self) -> str:
