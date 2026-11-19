@@ -21,3 +21,5 @@ dev300 rougeL **.6668** (C1 .6575). Paired bootstrap vs C1 MBR8: dev300 +.009 [-
 Greedy (2 shots): .6516 vs C1 greedy .6325 (dev300 +.019 [+.006, +.034]; clean/strict CIs span 0).
 Caveats: lower bounds are ~0, and ~10 variants were compared overnight (multiple comparisons) → treat as a lead, confirm with a second seed / the final train+dev retrain before replacing C1. Not run on test.
 Other overnight null/negative results vs C1: oracle retrieval (+.002 ns), MBR16 (+.001 ns), MBR T0.5 (-.015), GRPO from v3b greedy .6271 (< C1 greedy), soup zero-shot .6301.
+
+C2 confirmation (06:35): a05 merge MBR8 .6642 vs C1: dev_clean +.012 [+.001,+.025], dev_strict +.019 [+.004,+.038], dev300 +.007 ns. Seed repeat of C2 (same model, different sample) .6615: dev300 +.004 [-.010,+.017], dev_clean +.011 [-.009,+.029], strict +.001 [-.031,+.033] -> NOT significant on its own. Merged models are consistently ~+.004..+.009 above C1 under MBR but never clearly significant on dev300: C2 stays PROVISIONAL (C1 remains the safe choice). Third C2 pass and a second C1 pass (sampling noise reference) queued. MBR16 on arith_a1 died at 192/300 (queue kill) – not rerun.

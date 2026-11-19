@@ -1,0 +1,5 @@
+# GPU1: third MBR sampling pass of C2 (arith_a1, shots2) to average out sampling noise.
+serve /home/app/phunguyen/law_rag/data/models/arith_v3b_c3f_a1 --gpu 1 --share 0.45
+configs/exp/A6_mbrv3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/arith_v3b_c3f_a1 --set generate.shots=2 --set backend.base_url=http://localhost:8001/v1 --set generate.mbr=[0.0,0.7,0.7,0.7,0.7,0.7,0.72,0.7]
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbrv3b"
+do tmux kill-session -t lawrag-llm-g1
