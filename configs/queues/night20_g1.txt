@@ -1,0 +1,5 @@
+# GPU1: MBR temperature mix (greedy + T0.4 x2 + T0.7 x2 + T1.0 x3) on v3b + 2 shots vs C1 MBR8 (greedy + 7x T0.7) .6575.
+serve /home/app/phunguyen/law_rag/data/models/q35_v3b --gpu 1 --share 0.45
+configs/exp/A6_mbrv3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v3b --set backend.base_url=http://localhost:8001/v1 --set generate.mbr=[0.0,0.4,0.4,0.7,0.7,1.0,1.0,1.0]
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbrv3b"
+do tmux kill-session -t lawrag-llm-g1
