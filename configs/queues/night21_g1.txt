@@ -1,0 +1,7 @@
+# GPU1: T1.0 samples hurt (.6197 vs .6575); test lower sampling temperature in MBR8: greedy + 7x T0.5, then 7x T0.3.
+serve /home/app/phunguyen/law_rag/data/models/q35_v3b --gpu 1 --share 0.45
+configs/exp/A6_mbrv3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v3b --set backend.base_url=http://localhost:8001/v1 --set generate.mbr=[0.0,0.5,0.5,0.5,0.5,0.5,0.5,0.5]
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbrv3b"
+configs/exp/A6_mbrv3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v3b --set backend.base_url=http://localhost:8001/v1 --set generate.mbr=[0.0,0.3,0.3,0.3,0.3,0.3,0.3,0.3]
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbrv3b"
+do tmux kill-session -t lawrag-llm-g1
