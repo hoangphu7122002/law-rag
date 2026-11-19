@@ -1,0 +1,5 @@
+# Findings: competitions (agent summary; thin coverage, unverified)
+- Zalo AI 2021 legal retrieval (3,196 q, 61,425 articles): common = BM25 recall → BERT-family reranker (PhoBERT/XLM-R), word segmentation, hybrid α·BM25+β·BERT with threshold; one repo fine-tunes PhoBERT on top-150 BM25 candidates. AITeamVN/Vietnamese_Reranker zero-shot on Zalo legal: Acc@1 .7944, MRR@10 .8672. Sources: arXiv 2403.18093, github.com/phuongnm-bkhn/legal_text_retrieval, HF AITeamVN/Vietnamese_Reranker.
+- ALQAC: 2022 Miko (JAIST) XLM-R 1st retrieval; 2023 NOWJ1 BM25/TF-IDF + PLM, QA split into sentence classification + extraction (arXiv 2309.09070); 2024 UIT-DarkCow top 2 with LLMs (BM25 + sentence transformers). 2025 not found.
+- VLSP 2025 DRiLL: FPT 2nd with hybrid sparse+dense; top teams learning-to-rank over many features incl. LLM scores (aclanthology 2025.vlsp-1.49, arXiv 2510.20381). Not scored with ROUGE/BLEU.
+- No ROUGE/BLEU RAG-challenge evidence found; no LLM size / augmentation / post-processing details verified. Follow-up: ALQAC 2023/2024 and VLSP 2025 DRiLL overview papers.

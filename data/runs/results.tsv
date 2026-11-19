@@ -1,0 +1,5 @@
+time	run	split	n	cosine	jaccard	token_overlap	bleu1	rouge_l	law_hit	errors	git	note
+2026-11-18 00:11	B0_baseline__617af41c	dev	300	0.5866	0.1635	0.1893	0.1362	0.1595	0.0000	0	unknown	course baseline (sbert + FAISS L2 k=5 + Qwen1.5-1.8B base)
+2026-11-18 00:14	B0_baseline__3023e166	test	200	0.6019	0.1639	0.1914	0.1382	0.1709	0.0000	0	unknown	course baseline (sbert + FAISS L2 k=5 + Qwen1.5-1.8B base)
+2026-11-18 00:56	A1_aiteamvn__824515a6	test	200	0.6708	0.2263	0.2106	0.1256	0.1713	0.0150	0	unknown	AITeamVN stack zero-shot (vn-emb + vn-rerank 50->5 + Vi-Qwen2-3B-RAG, card prompt)
+2026-11-18 00:56	A1_aiteamvn__481fbbb3	dev	300	0.6623	0.2281	0.2153	0.1344	0.1670	0.0133	0	unknown	AITeamVN stack zero-shot (vn-emb + vn-rerank 50->5 + Vi-Qwen2-3B-RAG, card prompt)

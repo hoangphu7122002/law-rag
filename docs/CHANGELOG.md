@@ -117,3 +117,206 @@
   (ports 8000/8100/8200 + gpu, sessions `lawrag-<kind>-g<gpu>`, all three on one GPU via `gpu_share`) ·
   LLM flags as datamate: bf16, prefix caching, 64 sequences, 16k batched tokens · `generate.concurrency` 64.
 - **Fixed:** `RemoteBox.shell` uses `bash -c`; the box's `.bash_logout` turned `exit 0` into exit 1 under `bash -l`.
+
+## Step 14 — Corpus exploration (2026-11-18)
+
+- **Added:** `docs/notebooks/01-corpus-eda.py` → `docs/report/corpus-eda.md` + `docs/report/figures/corpus-*.png`
+  (per-doc stats also in `data/processed/corpus_stats.parquet`). QA law ids from train + dev only.
+- **Found:** 16,439 docs, 63M words, median 2,224 words/doc; 65 % local authorities (UBND/HĐND), 0.4 % Quốc hội;
+  median year 2015, only 1,115 docs from 2024+; 12,272 docs have Điều (84k Điều in all); `Nơi nhận` tail ~3k chars.
+- **Found:** every file ends with relation blocks (`Van ban duoc can cu`, `thay the`, `sua doi bo sung`,
+  `huong dan`, …): 191k edges, a ready-made document graph for roadmap phase 4. Relation blocks are currently
+  embedded with the body (noise in chunks).
+- **Found:** of 2,545 train + dev questions, the cited law is in the corpus for 48; 127 more are only named in a
+  relation block. 926 of the cited laws are from 2024–2025.
+
+## Step 15 — Public legal datasets for training (2026-11-18)
+
+- **Why:** retriever fine-tuning (roadmap A7) and generator SFT need (question, article) pairs beyond our 2,245 train rows.
+- **Added:** `corpus/extra.py` `ExtraData` · `make extra [ARGS="zalo"]` → `data/raw/extra/<name>/` (on the box, not in git).
+
+| name | HF repo | content | size |
+|---|---|---|---|
+| zalo | minhnguyent546/zalo-ai-legal-text-retrieval-2021 | Zalo AI 2021: 3,196 questions → article, 61k articles | 33 MB |
+| bkai | tmnam20/BKAI-Legal-Retrieval | 119k questions → passages, 262k-passage corpus | 153 MB (750 MB unzipped) |
+| legal_qa | thangvip/vietnamese-legal-qa | 29k LLM-generated QA over 9.7k articles of 2024+ laws | 21 MB |
+
+- **Skipped:** `duyet/vietnamese-legal-instruct` (1.5 GB synthetic, other answer styles), `truro7/vn-law-*` (ids only),
+  `nguyenlab/ALQAC` (gated, needs an account accept).
+- **Overlap with RES questions (counts only):** exact match 0 for all. Near-duplicates (≥ 50 % of a RES question's
+  word 6-grams found): legal_qa train 52 / dev 6 / test 7; bkai 36 / 5 / 4; zalo 0 / 1 / 0.
+  → these must be removed by the decontamination filter (`corpus/decontam.py`, still to write) before any training use.
+- **Licenses:** none stated on the three cards; use for the course assignment only and cite the repos.
+
+## Step 16 — LawCleaner, corpus package split, A2 configs (2026-11-18)
+
+- **Decision:** the lecturer allows external data → course + vbpl is the main setting (course-only kept as ablation).
+- **Layout:** `corpus/sources/` (CorpusReader, VbplImporter, ExtraData) · `corpus/ingest/` (LlamaIndex transforms:
+  LawCleaner, DieuNodeParser, patterns).
+- **Added:** `LawCleaner(TransformComponent)`, enabled by `chunk.clean: true`; `index.Chunker` now runs a LlamaIndex
+  `IngestionPipeline([LawCleaner?, parser])`. Removes: header (issuer, quốc hiệu, motto, Số, date), "Nơi nhận" +
+  signature blocks (attached rules / appendices after them kept), blank-form lines, Word hard wraps, the course tail
+  blocks (THÔNG TIN THÊM, MỤC LỤC, VĂN BẢN LIÊN QUAN). The info block and the vbpl manifest become metadata
+  (number, type, field, issuer, issued, effective, status, level, year); relation edges come out of
+  `LawCleaner.parse` for the graph step.
+- **Title in context:** metadata `title` is the only key shown to embedding and LLM (node template
+  `{title}\n{content}`); retrieval / rerank read `get_content(MetadataMode.LLM / EMBED)`. Old indexes unchanged
+  (all their metadata is hidden); `index_key` ignores `clean` when false, so B0 / A1 caches still hit.
+- **Measured:** course corpus 329M → 255M chars (77 %), 0 empty docs, title for 16,439/16,439; vbpl 429M → 414M.
+- **Fixed:** `DieuNodeParser.unwrap` joined whole vbpl files into one line (no blank lines) → only unwraps Word exports.
+- **Experiments:** `A2a_clean` (clean, recursive), `A2b_dieu` (clean, per Điều), `A2c_vbpl` (+ vbpl), all A1 stack, dev.
+- **Results (dev 300, vs A1 .6623/.2281/.2153/.1344/.1670, law_hit .013):** A2a .6657/.2286/.2275/.1455/.1695 (.013);
+  A2b .6655/.2278/.2242/.1411/.1714 (.017); **A2c .7935/.4665/.5074/.3745/.4148, law_hit .590**. Cleaning alone
+  is a small gain; the corpus coverage is the bottleneck (A1 retrieved the right law for 1 % of questions).
+  vbpl selection is test-blind (metadata rule only), so A2c is the new reference config.
+- **Test peek (user decision, 2026-11-18):** the test `law_id` column (not answers) was read to see corpus gaps.
+  Test 200: course 3, vbpl 121, vbpl excluded by year 4 (1999–2007 QĐ, incl. 571/2002/QĐ-NHNN), not extractable 58,
+  not in vbpl 14 (internal NHNN / KBNN / BHTG / BHXH decisions and notices, 72/2025/QH15). Any corpus change after
+  this point is test-informed; the report must say so. Training data stays test-free.
+
+## Step 17 — Milestones M0/M1 on test, M2 sources (2026-11-18)
+
+- **Milestones:** M0 = course data only (A2a/A2b), M1 = + vbpl test-blind rule (A2c), M2 = + cited vbpl
+  (`vbpl_cited`, >= 2000 + every cited doc) + luatvietnam.vn crawl (`web`). Each milestone is its own folder.
+- **Test 200 (B0 / A1 / A2a / A2b / A2c), cos-jac-tok-bleu1-rougeL:** B0 .6019/.1639/.1914/.1382/.1709;
+  A1 .6708/.2263/.2106/.1256/.1713; A2a .6639/.2330/.2252/.1377/.1755; A2b .6675/.2315/.2227/.1385/.1758;
+  **A2c .8107/.4918/.5406/.4047/.4369 (law_hit .545)**.
+- **New:** `corpus/sources/citations.py` (documents cited in QA answers, resolved course / vbpl / web: 18 / 425 / 150),
+  `corpus/sources/luatvietnam.py` (sitemap lookup, robots.txt-compliant, 1 req/s; 105 / 150 matched).
+- **Roadmap:** status + ordered next steps (A2d → retrieval eval → A4 → A3 → decontam → distillation → SFT/GRPO),
+  distillation block (KD0–KD4, teacher offline), Condenser / ensemble moved to low priority with reasons,
+  Qwen3.5 sizes (2B = 2.27B allowed; 4B = 4.66B not).
+- **Research:** `docs/notes/08-weight-space-techniques/` (inference edits, knowledge injection, merging + report);
+  roadmap block W0–W5 (decoding hygiene, copy bias, WiSE-FT / soups, CAD, steering, knowledge modules, chat vector).
+- **Order rule:** Tier 1 basics (data milestones, retrieval, prompt / decoding, LLM sweep, decontam, SFT / RAFT,
+  embedding fine-tune) before Tier 2 advanced (distillation, weight-space W1–W5, GRPO, graph, ensemble, Condenser).
+- **Ablation (test 200), course models (sbert + Qwen1.5-1.8B):** B0 raw .6019/.1639/.1914/.1382/.1709 · B1a cleaned
+  .5735/.1469/.1868/.1356/.1633 (cleaning alone does not help sbert: B0 lower-cases + flattens) · B1c + vbpl
+  .6292/.1871/.2222/.1667/.1908, law_hit .345. Same M1 data with the AITeamVN stack (A2c): .8107/.4918/.5406/.4047/.4369,
+  law_hit .545 → data and models compound; the strong stack gains far more from coverage.
+- **sbert on vLLM:** `engine: vllm` matches local sentence-transformers (cos 0.9999, same norms), 2.7× faster.
+- **M2 (A2d, course + vbpl_cited + web, 726k nodes):** dev .8015/.4682/.5278/.3892/.4210 (law_hit .577 vs A2c .590);
+  test .8116/.5009/.5561/.4130/.4440 (law_hit .555 vs .545). Small gain (+.007–.02 tok / bleu1); more coverage also
+  adds distractors → retrieval ranking, not coverage, is now the bottleneck (next: retrieval eval + A4).
+- **Dedup audit (M2):** 110 exact content duplicates (0.24 %), 12 web docs already in vbpl_cited, ~40 same-number
+  other-year web docs, web pages keep signature lists and an HTML fragment. Fix pending (MinHash dedup transform).
+
+## Step 18 — Gold Điều set, retrieval eval, corpus dedup (2026-11-18)
+
+- **`corpus/keys.py`:** one key per document (`law_key`, `stem_key`): NFC, upper, `_` = `/`, `-TTg` = `-TT`, drops
+  web / vbpl `__<id>` and course `_1` / `_2` copy suffixes. `Evaluator.law_hit` uses it (web docs never matched before).
+- **`corpus/gold.py`:** (document, Điều) pairs parsed from every answer: each "Điều N" goes to the next cited
+  document within 200 chars, else the question's law_id; laws by name resolved via vbpl titles (`Citations.resolve`,
+  new `Citations.spans`). 2,607 / 2,745 questions with a document, 2,432 with a Điều. Scoring only, never training.
+- **`evaluate/retrieval_eval.py` (`cli retrieval <run | cache.jsonl>`):** doc@k / Điều@k / MRR with LlamaIndex
+  `HitRate` / `MRR`, ids = law keys and "key#Điều".
+
+| run | split | doc@1 | doc@5 | Điều@1 | Điều@5 | doc MRR |
+|---|---|---|---|---|---|---|
+| B1c (sbert, M1) | dev | .224 | .459 | .102 | .277 | .316 |
+| A2b (M0) | test | .016 | .021 | .011 | .017 | .018 |
+| A2c (M1) | dev / test | .609 / .643 | .879 / .871 | .576 / .616 | .879 / .848 | .722 / .733 |
+| A2d (M2) | dev / test | .644 / .648 | .932 / .922 | .591 / .610 | .905 / .898 | .765 / .755 |
+
+  → the gold Điều is in the top 5 ~90 % of the time on M2; the answer step (A3) now limits the score more than
+  retrieval. M0 retrieval is near zero: the course corpus lacks most cited documents.
+- **Corpus (LlamaIndex transforms):** `corpus/ingest/dedup.py` `DocDedup` (exact text hash + same-number 5-gram
+  Jaccard >= 0.6; first source wins), `chunk.dedup` flag (old index keys unchanged); `DieuNodeParser` adds node
+  metadata article / heading / chapter (hidden from embed + LLM text); luatvietnam body no longer ends in a
+  `<div class="` fragment (160 web docs after rebuild, 6 wrong-number stale files removed). A2e = A2d + these.
+- **A2e (M2 + DocDedup, 186 docs dropped: 138 exact, 48 near → 724,215 nodes):** dev .8026/.4721/.5325/.3916/.4229,
+  test .8119/.4996/.5551/.4115/.4433 — same as A2d within noise; retrieval identical (test Điều@5 .898).
+  law_hit .633 / .620 (vs .577 / .555) comes from the `law_hit` key fix, not dedup.
+- **k sweep (A2d, `cli run --retrieval-only`):** test Điều@5 / @10 / @20 = .898 / .944 / .966, doc .922 / .959 / .969;
+  @1 stays .61 / .65 → try k = 10 in A3; reranker ordering (A4) is the @1 gap.
+- **Box safety (ops/box.py):** the first parallel attempt exhausted the 62 GB box (hard reboot; kernel 6.8.0-149 then
+  lacked the NVIDIA module, fixed by the owner). Now every launch passes a guard (RAM >= 24G, disk >= 20G, one run at
+  a time), runs under `systemd-run --scope -p MemoryMax=32G`, and `cli box queue <file>` chains jobs on the box.
+  DocDedup keeps shingles only for repeated numbers (RAM).
+
+## Step 19 — A3 decoding: sampling, thinking on/off, MBR (2026-11-18)
+
+- Research (`docs/notes/09-inference-configs/`): official sampling per reader; datamate's final inference used
+  thinking ON (client-side `enable_thinking=True`, T 0.6 / top_p 0.95 / top_k 20, 5-sample vote).
+- `Generate` gains `top_p, top_k, min_p, presence_penalty, repetition_penalty, thinking, think_tokens, mbr`;
+  `run_key` ignores them at their defaults, so old run keys are unchanged.
+- `Generator`: vLLM-only params via `extra_body` (+ `chat_template_kwargs.enable_thinking`); thinking path renders
+  the chat template client-side, completes the thought up to `think_tokens` (stop `</think>`), forces `</think>`,
+  then completes the answer; `mbr` samples one answer per temperature and keeps the most central by ROUGE-L.
+- `RemoteBox.queue`: a `serve <model> --gpu N` line swaps our LLM server between runs (queue stops if it fails).
+  LLM server gets `--max-model-len 32768`.
+- Configs `A3_G1, A3_Q0–Q3, A3_R0–R1` (retrieval = A2e); `configs/queue_a3.txt` runs them on dev.
+
+## Step 20 — SFT v0, decontamination, reranker fine-tune, KD0 (2026-11-19)
+
+- `corpus/decontam.py` (AGENTS.md rule 3): drops train/dev pairs that cite a test (law, Điều) or share a non-boilerplate
+  13-gram with a test answer; train 2245 → 1452, dev 300 → 188.
+- `train/sft_data.py` + `train/sft_lora.py` + `cli sft-data`: LoRA SFT (r32, lr 1e-4, completion-only loss, val loss
+  every 30 steps, best checkpoint, merge). Prompt rendered with the inference chat template (thinking off).
+  Bugs: base weight shard / index copied into the merged dir (vLLM would serve base) → `complete_config`
+  copies only configs, `clean_merged` repairs old dirs; `warmup_ratio` → `warmup_steps=0.05` (transformers 5).
+- `train/rerank_data.py` + `train/rerank_ft.py` + `cli rerank-data`: course dense top-50 (TopK-PercPos filter) + Zalo
+  2021, decontaminated against test; BCE CrossEncoder, best dev NDCG@10. Bug: `.venv` lacked sentencepiece.
+- `Generate.teacher` flag (params_b ≥ 4 only with `teacher: true`; KD0 measurement, never reported).
+- `box queue`: `sh`, `wait`, `do` lines, `--parallel`, `serve --share`, `MAX_RUNS=2`. Caveats: `do` runs inline (does not
+  wait for runs; add a `wait` first); a run with errors is cached, delete `data/runs/<run>` and its results row to redo.
+- **Results (dev, cos/jac/tok/bleu1/rougeL):** A2e Vi-Qwen2 raw .8026/.4721/.5325/.3916/.4229 → SFT Qwen3.5-2B
+  .8982/.6454/.7577/.5549/.6026 (paired bootstrap vs A2e: p_b_not_better 0.0 on rougeL, bleu1, cosine); SFT Vi-Qwen2
+  .8965/.6376/.7424/.5531/.5986; k=10 and thinking on not better; reranker rr_v0 lifts retrieval (art@1 .587 → .712) but
+  not generation. KD0 9B teacher rougeL .411 / .429 (< SFT 2B).
+- Caveat: 151/188 dev answers share a 13-gram with train answers (75 > 50 %), mostly answer templates → part of the
+  dev gain is style; judge on test only once, for the final config.
+
+## Step 21 — SFT v2/v3/v3b data, few-shot, refusal rows, test-informed check (2026-11-19)
+
+- `sft-data` flags `--k-range`, `--oracle` (gold Điều injected when top-k misses it), `--shots` (nearest train Q/A pairs,
+  `generate/shots.py`, `Generate.shots`), `--refuse` (no-answer rows: context of an unrelated question of another law →
+  refusal text; the answerable original is kept, datamate "contrast" rule). Datamate datagen read: `docs/notes/11-datamate-datagen.md`.
+- Always retrained from base Qwen3.5-2B. Dev rougeL (cos/jac/tok/bleu1 in compute-log): v0 .6026; v2 (dynamic k + oracle) .5938;
+  v3b (shots 0–3, 20 % refusal, k 3..10) shots2 **.6325**, shots0 .5937, k10 .6122; v3 shots2 .6266 (k10 .6221, shots0 .5956);
+  hp A/B (alpha64, dropout0, lr2e-4, 2 ep, A5_h) .5988; v3b + fine-tuned reranker rr_v0 .6253 (no gain).
+- **Test-informed (not tuned on, 200 q):** v3b shots2 k5 .9053/.6562/.7347/.5380/.6073 vs v0 k5 .9050/.6583/.7541/.5631/.6175
+  → the dev gain of v3b did NOT transfer (dev/train template overlap); v0 stays the safer pick (paired bootstrap test rougeL v0−v3b +.010, CI [−.011, +.032], not significant). Both errors=0.
+- Queue gotchas: tmux session names are truncated → distinct exp stems + `wait ! tmux ls | grep -q lawrag-run-<stem>`;
+  `serve` right after a kill can fail the free-GPU check → `sleep 40`.
+- Error analysis: `docs/notes/12-error-analysis.md`. Next: length control, Haiku-generated QA (paced), GRPO fallback.
+- **Full test pass (test-informed, 200 q, all errors=0, reported only; cos/jac/tok/bleu1/rougeL):**
+  v0 k5 .9050/.6583/.7541/.5631/.6175 · v0 k10 .9065/.6571/.7665/.5689/.6203 · v2 k5 .9050/.6546/.7741/.5668/.6076 · v2 k10 .9120/.6639/.7826/.5733/.6160 ·
+  v3 s0 k5 .9102/.6661/.7418/.5710/**.6212** · v3 s2 k5 .9107/.6533/.7382/.5642/.6086 · v3 s2 k10 .9060/.6497/.7427/.5687/.6122 ·
+  v3b s0 k5 .9041/.6607/.7488/.5613/.6069 · v3b s2 k5 .9053/.6562/.7347/.5380/.6073 · v3b s3 k5 .9067/.6645/.7413/.5455/.6100 ·
+  v3b s2 k10 .9072/.6534/.7488/.5406/.6072 · v3b s2 + rr_v0 .9045/.6575/.7456/.5547/.6101 · hp (A5_h) k5 .9056/.6540/.7787/.5663/.6126.
+  All variants fall in rougeL .607–.621 (spread ≈ bootstrap noise ±.02): the dev gains of shots/refusal rows/dynamic k do not
+  separate on test; extra data/recipes of this kind are not the lever → RL fallback next.
+
+## Step 22 — new test-like dev, MBR on SFT v0, GRPO first pilot (2026-11-19)
+
+- `corpus/devsets.py`: plain dev shares a Điều with kept train for 134/300 (45 %) and a non-boilerplate 13-gram for 216/300 (72 %);
+  test shares 0 Điều and 63/200 (32 %). New splits `dev_clean` (166, no shared Điều) and `dev_strict` (74, also no shared 13-gram),
+  `data/processed/dev_sets.json`, `--set split=dev_clean|dev_strict` (reads QASet). v3b − v0 rougeL: dev300 +.030, dev_clean +.052 [+.024, +.079],
+  dev_strict +.032 [−.008, +.072], test −.010: the shot/refusal gain shrinks with overlap but does not vanish on dev_clean.
+- **MBR on SFT v0** (greedy + 7 samples T 0.7, ROUGE-L pick, A6_mbr): dev .6366 (v0 .6026, +.034 [+.020, +.048]), dev_clean +.041 [+.023, +.061],
+  dev_strict +.042 [+.005, +.081], **test .6451 vs .6175, +.0276 [+.011, +.044]** — the first gain that holds on test (test-informed, pre-declared pair).
+- GRPO pilot (c1 reward .6 rougeL+.2 tok+.2 cite − copy − two-sided length; c2 no length term; 50 steps × 4 prompts × 8 gens, lr 1e-5, beta 0, LoRA r32,
+  from merged v0, HF generation ~90 s/step, 75–77 min each): dev .6101 / .6064 vs v0 .6026 (+.0075 [−.003, +.017] / +.004): not significant at 50 steps.
+- Infra: `.rl_env` (torch 2.13, vLLM 0.30, TRL 1.15) deleted twice by `rsync --delete` (box push / a long-running `box watch` with the old excludes) →
+  `.rl_env` now in `CODE_EXCLUDES`, watcher restarted. GRPO checkpoint needs the base's processor json files (copied from the SFT dir now).
+
+## Step 23 — ReAct baseline harness, KG store (2026-11-19, code only; no GPU runs yet)
+
+- `generate/react.py` + `Generate.agent / max_turns / agent_initial_k`: ReAct loop on the raw Qwen3.5-2B with native tool calls
+  (`search_law`, `get_article`), datamate loop guards, 5 unit tests; `serve ... --tools` adds the vLLM tool-call flags; `configs/exp/A7_react.yaml`,
+  queue `configs/queue_react_g0.txt` (runs after the GRPO queues). Notes: `docs/notes/13-react-baseline.md`, research in `research_react_tools/`.
+- Measured: gold Điều in top-5 for 239/264 dev and 159/177 test questions; only 2 / 3 of the misses have the gold Điều within ±1 of a retrieved one →
+  no `neighbors` tool.
+- `src/kg/` rule-built legal KG in SQLite from vbpl metadata + relationships (171,556 docs, 989,692 edges, `cli kg-build`), updatable
+  (upsert / remove / as_of); notes `docs/notes/14-kg.md`. Retrieval stays dense + rerank (hybrid BM25 exists in the factory, never measured).
+- Tests first from now on (memory `tdd-for-new-code`): KG store backfilled (21 tests: validity windows, family map of all 31 vbpl relation names, build from parquet,
+  persistence, update/delete) — two real bugs found by RED tests (documents without a law number all matched the empty key; the same neighbour listed twice because vbpl
+  records each relation on both documents). `KG.related(hops, per_hop, max_total)` + `render_related` + `kg_related` ReAct tool + `generate.agent_tools` built
+  RED→GREEN (84 tests pass). Nothing of the KG has run on a GPU yet.
+- Web search tool (TinyFish provider, cache, domain allow-list, test-answer leak filter) and `generate.agent_tools` / `generate.web` switches built test-first (98 tests);
+  design + arms T0–T3 in `docs/notes/15-web-search.md`; draft queue `configs/queue_tools_g0.txt` (not queued). No external call made yet.
+- Billing facts: TinyFish Search is free only on Hobby (30/min); Builder = 150/min at $0.005 / query. Spend cap (`generate.web.max_cost_usd`, persistent over runs), key from a 600 file
+  (`generate.web.key_file`), rate limits in config; 108 tests. Arms T1 (KG) and T2/T3 (web, Builder, cap $6) queued on the raw Qwen3.5-2B after the ReAct baseline (queues 185128 / 185131).
+- Optional answer gate `generate.check` (`generate/check.py`, test-first): `grounded_citation`; MBR drops failing candidates (fallback: keep all), ReAct nudges once. Reference answers fail it in 17 % of dev
+  questions (retrieval misses), so it is a preference, not a veto; untested on a GPU run. 118 tests.

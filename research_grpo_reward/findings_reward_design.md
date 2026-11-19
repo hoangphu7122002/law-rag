@@ -1,0 +1,7 @@
+# Findings: reward design (agent summary, abstracts/excerpts only — all numbers unverified)
+- Hacking: "Copying Is Not Grounding" (arXiv 2610.18442): RAG rewards get gamed by copying passages; KL/copy penalty alone trades copying for short/empty answers or refusals; fix = sentence-level credit for authored, supported sentences.
+- Student GRPO summarization report (personal-site-d61.pages.dev, "The Frozen Lake and Beyond"): ROUGE-only reward → article copying, overlong, incomplete sentences; fix = capped ROUGE-L + MiniLM cosine + piecewise length term + completeness signal.
+- Catalan simplification GRPO (arXiv 2609.04823): copy penalty + length penalty past reference length. GR3 (arXiv 2603.10535): length inflation. A plain length penalty pushes to evasive answers → use a two-sided length band.
+- Weights: no validated mix of ROUGE-L/BLEU/embedding/length/citation; only a blog's 0.7 cosine + 0.3 BLEU (hackmd.io/@l_WDq7lkQq29Pz-KD1JPNA/H1bS47Zt1g, unverified) → tune on dev.
+- Citation/format: Thai legal QA GRPO (aclanthology 2025.nllp-1.21): format + hallucination + citation-F1 rewards, up to 90 % citation-F1 gain, +31 % joint quality vs instruction tuning; companion paper BGE-M3 similarity reward ~2.5x cheaper than an LLM RM; one paper gates reward on format validity.
+- Vietnamese: HF card thangvip/qwen3-1.7b-vietnamese-legal-grpo-phase-2 (thin); GreenMind (arXiv 2507.09638) semantic-similarity rewards, not legal.

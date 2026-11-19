@@ -1,0 +1,6 @@
+# Findings: TRL GRPOTrainer practice (agent summary; unverified, docs main page read partially)
+- Defaults: loss_type dapo (alt dr_grpo, sapo, cispo, vespo), scale_rewards group (batch more robust), num_generations 8, beta 0.0 (no ref model), max_completion_length 512, vllm_mode colocate, vllm_gpu_memory_utilization 0.3.
+- Batch rule: per_device_batch × processes × grad_accum divisible by num_generations; generation_batch_size mutually exclusive with steps_per_generation. Set dtype bf16 via model_init_kwargs (string model loads fp32).
+- Memory 2B LoRA on 48GB: no official figure; estimate weights 4-5GB + vLLM colocate .3 ≈ 14GB; long contexts dominate → gradient checkpointing; OOM → lower num_generations / vLLM util.
+- Qwen3.5 = hybrid Gated-DeltaNet, VL checkpoint. Without flash-linear-attention + causal-conv1d training ~2x slower, no error (NeMo RL guide). Freeze vision tower. TRL docs test Qwen2-VL/2.5-VL; Qwen3.5 support PRs #5205, #5824 (secondhand). Unverified: LoRA target names, LoRA sync into vLLM for GDN layers.
+- Sources: huggingface.co/docs/trl/main/en/grpo_trainer, huggingface.co/blog/vllm-colocate, docs.nvidia.com/nemo/rl/latest/guides/models/qwen/qwen3-5.html, cenrax.substack.com/p/stop-guessing-a-systematic-guide
