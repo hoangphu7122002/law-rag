@@ -57,8 +57,26 @@ class EmbedBench:
                     ranked.append(k)
             pos_of[q] = next((r for r, k in enumerate(ranked, 1) if k in self.gold[q]), None)
         out = {**_agg(pos_of, qids), "passages_per_s": passages_per_s, "query_ms_p50": float(np.median(single)) if single else 0.0}
+        out["ranks"] = pos_of                               # per question (None = gold Điều not retrieved): paired tests need these
         out["groups"] = {g: _agg(pos_of, [q for q in members if q in pos_of]) for g, members in self.groups.items()}
         return out
+
+
+def paired_bootstrap(ranks_a: dict, ranks_b: dict, metric: str = "art@1", n: int = 2000, seed: int = 20261031) -> dict:
+    """Paired bootstrap of metric(A) - metric(B) over the questions both runs have. metric: "art@K" (gold Điều in top K) or "mrr".
+    Returns diff, 95 % interval, one-sided p (share of resamples with diff <= 0) and n."""
+    qs = sorted(set(ranks_a) & set(ranks_b), key=str)
+    if metric == "mrr":
+        val = lambda r: 1.0 / r if r else 0.0
+    else:
+        k = int(metric.split("@")[1])
+        val = lambda r: float(r is not None and r <= k)
+    d = np.array([val(ranks_a[q]) - val(ranks_b[q]) for q in qs])
+    if not len(d):
+        return {"diff": 0.0, "lo": 0.0, "hi": 0.0, "p": 1.0, "n": 0}
+    boots = np.random.default_rng(seed).choice(d, size=(n, len(d))).mean(axis=1)
+    return {"diff": float(d.mean()), "lo": float(np.percentile(boots, 2.5)), "hi": float(np.percentile(boots, 97.5)),
+            "p": float((boots <= 0).mean()), "n": len(d)}
 
 
 def _agg(pos_of: dict[int, int | None], qids: list[int]) -> dict[str, float]:

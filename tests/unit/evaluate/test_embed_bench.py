@@ -227,3 +227,31 @@ def test_queries_can_use_a_different_embedder_than_documents_for_query_only_tuni
     assert m["art@1"] == 1.0
     assert all("thuế là gì" not in t for call in docs_emb.calls for t in call)   # documents only went to the document tower
     assert query_emb.calls and all(len(call) == 1 or call[0] == "thuế là gì" for call in query_emb.calls)
+
+
+def test_a_run_reports_the_rank_of_the_gold_dieu_per_question():
+    bench = EmbedBench(POOL, queries={1: "thuế là gì", 2: "phí"}, gold={1: {"10/2020/NĐ#1"}, 2: {"20/2021/TT#3"}})
+    ranks = bench.run(Topic(["thuế", "phí", "đất", "nước"]))["ranks"]
+    assert ranks[1] == 1 and ranks[2] > 1
+
+
+def test_paired_bootstrap_detects_a_consistent_gain_and_not_noise():
+    from evaluate.embed_bench import paired_bootstrap
+
+    base = {i: 3 for i in range(100)}
+    better = {i: 1 for i in range(100)}                       # always rank 1 vs always rank 3
+    d = paired_bootstrap(better, base, "art@1")
+    assert d["diff"] == 1.0 and d["lo"] > 0 and d["p"] < 0.01
+    same = paired_bootstrap(base, dict(base), "mrr")
+    assert same["diff"] == 0.0 and same["lo"] <= 0 <= same["hi"]
+    flip = {i: (1 if i % 2 else 3) for i in range(100)}
+    flip2 = {i: (3 if i % 2 else 1) for i in range(100)}       # opposite half each: mean difference 0, wide interval
+    n = paired_bootstrap(flip, flip2, "art@1")
+    assert n["lo"] < 0 < n["hi"]
+
+
+def test_paired_bootstrap_only_compares_questions_both_runs_have():
+    from evaluate.embed_bench import paired_bootstrap
+
+    d = paired_bootstrap({1: 1, 2: 1, 9: 1}, {1: 2, 2: 2, 5: 1}, "art@1")
+    assert d["n"] == 2
