@@ -5,7 +5,7 @@
 Prompts = rows of src/train/sft_data.py (`prompt` string with chat template + `completion` = reference). Only rows the SFT
 model answers badly carry gradient; `--hard` keeps the rows whose first rollout scores below that threshold (default: all).
 Reward = .6 rougeL + .2 token overlap + .2 citation (same "Điều N" as the reference) - copy penalty - length penalty;
-refusal-like answers get 0. Metrics are the course ones (src/evaluate/metrics.py, loaded by path: numpy only).
+refusal-like answers get 0, unless the reference is itself a refusal (no-answer row): then refusal = 1, else 0. Metrics are the course ones (src/evaluate/metrics.py, loaded by path: numpy only).
 """
 import argparse
 import importlib.util
@@ -34,10 +34,24 @@ def ngrams(text: str, n: int = 8) -> set:
     return {tuple(w[i:i + n]) for i in range(len(w) - n + 1)}
 
 
+def is_refusal(text: str) -> bool:
+    return text.strip().lower().startswith(REFUSAL)
+
+
+def filter_long(rows, count_tokens, max_tokens: int):
+    """Drop rows whose 'prompt' is over max_tokens. Returns (kept_rows, dropped_count)."""
+    kept = [r for r in rows if count_tokens(r["prompt"]) <= max_tokens]
+    return kept, len(rows) - len(kept)
+
+
 def score(pred: str, ref: str, prompt: str, length_pen: bool = True, cos: float | None = None) -> float:
     """Reward of one completion. Pure function (unit-testable, no GPU). `cos` = cosine to the reference (config 3), else None."""
     p = pred.strip()
-    if not p or p.lower().startswith(REFUSAL):
+    if not p:
+        return 0.0
+    if is_refusal(ref):     # no-answer row: a refusal is the correct behaviour, anything else is wrong
+        return 1.0 if is_refusal(p) else 0.0
+    if is_refusal(p):
         return 0.0
     cite = 1.0
     want = set(DIEU.findall(ref))
@@ -72,6 +86,7 @@ def main() -> None:
     ap.add_argument("--no-length", action="store_true", help="config 2: no length penalty")
     ap.add_argument("--cosine", action="store_true", help="config 3: cosine (course sbert) in the reward")
     ap.add_argument("--use-vllm", action="store_true", help="colocated vLLM rollouts (needs vllm in this env)")
+    ap.add_argument("--max-prompt-tokens", type=int, default=0, help="drop train rows whose prompt exceeds N tokens (0 = off)")
     ap.add_argument("--limit", type=int, default=0, help="smoke test: first N rows, 10 steps")
     ap.add_argument("--seed", type=int, default=20261031)
     a = ap.parse_args()
@@ -88,6 +103,14 @@ def main() -> None:
     if a.limit:
         ds = ds.select(range(min(a.limit, len(ds))))
 
+    tok = AutoTokenizer.from_pretrained(a.base)
+    dropped = 0
+    if a.max_prompt_tokens > 0:
+        rows = [{"prompt": r["prompt"], "i": i} for i, r in enumerate(ds)]
+        kept, dropped = filter_long(rows, lambda p: len(tok(p).input_ids), a.max_prompt_tokens)
+        print(f"--max-prompt-tokens {a.max_prompt_tokens}: dropped {dropped} of {len(ds)} rows")
+        ds = ds.select([r["i"] for r in kept])
+
     emb = None
     if a.cosine:
         from sentence_transformers import SentenceTransformer
@@ -101,7 +124,6 @@ def main() -> None:
             cos = [float(v[i] @ v[n + i]) for i in range(n)]
         return [score(c, r, p, not a.no_length, k) for p, c, r, k in zip(prompts, completions, reference, cos)]
 
-    tok = AutoTokenizer.from_pretrained(a.base)
     multimodal = hasattr(AutoConfig.from_pretrained(a.base), "vision_config")
     Model = AutoModelForImageTextToText if multimodal else AutoModelForCausalLM
     model = Model.from_pretrained(a.base, dtype=torch.bfloat16, attn_implementation="sdpa")
@@ -127,7 +149,7 @@ def main() -> None:
                 shutil.copy(f, out / f.name)
     else:
         complete_config(a.base, out)
-    (out / "train_report.json").write_text(json.dumps({"args": vars(a), "rows": len(ds), "minutes": round((time.time() - t0) / 60, 1),
+    (out / "train_report.json").write_text(json.dumps({"args": vars(a), "rows": len(ds), "dropped_long": dropped, "minutes": round((time.time() - t0) / 60, 1),
                                                         "log": [r for r in trainer.state.log_history if "reward" in r]}, indent=1))
     print(f"done: {out} in {round((time.time() - t0) / 60, 1)} min")
 
