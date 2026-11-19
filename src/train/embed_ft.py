@@ -22,6 +22,10 @@ VARIANTS: dict[str, dict] = {
     "lora32_low": {"mode": "lora", "r": 32, "lr": 2e-5, "epochs": 1, "negatives": 7, "scale": 20.0, "alphas": [0.5]},
     "lora32_vlow": {"mode": "lora", "r": 32, "lr": 5e-6, "epochs": 1, "negatives": 7, "scale": 20.0},
     "full_low": {"mode": "full", "r": 0, "lr": 2e-6, "epochs": 1, "negatives": 7, "scale": 20.0, "alphas": [0.5]},
+    # temperature .02 (scale 50) was the one grid cell above the base (Điều@1 .564 vs .534, no per-question test yet): repeat it and its low-lr / low-rank cousins
+    "lora32_t02_low": {"mode": "lora", "r": 32, "lr": 2e-5, "epochs": 1, "negatives": 7, "scale": 50.0, "alphas": [0.5]},
+    "lora8_t02": {"mode": "lora", "r": 8, "lr": 1e-4, "epochs": 1, "negatives": 7, "scale": 50.0},
+    "lora32_t02_s2": {"mode": "lora", "r": 32, "lr": 1e-4, "epochs": 1, "negatives": 7, "scale": 50.0, "seed": 7},   # seed repeat: is .564 luck?
     "query32": {"mode": "query", "r": 32, "lr": 1e-4, "epochs": 1, "negatives": 7, "scale": 20.0},   # query tower only; documents stay = index stays valid
 }
 
@@ -93,7 +97,7 @@ def interpolated_model(base: str, tuned_dir: str, alpha: float, out: str, max_le
 
 
 def train(name: str, data: str, out: str, base: str = BASE, batch: int = 128, mini_batch: int = 16, max_len: int = 512,
-          limit: int = 0, seed: int = 20261031) -> str:
+          limit: int = 0, seed: int | None = None) -> str:
     """Train one variant; returns the model directory (LoRA already merged). Needs a GPU (not unit-tested)."""
     import torch
     from datasets import Dataset
@@ -103,6 +107,7 @@ def train(name: str, data: str, out: str, base: str = BASE, batch: int = 128, mi
 
     QueryOnlyLoss = query_only_loss_class()
     v = variant_args(name)
+    seed = seed if seed is not None else v.get("seed", 20261031)
     ds = Dataset.from_list(load_groups(data, v["negatives"], limit, seed))
     model = SentenceTransformer(base, device="cuda", trust_remote_code=True)
     model.max_seq_length = max_len

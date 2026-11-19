@@ -41,11 +41,11 @@ def train_eval(variant: str, limit: int = 0) -> list:
     eft = _load("embed_ft", "/src/train/embed_ft.py")
     eb = _load("embed_bench", "/src/evaluate/embed_bench.py")
     t0 = time.time()
-    model_dir = eft.train(variant, "/data/rr_v0_train.jsonl", f"/tmp/{variant}", limit=limit)
+    model_dir = eft.BASE if variant == "base" else eft.train(variant, "/data/rr_v0_train.jsonl", f"/tmp/{variant}", limit=limit)
     minutes = round((time.time() - t0) / 60, 1)
     passages, queries, gold, keys, groups = eb.load_pool("/data/pool.json")
     bench = eb.EmbedBench(passages, queries, gold, keys=keys, groups=groups)
-    v = eft.variant_args(variant)
+    v = {} if variant == "base" else eft.variant_args(variant)
     rows = []
 
     def score(label: str, path: str, query_only: bool = False) -> None:
@@ -56,7 +56,7 @@ def train_eval(variant: str, limit: int = 0) -> list:
             e and e.close()
         rows.append({"name": label, **v, "train_minutes": minutes, "limit": limit, **m})
 
-    score(variant, model_dir, query_only=v["mode"] == "query")
+    score(variant, model_dir, query_only=v.get("mode") == "query")
     for a in v.get("alphas", []):
         score(f"{variant}@{a}", eft.interpolated_model(eft.BASE, model_dir, a, f"/tmp/{variant}_a{a}"))
     Path(f"/results/embed_ft_{variant}{'_smoke' if limit else ''}.json").write_text(json.dumps(rows, ensure_ascii=False, indent=1))
