@@ -1,0 +1,42 @@
+# ---- night2_g1
+# Night, GPU1 (after the compact-prompt eval 231703): collect ReAct trajectories of SFT v0 (T0 tools, T 0.7) on the TRAIN split, seed 1 (trajectories.jsonl in the run dir). Filter decontam at dataset-build time.
+serve /home/app/phunguyen/law_rag/data/models/q35_v0 --gpu 1 --share 0.45 --tools
+configs/exp/A7_react.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v0 --set backend.base_url=http://localhost:8001/v1 --set split=train --set generate.temperature=0.7 --set generate.agent_seed=1 --set generate.tool_prompt=compact
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react"
+do tmux kill-session -t lawrag-llm-g1
+# ---- night7_g1
+# GPU1 (replaces the T1 / oracle order): after trajectories seed 1 (232822): build S1 from them, LoRA-SFT from v0 (data/models/react_s1), then ReAct T0 on dev_clean with it (control: v0 ReAct .5709, plain RAG v0 .583).
+sh react-s1 sh scripts/react_s1.sh
+serve /home/app/phunguyen/law_rag/data/models/react_s1 --gpu 1 --share 0.45 --tools
+configs/exp/A7_react.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/react_s1 --set backend.base_url=http://localhost:8001/v1 --set split=dev_clean --set generate.tool_prompt=compact
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react"
+do tmux kill-session -t lawrag-llm-g1
+# ---- night8_g1
+# GPU1 after the ReAct SFT queue: T1 (+kg) trajectories seed 3, then ORACLE ceiling (gold Điều at rank 1) for v3b + 2 shots, greedy and MBR8.
+serve /home/app/phunguyen/law_rag/data/models/q35_v0 --gpu 1 --share 0.45 --tools
+configs/exp/A7_react.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v0 --set backend.base_url=http://localhost:8001/v1 --set split=train --set generate.temperature=0.7 --set generate.agent_seed=3 --set generate.agent_tools=["search_law","get_article","kg_related"] --set generate.tool_prompt=compact
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react"
+serve /home/app/phunguyen/law_rag/data/models/q35_v3b --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set backend.base_url=http://localhost:8001/v1 --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v3b --set generate.shots=2 --set retrieve.oracle=true
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b"
+configs/exp/A6_mbrv3b.yaml --set backend.base_url=http://localhost:8001/v1 --set retrieve.oracle=true
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbrv3b"
+do tmux kill-session -t lawrag-llm-g1
+# ---- night9_g1
+# GPU1 after night8 (T1 trajectories + oracle): dev greedy of the merged models. soup (zero shot) vs c3f .6343 / v0 .6026; v3b+RL delta with 2 shots vs C1 greedy .6325.
+serve /home/app/phunguyen/law_rag/data/models/soup_rl3 --gpu 1 --share 0.45
+configs/exp/A4_q35_off.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/soup_rl3 --set backend.base_url=http://localhost:8001/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A4"
+serve /home/app/phunguyen/law_rag/data/models/arith_v3b_c3f_a1 --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/arith_v3b_c3f_a1 --set generate.shots=2 --set backend.base_url=http://localhost:8001/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b"
+serve /home/app/phunguyen/law_rag/data/models/arith_v3b_c3f_a05 --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/arith_v3b_c3f_a05 --set generate.shots=2 --set backend.base_url=http://localhost:8001/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b"
+do tmux kill-session -t lawrag-llm-g1
+# ---- night10_g1
+# c6f MBR8 was skipped (duplicate tmux session name with c5f's MBR8 run); rerun after the merged-model evals.
+serve /home/app/phunguyen/law_rag/data/models/rl_c6f --gpu 1 --share 0.45
+configs/exp/A6_mbr.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c6f --set backend.base_url=http://localhost:8001/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbr-"
+do tmux kill-session -t lawrag-llm-g1
