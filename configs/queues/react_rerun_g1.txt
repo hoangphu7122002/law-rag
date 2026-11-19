@@ -1,0 +1,8 @@
+# rerun of the two ReAct arms that died unfinished (T3 = +KG +web: 58/166 rows; no-initial-passages arm: 0 rows) after GPU1's GRPO c6f queue; raw Qwen3.5-2B, dev_clean
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1119-221711"
+serve Qwen/Qwen3.5-2B --gpu 1 --share 0.45 --tools
+configs/exp/A7_react.yaml --set backend.base_url=http://localhost:8001/v1 --set split=dev_clean --set generate.agent_tools=["search_law","get_article","kg_related","web_search"] --set generate.web.key_file=/home/app/phunguyen/law_rag_secrets/tinyfish.key --set generate.web.domains=["vbpl.vn","luatvietnam.vn","thuvienphapluat.vn","vanban.chinhphu.vn"] --set generate.web.calls_per_minute=150 --set generate.web.calls_per_hour=2000 --set generate.web.cost_per_query=0.005 --set generate.web.max_cost_usd=6
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react"
+configs/exp/A7_react.yaml --set backend.base_url=http://localhost:8001/v1 --set split=dev_clean --set generate.agent_initial_k=0
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react"
+do tmux kill-session -t lawrag-llm-g1

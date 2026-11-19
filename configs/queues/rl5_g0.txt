@@ -1,0 +1,12 @@
+# GPU0 (idle): c4f MBR8 (skipped earlier: duplicate session name), then c5 = cosine reward (best so far) with lr 2e-5; dev greedy + MBR8
+do sleep 20
+serve /home/app/phunguyen/law_rag/data/models/rl_c4f --gpu 0 --share 0.45
+configs/exp/A6_mbr.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c4f --set backend.base_url=http://localhost:8000/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbr-"
+do tmux kill-session -t lawrag-llm-g0; sleep 40
+sh grpo-c5f env MASTER_PORT=29501 /home/app/phunguyen/law_rag/.rl_env/bin/python src/train/grpo.py --data data/train/q35_v0 --base /home/app/phunguyen/law_rag/data/models/q35_v0 --out data/models/rl_c5f --steps 150 --lr 2e-5 --gens 8 --batch 1 --accum 4 --max-completion 1024 --use-vllm --cosine
+serve /home/app/phunguyen/law_rag/data/models/rl_c5f --gpu 0 --share 0.45
+configs/exp/A4_q35_off.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c5f --set backend.base_url=http://localhost:8000/v1
+configs/exp/A6_mbr.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c5f --set backend.base_url=http://localhost:8000/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbr-"
+do tmux kill-session -t lawrag-llm-g0; sleep 40

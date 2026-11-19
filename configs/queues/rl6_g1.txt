@@ -1,0 +1,10 @@
+# GPU1 (idle after ReAct): c6 = cosine reward + KL beta 0.01 (the two best ideas together); dev greedy + MBR8. Waits for other eval runs (tmux session names collide across GPUs).
+do sleep 20
+sh grpo-c6f /home/app/phunguyen/law_rag/.rl_env/bin/python src/train/grpo.py --data data/train/q35_v0 --base /home/app/phunguyen/law_rag/data/models/q35_v0 --out data/models/rl_c6f --steps 150 --lr 1e-5 --gens 8 --batch 1 --accum 4 --max-completion 1024 --use-vllm --cosine --beta 0.01
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A"
+serve /home/app/phunguyen/law_rag/data/models/rl_c6f --gpu 1 --share 0.45
+configs/exp/A4_q35_off.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c6f --set backend.base_url=http://localhost:8001/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A4"
+configs/exp/A6_mbr.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c6f --set backend.base_url=http://localhost:8001/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbr-"
+do tmux kill-session -t lawrag-llm-g1; sleep 40

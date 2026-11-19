@@ -197,3 +197,11 @@ def test_without_a_gate_the_first_answer_is_final_and_tool_results_count_as_cont
     assert out == "Căn cứ Điều 99."
     g, out = gated([NS(content="", tool_calls=[call("get_article", '{"law": "a", "dieu": 5}')]), NS(content="Căn cứ Điều 5 quy định.", tool_calls=None)], ["grounded_citation"])
     assert out == "Căn cứ Điều 5 quy định." and len(g._oai.seen) == 2                # Điều 5 is in the initial passage: no repair
+
+
+def test_the_full_conversation_of_each_question_is_kept_for_trajectory_training():
+    g = gen([NS(content="", tool_calls=[call("get_article", '{"law": "50/2024/TT", "dieu": 5}')]), NS(content="Xong.", tool_calls=None)])
+    run(g, "câu hỏi?")
+    msgs = g.traces["câu hỏi?"]
+    assert [m["role"] for m in msgs][-3:] == ["assistant", "tool", "assistant"]
+    assert msgs[-3]["tool_calls"][0]["function"]["name"] == "get_article" and msgs[-1]["content"] == "Xong."

@@ -137,6 +137,7 @@ class ReactGenerator(Generator):
     def __init__(self, cfg: Generate, backend: Backend, tools: LawTools | None = None):
         super().__init__(cfg, backend)
         self.tools, self._oai = tools, None
+        self.traces: dict[str, list[dict]] = {}   # question -> the whole conversation (trajectory data for SFT / rejection sampling)
 
     @property
     def oai(self):
@@ -179,6 +180,7 @@ class ReactGenerator(Generator):
                              {"role": "user", "content": "Câu trả lời nhắc tới " + ", ".join(f"Điều {n}" for n in bad) + " nhưng điều đó không có trong ngữ cảnh hay kết quả "
                               "công cụ. Hãy kiểm tra bằng get_article hoặc trả lời lại chỉ dựa trên các điều luật đã có."}]
                     continue
+                self.traces[question] = msgs + [{"role": "assistant", "content": text}]
                 return text
             msgs.append({"role": "assistant", "content": m.content or "",
                          "tool_calls": [{"id": c.id, "type": "function", "function": {"name": c.function.name, "arguments": c.function.arguments}} for c in calls]})
