@@ -229,3 +229,20 @@ def test_the_style_is_chosen_by_the_config_and_reaches_the_first_message():
     run(g)
     system = g._oai.seen[0]["messages"][0]["content"]
     assert "Căn cứ Điều X" in system and "- search_law(" not in system
+
+
+def seed_of(agent_seed, q="câu hỏi?"):
+    g = gen([NS(content="ok", tool_calls=None)])
+    g.cfg = g.cfg.model_copy(update={"agent_seed": agent_seed})
+    run(g, q)
+    return g._oai.seen[0]["seed"]
+
+
+def test_agent_seed_zero_keeps_the_old_per_question_seed():
+    import zlib
+    assert seed_of(0) == zlib.crc32("câu hỏi?".encode()) & 0x7FFFFFFF
+
+
+def test_agent_seed_changes_the_per_question_seed_deterministically():
+    assert seed_of(1) == seed_of(1)
+    assert seed_of(1) != seed_of(2) and seed_of(1) != seed_of(0)

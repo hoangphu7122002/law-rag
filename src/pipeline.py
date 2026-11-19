@@ -60,3 +60,12 @@ class Experiment:
             self.run.append_prediction(pred.to_dict())
 
         await asyncio.gather(*(one(q) for q in questions))
+        save_trajectories(self.run, questions, generator)
+
+
+def save_trajectories(run: Run, questions: list[Question], generator) -> None:
+    """Agent runs: append each answered question's full conversation to trajectories.jsonl (traces are keyed by question text, so
+    duplicate texts share one trace). Generators without traces leave the run dir unchanged."""
+    traces = getattr(generator, "traces", None)
+    if traces:
+        run.append_trajectories([{"qid": q.qid, "question": q.text, "messages": traces[q.text]} for q in questions if q.text in traces])

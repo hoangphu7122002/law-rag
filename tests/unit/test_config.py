@@ -43,3 +43,13 @@ def test_new_agent_fields_at_their_defaults_do_not_change_old_run_keys():
     a = load("configs/exp/A4_q35_off.yaml").run_key()
     b = load("configs/exp/A4_q35_off.yaml", ["generate.agent_tools=[\"search_law\",\"get_article\"]"]).run_key()
     assert a == b
+
+
+def test_agent_seed_changes_run_key_only_when_set():
+    from config import load
+
+    base = load("configs/exp/A4_q35_off.yaml").run_key()
+    assert load("configs/exp/A4_q35_off.yaml", ["generate.agent_seed=0"]).run_key() == base
+    k1 = load("configs/exp/A4_q35_off.yaml", ["generate.agent_seed=1"]).run_key()
+    k2 = load("configs/exp/A4_q35_off.yaml", ["generate.agent_seed=2"]).run_key()
+    assert len({base, k1, k2}) == 3

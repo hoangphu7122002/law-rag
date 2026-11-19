@@ -161,7 +161,8 @@ class ReactGenerator(Generator):
             msgs[0] = {**msgs[0], "content": msgs[0]["content"] + "\n\n" + system_tools(self.cfg.agent_tools, self.cfg.tool_prompt)}
         else:
             msgs.insert(0, {"role": "system", "content": system_tools(self.cfg.agent_tools, self.cfg.tool_prompt)})
-        seed = zlib.crc32(question.encode()) & 0x7FFFFFFF
+        salt = f"{question}#{self.cfg.agent_seed}" if self.cfg.agent_seed else question   # seed 0 = the original value
+        seed = zlib.crc32(salt.encode()) & 0x7FFFFFFF
         seen: set[str] = set()
         gate, repaired, context = Gate(self.cfg.check), False, list(init)   # context = what the model has seen (passages + tool results)
         for turn in range(self.cfg.max_turns):

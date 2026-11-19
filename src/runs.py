@@ -5,6 +5,7 @@
       meta.json          git commit, backend, start time
       retrieved.jsonl    passages per question (copied from the retrieval cache)
       predictions.jsonl  one Prediction per line, appended as answers arrive (rerun = resume)
+      trajectories.jsonl agent runs only: {qid, question, messages} per answered question
       metrics.json       summary + per-question scores, written by Evaluator
 """
 import json
@@ -53,6 +54,11 @@ class Run:
     def append_prediction(self, row: dict) -> None:
         with open(self.path / "predictions.jsonl", "a", encoding="utf-8") as f:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+    def append_trajectories(self, rows: list[dict]) -> None:
+        with open(self.path / "trajectories.jsonl", "a", encoding="utf-8") as f:
+            for row in rows:
+                f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
     def write_json(self, name: str, obj) -> None:
         (self.path / name).write_text(json.dumps(obj, ensure_ascii=False, indent=1))
