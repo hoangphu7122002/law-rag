@@ -8,6 +8,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from llama_index.core import QueryBundle
+from llama_index.core.schema import MetadataMode
 from tqdm import tqdm
 
 from config import Config
@@ -39,7 +40,10 @@ class Retrieval:
         if reranker is not None:
             hits = reranker.postprocess_nodes(hits, query_bundle=QueryBundle(q.text))
         hits = hits[: self.cfg.retrieve.k]
-        return [Passage(pid=h.node.node_id, doc=h.node.metadata.get("doc", ""), text=h.node.get_content(),
+        for h in hits:  # rerankers write retrieval_score into metadata; keep it out of the LLM text
+            if "retrieval_score" in h.node.metadata and "retrieval_score" not in h.node.excluded_llm_metadata_keys:
+                h.node.excluded_llm_metadata_keys = [*h.node.excluded_llm_metadata_keys, "retrieval_score"]
+        return [Passage(pid=h.node.node_id, doc=h.node.metadata.get("doc", ""), text=h.node.get_content(metadata_mode=MetadataMode.LLM),
                         score=float(h.score or 0.0)) for h in hits]
 
     def _read(self) -> dict[int, list[Passage]]:

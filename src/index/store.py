@@ -18,7 +18,8 @@ ROOT = Path("data/index")
 class IndexStore:
     def __init__(self, cfg: Config):
         self.cfg = cfg
-        self.dir = ROOT / f"{cfg.chunk.kind}-{cfg.chunk.size}__{cfg.index_key()}"
+        clean = "-clean" if cfg.chunk.clean else ""
+        self.dir = ROOT / f"{cfg.chunk.kind}-{cfg.chunk.size}{clean}__{cfg.index_key()}"
         self._nodes: list[BaseNode] | None = None
         self._vector: VectorStoreIndex | None = None
 

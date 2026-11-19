@@ -2,6 +2,7 @@
 import time
 
 from corpus import QASet
+from corpus.keys import law_key, stem_key
 from evaluate import metrics
 from runs import Ledger, Run
 
@@ -35,8 +36,8 @@ class Evaluator:
     @staticmethod
     def law_hit(law_id: str, docs: list[str]) -> bool:
         """Was the cited document among the passages given to the LLM?"""
-        target = law_id.replace("/", "_").lower()
-        return bool(target) and any(d.lower() == target for d in docs)
+        target = law_key(law_id)
+        return bool(target) and any(stem_key(d) == target for d in docs)
 
     def embed(self, text: str):
         if self._encoder is None:

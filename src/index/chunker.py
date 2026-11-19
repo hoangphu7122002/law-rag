@@ -1,9 +1,11 @@
-"""Documents -> nodes, chosen by config.chunk.kind."""
+"""Documents -> nodes with a LlamaIndex IngestionPipeline: [LawCleaner] -> [DocDedup] -> node parser (by config.chunk.kind)."""
+from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import LangchainNodeParser, NodeParser
-from llama_index.core.schema import BaseNode, Document
+from llama_index.core.schema import BaseNode, Document, TransformComponent
 
 from config import Chunk
-from corpus import DieuNodeParser
+from corpus import DieuNodeParser, LawCleaner
+from corpus.ingest import DocDedup
 
 
 class Chunker:
@@ -18,5 +20,8 @@ class Chunker:
         lc = RecursiveCharacterTextSplitter(chunk_size=self.cfg.size, chunk_overlap=self.cfg.overlap)
         return LangchainNodeParser(lc, include_prev_next_rel=False)
 
+    def transformations(self) -> list[TransformComponent]:
+        return ([LawCleaner()] if self.cfg.clean else []) + ([DocDedup()] if self.cfg.dedup else []) + [self.parser()]
+
     def split(self, documents: list[Document]) -> list[BaseNode]:
-        return self.parser().get_nodes_from_documents(documents, show_progress=True)
+        return IngestionPipeline(transformations=self.transformations()).run(documents=documents, show_progress=True)

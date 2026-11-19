@@ -1,7 +1,7 @@
 """Cross-encoder rerank through a vLLM pooling server (`/rerank`, Jina/Cohere format) instead of in-process."""
 from llama_index.core.bridge.pydantic import Field
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
-from llama_index.core.schema import NodeWithScore, QueryBundle
+from llama_index.core.schema import MetadataMode, NodeWithScore, QueryBundle
 
 
 class VllmRerank(BaseNodePostprocessor):
@@ -21,7 +21,7 @@ class VllmRerank(BaseNodePostprocessor):
         import httpx
 
         body = {"model": self.model, "query": query_bundle.query_str, "top_n": self.top_n,
-                "documents": [n.node.get_content() for n in nodes], "truncate_prompt_tokens": self.max_len}
+                "documents": [n.node.get_content(metadata_mode=MetadataMode.EMBED) for n in nodes], "truncate_prompt_tokens": self.max_len}
         res = httpx.post(f"{self.url}/rerank", json=body, timeout=self.timeout)
         res.raise_for_status()
         out = []
