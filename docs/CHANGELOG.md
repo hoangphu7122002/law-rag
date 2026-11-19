@@ -328,3 +328,8 @@
 - `docs/reference/structure.md` rewritten from the real imports (kg, train, ReAct / web / gate, dev subsets, import-rule table); `AGENTS.md` layout + rule 9 (test first).
 - Deliberately NOT moved yet: `src/train/` and `configs/exp/` (queued GRPO jobs on the box call `src/train/grpo.py`); no `generate/` → `agent/` split (all files < 300 lines today).
   Phase 2 after the GRPO and ReAct queues finish: optional `agent/` package (react, web, check), box-side helper scripts into `scripts/`, old queue files pruned.
+
+## Step 25 — embedder benchmark on Modal (2026-11-19)
+- Added `cli embed-bench` (src/evaluate/embed_bench.py, tests) + Modal job src/ops/modal_embed.py; results in docs/research/model-selection/embed_bench_results.md.
+- Result: AITeamVN Vietnamese_Embedding stays best on the pool (Điều@1 .534, MRR .674); Qwen3-Emb-4B/8B .51 @1 but 9-12x slower; bge-m3 .523. Pool is AITeamVN's top-50 (biased); no switch.
+- GRPO (Step 26 pending c3f/c4f): c1f dev greedy .6225 vs v0 .6026 (+.020, CI .0065..0338), c2f .6116 (+.009, ns), c1f MBR8 .6374 vs MBR8 v0 .6366 (no gain over MBR).

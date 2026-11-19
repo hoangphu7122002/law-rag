@@ -22,7 +22,7 @@ _here = Path(__file__).resolve()
 SRC = _here.parents[1] if _here.parent.name == "ops" else Path("/src")
 
 image = (modal.Image.debian_slim(python_version="3.11")
-         .pip_install("torch==2.5.1", "transformers>=4.51,<5", "sentence-transformers>=3.4,<6", "numpy<2", "pyyaml", "accelerate", "einops")
+         .pip_install("torch==2.6.0", "transformers>=4.51,<5", "sentence-transformers>=3.4,<6", "numpy<2", "pyyaml", "accelerate", "einops")
          .add_local_dir(SRC, "/src"))
 
 
