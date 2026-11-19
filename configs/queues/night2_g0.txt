@@ -1,0 +1,6 @@
+# Night, GPU0 (after the RL seed repeat 232412): trajectories seed 2.
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1119-232412"
+serve /home/app/phunguyen/law_rag/data/models/q35_v0 --gpu 0 --share 0.45 --tools
+configs/exp/A7_react.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v0 --set backend.base_url=http://localhost:8000/v1 --set split=train --set generate.temperature=0.7 --set generate.agent_seed=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react"
+do tmux kill-session -t lawrag-llm-g0

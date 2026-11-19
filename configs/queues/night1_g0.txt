@@ -1,0 +1,16 @@
+# Night, GPU0 (after queue 221257 = c4f MBR8 + c5f): (1) teacher gate: raw Qwen3.5-9B on dev_clean, ReAct T0 and plain RAG (to beat: SFT v0 .583 plain, .571 ReAct);
+# (2) RL seed repeat of the best reward (c3 cosine, seed 7) -> is c3f's +.032 reproducible?; dev greedy + MBR8.
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1119-221257"
+serve Qwen/Qwen3.5-9B --gpu 0 --share 0.6 --tools
+configs/exp/A7_react.yaml --set generate.model=Qwen/Qwen3.5-9B --set generate.params_b=9.0 --set generate.teacher=true --set backend.base_url=http://localhost:8000/v1 --set split=dev_clean
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react"
+configs/exp/A4_q35_off.yaml --set generate.model=Qwen/Qwen3.5-9B --set generate.params_b=9.0 --set generate.teacher=true --set backend.base_url=http://localhost:8000/v1 --set split=dev_clean
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A4"
+do tmux kill-session -t lawrag-llm-g0; sleep 40
+sh grpo-c3s2 env MASTER_PORT=29501 /home/app/phunguyen/law_rag/.rl_env/bin/python src/train/grpo.py --data data/train/q35_v0 --base /home/app/phunguyen/law_rag/data/models/q35_v0 --out data/models/rl_c3s2 --steps 150 --lr 1e-5 --gens 8 --batch 1 --accum 4 --max-completion 1024 --use-vllm --cosine --seed 7
+serve /home/app/phunguyen/law_rag/data/models/rl_c3s2 --gpu 0 --share 0.45
+configs/exp/A4_q35_off.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c3s2 --set backend.base_url=http://localhost:8000/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A4"
+configs/exp/A6_mbr.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c3s2 --set backend.base_url=http://localhost:8000/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbr-"
+do tmux kill-session -t lawrag-llm-g0; sleep 40
