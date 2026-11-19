@@ -337,3 +337,9 @@
 ## Step 26 — embedder fine-tuning on Modal: negative / borderline result (2026-11-19)
 - src/train/embed_ft.py (MNRL, LoRA/full/query-only/interpolation) + src/ops/modal_embed_ft.py + paired bootstrap in embed-bench; 15 variants on AITeamVN with 4,015 rr_v0 groups.
 - lr 1e-4 hurts (Điều@1 .46-.49 vs .534). Conservative lr 2e-5 / scale 50: +.023 Điều@1 [+.004,+.045] but strict-subset lower bound 0 and no seed reproduction → not accepted; no re-index. Details: docs/research/model-selection/embed_ft_results.md.
+
+## Step 27 — overnight 2026-11-19/20 (interim, updated by the monitor)
+- RL dev greedy rougeL (v0 .6026; paired bootstrap): c1f .6225, c2f .6116 (ns), **c3f cosine .6343 (+.032 [.019,.045])**, c4f beta .01 .6274 (+.025), c5f cosine lr 2e-5 .6222 (+.020; clean/strict ns), c6f cosine+beta .01 .6242 (+.022). MBR8: c3f .6450, c4f .6376, c5f .6407 (v0 MBR8 .6366). All RL variants within ~.012 of each other = noise level; reward curves saturate (~.73); no LR sweep needed.
+- **Compact tool prompt** (drop the duplicated per-tool prose list, keep the answer template): ReAct on SFT v0, dev_clean .5926 vs .5709 (full prompt), diff +.0217 [+.004, +.041]; dev_strict +.026 [+.003, +.056]. Now above plain RAG v0 greedy (.5828). ReAct data collection and SFT rebuilt with `generate.tool_prompt=compact`.
+- **9B teacher gate FAILED**: raw Qwen3.5-9B on dev_clean: ReAct .436, plain RAG .398 (SFT v0: .571 / .583) -> a raw 9B teacher does not reproduce the reference style; on-policy distillation from it is dropped (a fine-tuned teacher would be needed).
+- Other negatives: chunk context line (chapter/scope) no retrieval gain (paired CI spans 0); embedder fine-tune not accepted (Step 26); kNN prior only +1.5-3.3 pts recall on clean dev. ROUGE-L survey: no verified 0.8-0.9 for Vietnamese legal QA (docs/research/rougel-benchmarks/).
