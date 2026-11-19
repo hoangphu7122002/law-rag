@@ -1,0 +1,5 @@
+serve /home/app/phunguyen/law_rag/data/models/q35_v0 --gpu 0 --share 0.45
+configs/exp/A4_q35_on.yaml --set backend.base_url=http://localhost:8000/v1 --set retrieve.k=10
+configs/exp/A4_q35_off.yaml --set backend.base_url=http://localhost:8000/v1 --set rerank.engine=local --set rerank.model=data/models/rr_v0 --set retrieve.k=10
+wait ! tmux has-session -t lawrag-run-A4_q35_on-10 2>/dev/null && ! tmux has-session -t lawrag-run-A4_q35_off-local-data_models_rr_v0-10 2>/dev/null
+do tmux kill-session -t lawrag-llm-g0

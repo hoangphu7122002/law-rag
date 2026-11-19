@@ -1,0 +1,6 @@
+# A3 round 2 on Q3 (Qwen3.5-2B thinking T0.6), dev
+serve Qwen/Qwen3.5-2B --gpu 1
+configs/exp/A3_Q3.yaml --set backend.base_url=http://localhost:8001/v1 --set generate.think_tokens=2048
+configs/exp/A3_Q3.yaml --set backend.base_url=http://localhost:8001/v1 --set generate.prompt=cancu
+configs/exp/A3_Q3.yaml --set backend.base_url=http://localhost:8001/v1 --set retrieve.k=10
+configs/exp/A3_Q3m.yaml --set backend.base_url=http://localhost:8001/v1

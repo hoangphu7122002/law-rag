@@ -1,0 +1,2 @@
+# GRPO with colocated vLLM, .rl_env (own venv); 10 steps; compare s/step (HF mode ~85-95 s per 32 completions)
+sh grpo-vllm-smoke /home/app/phunguyen/law_rag/.rl_env/bin/python src/train/grpo.py --data data/train/q35_v0 --base /home/app/phunguyen/law_rag/data/models/q35_v0 --out data/models/rl_vsmoke --limit 16 --gens 8 --batch 1 --accum 4 --max-completion 1024 --use-vllm

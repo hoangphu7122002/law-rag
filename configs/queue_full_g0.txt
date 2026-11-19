@@ -1,0 +1,11 @@
+# Pre-declared top candidates for the full pass (chosen from dev_clean/dev_strict, not from test): MBR8 on rl_c2, MBR8 on v3b+2 shots (test)
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1119-165153"
+serve /home/app/phunguyen/law_rag/data/models/rl_c2 --gpu 0 --share 0.45
+configs/exp/A6_mbr.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c2 --set backend.base_url=http://localhost:8000/v1
+configs/exp/A6_mbr.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c2 --set backend.base_url=http://localhost:8000/v1 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbr"
+do tmux kill-session -t lawrag-llm-g0; sleep 40
+serve /home/app/phunguyen/law_rag/data/models/q35_v3b --gpu 0 --share 0.45
+configs/exp/A6_mbrv3b.yaml --set backend.base_url=http://localhost:8000/v1 --set generate.shots=2 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbrv3b"
+do tmux kill-session -t lawrag-llm-g0

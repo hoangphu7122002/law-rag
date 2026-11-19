@@ -1,0 +1,15 @@
+# A2e (M2 + corpus steps): A2d + DocDedup (exact / same-number near copies), Điều / Chương node metadata,
+# web body fix. Same models; isolates the corpus-quality change. Report as test-informed like A2d.
+note: "M2 dedup: A2d + DocDedup + article metadata + web fix"
+sources: [corpus, vbpl_cited, web]
+chunk: {kind: dieu, size: 2000, overlap: 100, clean: true, dedup: true}
+embed: {model: AITeamVN/Vietnamese_Embedding, normalize: true, max_len: 512}
+retrieve: {kind: dense, metric: ip, k: 5, candidates: 50}
+rerank: {model: AITeamVN/Vietnamese_Reranker, max_len: 1024}
+generate:
+  model: AITeamVN/Vi-Qwen2-3B-RAG
+  params_b: 3.09
+  mode: chat
+  prompt: vi_rag
+  max_tokens: 768
+  temperature: 0.0

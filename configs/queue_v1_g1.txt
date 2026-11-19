@@ -1,0 +1,7 @@
+# GPU1: SFT v1 = Qwen3.5-2B, prompt cancu, 3 epochs (best val ~ step 270 in v0) -> dev eval k5/k10
+do tmux kill-session -t lawrag-llm-g1; sleep 15
+sh sftdata-q35c uv run python -m cli sft-data configs/exp/A3_Q3.yaml --name q35_v1 --set generate.prompt=cancu
+sh train-q35c /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/q35_v1 --base Qwen/Qwen3.5-2B --out data/models/q35_v1 --epochs 3
+serve /home/app/phunguyen/law_rag/data/models/q35_v1 --gpu 1
+configs/exp/A4_q35_off.yaml --set backend.base_url=http://localhost:8001/v1 --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v1 --set generate.prompt=cancu
+configs/exp/A4_q35_off.yaml --set backend.base_url=http://localhost:8001/v1 --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v1 --set generate.prompt=cancu --set retrieve.k=10

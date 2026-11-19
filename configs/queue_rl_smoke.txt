@@ -1,0 +1,2 @@
+# GRPO smoke: 16 prompts, 10 steps, no vLLM, on GPU1 (GPU1 free). Measures time/memory and checks Qwen3.5 compatibility.
+sh grpo-smoke /home/app/phunguyen/train_env/bin/python src/train/grpo.py --data data/train/q35_v0 --base /home/app/phunguyen/law_rag/data/models/q35_v0 --out data/models/rl_smoke --limit 16 --gens 4 --batch 1 --accum 2 --max-completion 512

@@ -1,0 +1,19 @@
+# A3 decoding sweep (docs/notes/09-inference-configs/research_report.md); retrieval = A2e.
+note: "A3 Q2: Qwen3.5-2B thinking on, official"
+sources: [corpus, vbpl_cited, web]
+chunk: {kind: dieu, size: 2000, overlap: 100, clean: true, dedup: true}
+embed: {model: AITeamVN/Vietnamese_Embedding, normalize: true, max_len: 512}
+retrieve: {kind: dense, metric: ip, k: 5, candidates: 50}
+rerank: {model: AITeamVN/Vietnamese_Reranker, max_len: 1024}
+generate:
+  model: Qwen/Qwen3.5-2B
+  params_b: 2.27
+  prompt: vi_rag
+  max_tokens: 1024
+  thinking: true
+  think_tokens: 1024
+  temperature: 1.0
+  top_p: 0.95
+  top_k: 20
+  presence_penalty: 1.5
+  concurrency: 32

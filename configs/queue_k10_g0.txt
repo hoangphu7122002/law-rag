@@ -1,0 +1,9 @@
+# k=10 evals on dev (GPU0, port 8000), after the A4 GPU0 queue. Models trained on k=5 data.
+wait ! tmux has-session -t lawrag-queue-1119-001213 2>/dev/null
+configs/exp/A4_q35_off.yaml --set backend.base_url=http://localhost:8000/v1 --set retrieve.k=10
+configs/exp/A4_q35_on.yaml --set backend.base_url=http://localhost:8000/v1 --set retrieve.k=10
+wait [ -f data/models/vq2_v0/train_report.json ]
+serve /home/app/phunguyen/law_rag/data/models/vq2_v0 --gpu 0
+configs/exp/A4_vq2.yaml --set backend.base_url=http://localhost:8000/v1 --set retrieve.k=10
+serve AITeamVN/Vi-Qwen2-3B-RAG --gpu 0
+configs/exp/A2e_dedup.yaml --set backend.base_url=http://localhost:8000/v1 --set retrieve.k=10

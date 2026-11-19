@@ -1,0 +1,8 @@
+# ReAct tool-set arms T0..T3 on the RAW Qwen3.5-2B, dev_clean (DRAFT, not queued: T2/T3 need TINYFISH_API_KEY on the box + the user's go-ahead for web calls)
+serve Qwen/Qwen3.5-2B --gpu 0 --share 0.45 --tools
+configs/exp/A7_react.yaml --set backend.base_url=http://localhost:8000/v1 --set split=dev_clean --set generate.agent_tools='["search_law","get_article"]'
+configs/exp/A7_react.yaml --set backend.base_url=http://localhost:8000/v1 --set split=dev_clean --set generate.agent_tools='["search_law","get_article","kg_related"]'
+# configs/exp/A7_react.yaml --set backend.base_url=http://localhost:8000/v1 --set split=dev_clean --set generate.agent_tools='["search_law","get_article","web_search"]' --set generate.web.domains='["vbpl.vn","luatvietnam.vn"]'
+# configs/exp/A7_react.yaml --set backend.base_url=http://localhost:8000/v1 --set split=dev_clean --set generate.agent_tools='["search_law","get_article","kg_related","web_search"]' --set generate.web.domains='["vbpl.vn","luatvietnam.vn"]'
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react"
+do tmux kill-session -t lawrag-llm-g0

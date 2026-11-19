@@ -1,0 +1,9 @@
+# MBR variants on dev: N=16 on v0, then v3b (2 shots) MBR8
+serve /home/app/phunguyen/law_rag/data/models/q35_v0 --gpu 0 --share 0.45
+configs/exp/A6_mbr16.yaml --set backend.base_url=http://localhost:8000/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbr16"
+do tmux kill-session -t lawrag-llm-g0; sleep 40
+serve /home/app/phunguyen/law_rag/data/models/q35_v3b --gpu 0 --share 0.45
+configs/exp/A6_mbrv3b.yaml --set backend.base_url=http://localhost:8000/v1 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbrv3b"
+do tmux kill-session -t lawrag-llm-g0

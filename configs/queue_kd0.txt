@@ -1,0 +1,5 @@
+# KD0: Qwen3.5-9B teacher on dev, GPU1 after the A4 GPU1 queue
+wait ! tmux has-session -t lawrag-queue-1119-001216 2>/dev/null
+serve Qwen/Qwen3.5-9B --gpu 1 --share 0.85
+configs/exp/KD0_n9_off.yaml --set backend.base_url=http://localhost:8001/v1
+configs/exp/KD0_n9_on.yaml --set backend.base_url=http://localhost:8001/v1

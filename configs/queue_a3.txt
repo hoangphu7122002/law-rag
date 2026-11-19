@@ -1,0 +1,10 @@
+# A3 decoding sweep, dev. serve lines swap the LLM on GPU1 (port 8001).
+configs/exp/A3_G1.yaml --set backend.base_url=http://localhost:8001/v1
+serve Qwen/Qwen3.5-2B --gpu 1
+configs/exp/A3_Q0.yaml --set backend.base_url=http://localhost:8001/v1
+configs/exp/A3_Q1.yaml --set backend.base_url=http://localhost:8001/v1
+configs/exp/A3_Q2.yaml --set backend.base_url=http://localhost:8001/v1
+configs/exp/A3_Q3.yaml --set backend.base_url=http://localhost:8001/v1
+serve Qwen/Qwen3-1.7B --gpu 1
+configs/exp/A3_R0.yaml --set backend.base_url=http://localhost:8001/v1
+configs/exp/A3_R1.yaml --set backend.base_url=http://localhost:8001/v1

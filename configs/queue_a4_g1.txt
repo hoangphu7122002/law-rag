@@ -1,0 +1,6 @@
+# A4 SFT v0, GPU1: after the A3 round-2 queue and the vq2 data -> train Vi-Qwen2 -> eval dev
+wait ! tmux has-session -t lawrag-queue-1119-000843 2>/dev/null && [ -f data/train/vq2_v0/report.json ]
+do tmux kill-session -t lawrag-llm-g1 && sleep 20
+sh train-vq2 /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/vq2_v0 --base AITeamVN/Vi-Qwen2-3B-RAG --out data/models/vq2_v0
+serve /home/app/phunguyen/law_rag/data/models/vq2_v0 --gpu 1
+configs/exp/A4_vq2.yaml --set backend.base_url=http://localhost:8001/v1

@@ -1,0 +1,4 @@
+# one job per line, run one after another on the box: cli box queue configs/queue_a2e.txt
+# LLM serves on GPU1 -> port 8001
+configs/exp/A2e_dedup.yaml --set backend.base_url=http://localhost:8001/v1
+configs/exp/A2e_dedup.yaml --set backend.base_url=http://localhost:8001/v1 --set split=test

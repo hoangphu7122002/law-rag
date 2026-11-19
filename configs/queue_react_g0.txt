@@ -1,0 +1,10 @@
+# ReAct baseline on RAW Qwen3.5-2B (dev_clean 166): (a) no tools (plain raw model, same prompt), (b) ReAct + 5 initial passages, (c) ReAct with no initial passages.
+# Starts after both GRPO queues finish (GPUs are full of RL until then).
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1119-174751"
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1119-175231"
+serve Qwen/Qwen3.5-2B --gpu 0 --share 0.45 --tools
+configs/exp/A7_react.yaml --set backend.base_url=http://localhost:8000/v1 --set split=dev_clean --set generate.agent=false
+configs/exp/A7_react.yaml --set backend.base_url=http://localhost:8000/v1 --set split=dev_clean
+configs/exp/A7_react.yaml --set backend.base_url=http://localhost:8000/v1 --set split=dev_clean --set generate.agent_initial_k=0
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react"
+do tmux kill-session -t lawrag-llm-g0

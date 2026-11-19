@@ -1,0 +1,6 @@
+# MBR16 on v0, test (dev row comes from queue-1119-172845)
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1119-172845"
+serve /home/app/phunguyen/law_rag/data/models/q35_v0 --gpu 1 --share 0.45
+configs/exp/A6_mbr16.yaml --set backend.base_url=http://localhost:8001/v1 --set generate.concurrency=4 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbr16"
+do tmux kill-session -t lawrag-llm-g1

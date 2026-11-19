@@ -1,0 +1,4 @@
+# A3 raw base of Vi-Qwen2 (fine-tune gain reference), dev
+serve Qwen/Qwen2.5-3B-Instruct --gpu 0
+configs/exp/A3_P0.yaml --set backend.base_url=http://localhost:8000/v1
+configs/exp/A3_P1.yaml --set backend.base_url=http://localhost:8000/v1

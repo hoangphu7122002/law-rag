@@ -1,0 +1,14 @@
+# A4 SFT v0: LoRA on decontaminated train (src/train), retrieval = A2e; dev only while tuning.
+note: "A5 q35_h dev"
+sources: [corpus, vbpl_cited, web]
+chunk: {kind: dieu, size: 2000, overlap: 100, clean: true, dedup: true}
+embed: {model: AITeamVN/Vietnamese_Embedding, normalize: true, max_len: 512}
+retrieve: {kind: dense, metric: ip, k: 5, candidates: 50}
+rerank: {model: AITeamVN/Vietnamese_Reranker, max_len: 1024}
+generate:
+  model: /home/app/phunguyen/law_rag/data/models/q35_h
+  params_b: 2.27
+  prompt: vi_rag
+  max_tokens: 1024
+  thinking: false
+  temperature: 0.0

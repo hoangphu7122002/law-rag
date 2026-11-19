@@ -1,0 +1,9 @@
+# dev eval of GRPO c1 / c2 (v0 prompt, k5, shots 0); rescored on dev_clean / dev_strict afterwards
+serve /home/app/phunguyen/law_rag/data/models/rl_c1 --gpu 1 --share 0.45
+configs/exp/A4_q35_off.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c1 --set backend.base_url=http://localhost:8001/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A4_q35_off-"
+do tmux kill-session -t lawrag-llm-g1; sleep 40
+serve /home/app/phunguyen/law_rag/data/models/rl_c2 --gpu 1 --share 0.45
+configs/exp/A4_q35_off.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c2 --set backend.base_url=http://localhost:8001/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A4_q35_off-"
+do tmux kill-session -t lawrag-llm-g1

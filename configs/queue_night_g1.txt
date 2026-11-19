@@ -1,0 +1,11 @@
+# Night GPU1: after train-vq2 -> clean copied base files -> evals -> Vi-Qwen2 raw k10 -> KD0 9B
+wait ! tmux has-session -t lawrag-run-train-vq2 2>/dev/null
+sh clean-vq2 /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data x --base AITeamVN/Vi-Qwen2-3B-RAG --out data/models/vq2_v0 --clean-only
+serve /home/app/phunguyen/law_rag/data/models/vq2_v0 --gpu 1
+configs/exp/A4_vq2.yaml --set backend.base_url=http://localhost:8001/v1
+configs/exp/A4_vq2.yaml --set backend.base_url=http://localhost:8001/v1 --set retrieve.k=10
+serve AITeamVN/Vi-Qwen2-3B-RAG --gpu 1
+configs/exp/A2e_dedup.yaml --set backend.base_url=http://localhost:8001/v1 --set retrieve.k=10
+serve Qwen/Qwen3.5-9B --gpu 1 --share 0.85
+configs/exp/KD0_n9_off.yaml --set backend.base_url=http://localhost:8001/v1
+configs/exp/KD0_n9_on.yaml --set backend.base_url=http://localhost:8001/v1

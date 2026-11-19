@@ -1,0 +1,15 @@
+# GPU1 (rebuilt 07:58: old `wait` used a truncated tmux session name -> server killed under the eval; now distinct exp stems A5_*)
+wait ! tmux has-session -t lawrag-run-train-q35v2 2>/dev/null
+serve /home/app/phunguyen/law_rag/data/models/q35_v2 --gpu 1 --share 0.45
+configs/exp/A5_v2.yaml --set backend.base_url=http://localhost:8001/v1
+configs/exp/A5_v2.yaml --set backend.base_url=http://localhost:8001/v1 --set retrieve.k=10
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v2"
+do tmux kill-session -t lawrag-llm-g1
+sh sftdata-q35v3 uv run python -m cli sft-data configs/exp/A3_Q3.yaml --name q35_v3 --k-range 3,10 --oracle 0.7 --shots 0,1,2,3 --refuse 0.08
+sh train-q35v3 /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/q35_v3 --base Qwen/Qwen3.5-2B --out data/models/q35_v3 --epochs 3 --max-length 12288 --batch 1 --accum 16
+serve /home/app/phunguyen/law_rag/data/models/q35_v3 --gpu 1 --share 0.45
+configs/exp/A5_v3.yaml --set backend.base_url=http://localhost:8001/v1 --set generate.shots=2
+configs/exp/A5_v3.yaml --set backend.base_url=http://localhost:8001/v1 --set generate.shots=2 --set retrieve.k=10
+configs/exp/A5_v3.yaml --set backend.base_url=http://localhost:8001/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3"
+do tmux kill-session -t lawrag-llm-g1

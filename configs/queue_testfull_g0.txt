@@ -1,0 +1,12 @@
+# FULL TEST pass (user 2026-11-19 "đo full trên test"): every trained variant, report only, no selection beyond what dev chose.
+serve /home/app/phunguyen/law_rag/data/models/q35_v3b --gpu 0 --share 0.45
+configs/exp/A5_v3b.yaml --set backend.base_url=http://localhost:8000/v1 --set split=test
+configs/exp/A5_v3b.yaml --set backend.base_url=http://localhost:8000/v1 --set generate.shots=3 --set split=test
+configs/exp/A5_v3b.yaml --set backend.base_url=http://localhost:8000/v1 --set generate.shots=2 --set retrieve.k=10 --set split=test
+configs/exp/A5_v3b.yaml --set backend.base_url=http://localhost:8000/v1 --set generate.shots=2 --set rerank.engine=local --set rerank.model=/home/app/phunguyen/law_rag/data/models/rr_v0 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b"
+do tmux kill-session -t lawrag-llm-g0; sleep 40
+serve /home/app/phunguyen/law_rag/data/models/q35_v0 --gpu 0 --share 0.45
+configs/exp/A4_q35_off.yaml --set backend.base_url=http://localhost:8000/v1 --set retrieve.k=10 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A4_q35_off"
+do tmux kill-session -t lawrag-llm-g0

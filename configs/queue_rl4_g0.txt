@@ -1,0 +1,14 @@
+# GPU0: reward configs c2 (no length) then c4 (KL beta 0.01); 150 steps each
+do sleep 20
+sh grpo-c2f env MASTER_PORT=29501 /home/app/phunguyen/law_rag/.rl_env/bin/python src/train/grpo.py --data data/train/q35_v0 --base /home/app/phunguyen/law_rag/data/models/q35_v0 --out data/models/rl_c2f --steps 150 --lr 1e-5 --gens 8 --batch 1 --accum 4 --max-completion 1024 --use-vllm --no-length
+serve /home/app/phunguyen/law_rag/data/models/rl_c2f --gpu 0 --share 0.45
+configs/exp/A4_q35_off.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c2f --set backend.base_url=http://localhost:8000/v1
+configs/exp/A6_mbr.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c2f --set backend.base_url=http://localhost:8000/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbr-"
+do tmux kill-session -t lawrag-llm-g0; sleep 40
+sh grpo-c4f env MASTER_PORT=29501 /home/app/phunguyen/law_rag/.rl_env/bin/python src/train/grpo.py --data data/train/q35_v0 --base /home/app/phunguyen/law_rag/data/models/q35_v0 --out data/models/rl_c4f --steps 150 --lr 1e-5 --gens 8 --batch 1 --accum 4 --max-completion 1024 --use-vllm --beta 0.01
+serve /home/app/phunguyen/law_rag/data/models/rl_c4f --gpu 0 --share 0.45
+configs/exp/A4_q35_off.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c4f --set backend.base_url=http://localhost:8000/v1
+configs/exp/A6_mbr.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c4f --set backend.base_url=http://localhost:8000/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbr-"
+do tmux kill-session -t lawrag-llm-g0; sleep 40

@@ -1,0 +1,14 @@
+# A2a_clean: A1 stack, only the corpus side changes (corpus cleaned (LawCleaner), recursive 2000). Compare with A1 on dev.
+note: "corpus cleaned (LawCleaner), recursive 2000"
+sources: [corpus]
+chunk: {kind: recursive, size: 2000, overlap: 50, clean: true}
+embed: {model: AITeamVN/Vietnamese_Embedding, normalize: true, max_len: 512}
+retrieve: {kind: dense, metric: ip, k: 5, candidates: 50}
+rerank: {model: AITeamVN/Vietnamese_Reranker, max_len: 1024}
+generate:
+  model: AITeamVN/Vi-Qwen2-3B-RAG
+  params_b: 3.09
+  mode: chat
+  prompt: vi_rag
+  max_tokens: 768
+  temperature: 0.0

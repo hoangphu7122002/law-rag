@@ -1,0 +1,11 @@
+# B1a: course models (B0) on the cleaned course corpus (M0). Only the data changes vs B0; compare with A2a for models.
+note: "B0 models, corpus cleaned (LawCleaner), recursive 2000"
+chunk: {kind: recursive, size: 2000, overlap: 50, clean: true}
+embed: {model: keepitreal/vietnamese-sbert, engine: local, normalize: false, max_len: 256}
+retrieve: {kind: dense, metric: l2, k: 5}
+generate:
+  model: Qwen/Qwen1.5-1.8B
+  params_b: 1.84
+  mode: completion
+  prompt: baseline
+  max_tokens: 256

@@ -14,7 +14,7 @@ box:
   hf_home: /home/app/phunguyen/hf               # shared Hugging Face cache
   min_free_mib: 20000                           # refuse a GPU with less free memory for the LLM (other jobs share it)
   gpu_share: {llm: 0.45, embed: 0.15, rerank: 0.15}   # fraction of the 46 GB card per server; all three fit one GPU
-  llm_args: [--dtype, bfloat16, --enable-prefix-caching, --max-num-seqs, "64", --max-num-batched-tokens, "16384"]  # as datamate
+  llm_args: [--dtype, bfloat16, --max-model-len, "32768", --enable-prefix-caching, --max-num-seqs, "64", --max-num-batched-tokens, "16384"]  # as datamate
   pooling_args: [--dtype, bfloat16, --max-num-batched-tokens, "32768"]
   env:                                          # same fixes as datamate's /home/app/phunguyen/env.sh, but in our folder
     VLLM_USE_FLASHINFER_SAMPLER: "0"            # flashinfer JIT needs a matching CUDA toolkit; the box has none

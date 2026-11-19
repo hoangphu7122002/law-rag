@@ -1,0 +1,18 @@
+# KD0: distillation teacher measured on dev with A2e retrieval. >= 4B: never a reported result.
+note: "KD0 teacher Qwen3.5-9B thinking off (Q1 sampling)"
+sources: [corpus, vbpl_cited, web]
+chunk: {kind: dieu, size: 2000, overlap: 100, clean: true, dedup: true}
+embed: {model: AITeamVN/Vietnamese_Embedding, normalize: true, max_len: 512}
+retrieve: {kind: dense, metric: ip, k: 5, candidates: 50}
+rerank: {model: AITeamVN/Vietnamese_Reranker, max_len: 1024}
+generate:
+  model: Qwen/Qwen3.5-9B
+  params_b: 9.0
+  teacher: true
+  prompt: vi_rag
+  max_tokens: 1024
+  thinking: false
+  temperature: 0.3
+  top_p: 0.8
+  top_k: 20
+  presence_penalty: 1.5

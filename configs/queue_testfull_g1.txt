@@ -1,0 +1,15 @@
+serve /home/app/phunguyen/law_rag/data/models/q35_v3 --gpu 1 --share 0.45
+configs/exp/A5_v3.yaml --set backend.base_url=http://localhost:8001/v1 --set generate.shots=2 --set split=test
+configs/exp/A5_v3.yaml --set backend.base_url=http://localhost:8001/v1 --set generate.shots=2 --set retrieve.k=10 --set split=test
+configs/exp/A5_v3.yaml --set backend.base_url=http://localhost:8001/v1 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3-"
+do tmux kill-session -t lawrag-llm-g1; sleep 40
+serve /home/app/phunguyen/law_rag/data/models/q35_v2 --gpu 1 --share 0.45
+configs/exp/A5_v2.yaml --set backend.base_url=http://localhost:8001/v1 --set split=test
+configs/exp/A5_v2.yaml --set backend.base_url=http://localhost:8001/v1 --set retrieve.k=10 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v2"
+do tmux kill-session -t lawrag-llm-g1; sleep 40
+serve /home/app/phunguyen/law_rag/data/models/q35_h --gpu 1 --share 0.45
+configs/exp/A5_h.yaml --set backend.base_url=http://localhost:8001/v1 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_h"
+do tmux kill-session -t lawrag-llm-g1

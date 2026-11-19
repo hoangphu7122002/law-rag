@@ -1,0 +1,12 @@
+# B1c (sbert served on GPU1: --set backend.embed_url=http://localhost:8101/v1): course models (B0) on course + vbpl (M1), cleaned, one node per Điều. Compare with B1a (data) and A2c (models).
+note: "B0 models, course + vbpl cleaned, one node per Điều"
+sources: [corpus, vbpl]
+chunk: {kind: dieu, size: 2000, overlap: 100, clean: true}
+embed: {model: keepitreal/vietnamese-sbert, engine: vllm, normalize: false, max_len: 256}   # vLLM == local (cos 0.9999), 2.7x faster
+retrieve: {kind: dense, metric: l2, k: 5}
+generate:
+  model: Qwen/Qwen1.5-1.8B
+  params_b: 1.84
+  mode: completion
+  prompt: baseline
+  max_tokens: 256

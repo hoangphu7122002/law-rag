@@ -1,0 +1,6 @@
+# rerun MBR N=16 on v0: first attempt died with "Too many open files" (16 requests x 16 samples) -> concurrency 4
+do rm -rf /home/app/phunguyen/law_rag/data/runs/A6_mbr16__40b85ab1
+serve /home/app/phunguyen/law_rag/data/models/q35_v0 --gpu 1 --share 0.45
+configs/exp/A6_mbr16.yaml --set backend.base_url=http://localhost:8001/v1 --set generate.concurrency=4
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbr16"
+do tmux kill-session -t lawrag-llm-g1

@@ -1,0 +1,6 @@
+# GPU1: v3b + fine-tuned reranker rr_v0 (local engine), dev only. Waits for the v3 eval queue.
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1119-075551"
+serve /home/app/phunguyen/law_rag/data/models/q35_v3b --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set backend.base_url=http://localhost:8001/v1 --set generate.shots=2 --set rerank.engine=local --set rerank.model=/home/app/phunguyen/law_rag/data/models/rr_v0
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b"
+do tmux kill-session -t lawrag-llm-g1

@@ -1,0 +1,10 @@
+# GPU0 (rerun after "GPU 0 free < 20000" race right after the kill): hp A/B eval, then v3b without shots / with 3 shots
+serve /home/app/phunguyen/law_rag/data/models/q35_h --gpu 0 --share 0.45
+configs/exp/A5_h.yaml --set backend.base_url=http://localhost:8000/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_h"
+do tmux kill-session -t lawrag-llm-g0; sleep 40
+serve /home/app/phunguyen/law_rag/data/models/q35_v3b --gpu 0 --share 0.45
+configs/exp/A5_v3b.yaml --set backend.base_url=http://localhost:8000/v1
+configs/exp/A5_v3b.yaml --set backend.base_url=http://localhost:8000/v1 --set generate.shots=3
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b"
+do tmux kill-session -t lawrag-llm-g0

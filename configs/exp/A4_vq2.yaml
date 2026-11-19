@@ -1,0 +1,13 @@
+# A4 SFT v0: LoRA on decontaminated train (src/train), retrieval = A2e; dev only while tuning.
+note: "A4 SFT Vi-Qwen2-3B-RAG v0, greedy"
+sources: [corpus, vbpl_cited, web]
+chunk: {kind: dieu, size: 2000, overlap: 100, clean: true, dedup: true}
+embed: {model: AITeamVN/Vietnamese_Embedding, normalize: true, max_len: 512}
+retrieve: {kind: dense, metric: ip, k: 5, candidates: 50}
+rerank: {model: AITeamVN/Vietnamese_Reranker, max_len: 1024}
+generate:
+  model: /home/app/phunguyen/law_rag/data/models/vq2_v0
+  params_b: 3.09
+  prompt: vi_rag
+  max_tokens: 1024
+  temperature: 0.0

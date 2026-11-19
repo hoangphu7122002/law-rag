@@ -1,0 +1,9 @@
+# SFT v2 (user idea): varied k in 5..10 + gold passage injected (p .7) when top-k misses it -> eval dev k5 / k10
+configs/exp/A2e_dedup.yaml --retrieval-only --set retrieve.k=10 --set split=train
+sh sftdata-q35v2 uv run python -m cli sft-data configs/exp/A3_Q3.yaml --name q35_v2 --k-range 5,10 --oracle 0.7
+sh train-q35v2 /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/q35_v2 --base Qwen/Qwen3.5-2B --out data/models/q35_v2 --epochs 3 --max-length 12288 --batch 1 --accum 16
+serve /home/app/phunguyen/law_rag/data/models/q35_v2 --gpu 1
+configs/exp/A4_q35_off.yaml --set backend.base_url=http://localhost:8001/v1 --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v2
+configs/exp/A4_q35_off.yaml --set backend.base_url=http://localhost:8001/v1 --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v2 --set retrieve.k=10
+wait ! tmux has-session -t lawrag-run-A4_q35_off-_home_app_phunguyen_law_rag_data_models_q35_v2-10 2>/dev/null
+do tmux kill-session -t lawrag-llm-g1
