@@ -1,0 +1,11 @@
+# Embedders for `cli embed-bench` (one model at a time, fp16 in-process; name = row label). Prefixes follow each model card (verify before trusting a result).
+# --- small (≤ 0.6B) ---
+- {name: aiteamvn, model: AITeamVN/Vietnamese_Embedding, max_len: 1024}
+- {name: bge-m3, model: BAAI/bge-m3, max_len: 1024}
+- {name: e5-large-instruct, model: intfloat/multilingual-e5-large-instruct, max_len: 512, query_prefix: "Instruct: Given a Vietnamese legal question, retrieve the article that answers it\nQuery: "}
+- {name: gte-multilingual, model: Alibaba-NLP/gte-multilingual-base, max_len: 1024}
+- {name: qwen3-emb-0.6b, model: Qwen/Qwen3-Embedding-0.6B, max_len: 1024, query_prefix: "Instruct: Given a Vietnamese legal question, retrieve the article that answers it\nQuery: "}
+# --- large (user 2026-11-19: test a few) ---
+- {name: qwen3-emb-4b, purge: true, model: Qwen/Qwen3-Embedding-4B, max_len: 1024, batch: 16, query_prefix: "Instruct: Given a Vietnamese legal question, retrieve the article that answers it\nQuery: "}
+- {name: gte-qwen2-7b, purge: true, model: Alibaba-NLP/gte-Qwen2-7B-instruct, max_len: 1024, batch: 8, query_prefix: "Instruct: Given a Vietnamese legal question, retrieve the article that answers it\nQuery: "}
+- {name: qwen3-emb-8b, purge: true, model: Qwen/Qwen3-Embedding-8B, max_len: 1024, batch: 8, query_prefix: "Instruct: Given a Vietnamese legal question, retrieve the article that answers it\nQuery: "}

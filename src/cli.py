@@ -21,6 +21,13 @@ def main() -> None:
     sub.add_parser("data")
     v = sub.add_parser("vbpl", help="extra corpus from vbpl.vn (HF th1nhng0/vietnamese-legal-documents)")
     v.add_argument("--cited", action="store_true", help="M2: >= 2000 + every cited doc -> data/processed/vbpl_cited")
+    eb = sub.add_parser("embed-bench", help="compare embedders on a small pool (dense top-50 + gold articles): Điều@k, MRR, latency (src/evaluate/embed_bench.py)")
+    eb.add_argument("exp")
+    eb.add_argument("--split", default="dev_clean")
+    eb.add_argument("--models", default="configs/embed_bench.yaml")
+    eb.add_argument("--out", default="data/runs/embed_bench.json")
+    eb.add_argument("--limit", type=int, default=0)
+    eb.add_argument("--export", default=None, help="only build the pool and save it as JSON (for a remote job)")
     sub.add_parser("kg-build", help="legal KG (rules, no LLM) from vbpl metadata + relationships -> data/kg/kg.sqlite (src/kg)")
     sub.add_parser("web", help="cited documents missing from course + vbpl, from luatvietnam.vn -> data/processed/web")
     x = sub.add_parser("extra", help="public legal datasets for training -> data/raw/extra (see corpus/extra.py)")
@@ -79,6 +86,10 @@ def main() -> None:
             VbplImporter(2000, Citations().table()["vbpl_id"].drop_nulls().to_list(), "data/processed/vbpl_cited").build()
         else:
             VbplImporter().build()
+    elif args.cmd == "embed-bench":
+        from evaluate.embed_bench import run_models
+
+        run_models(args.exp, args.split, args.models, args.out, args.limit, args.export)
     elif args.cmd == "kg-build":
         from kg import KG
 
