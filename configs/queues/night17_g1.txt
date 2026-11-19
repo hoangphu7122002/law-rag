@@ -3,7 +3,6 @@ serve /home/app/phunguyen/law_rag/data/models/arith_v3b_c3f_a1 --gpu 1 --share 0
 configs/exp/A6_mbrv3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/arith_v3b_c3f_a1 --set backend.base_url=http://localhost:8001/v1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbrv3b"
 do tmux kill-session -t lawrag-llm-g1
-wait ! nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits -i 1 | awk '{exit !($1>2000)}'
 serve /home/app/phunguyen/law_rag/data/models/q35_v3b --gpu 1 --share 0.45
 configs/exp/A6_mbrv3b.yaml --set backend.base_url=http://localhost:8001/v1 --set retrieve.oracle=true --set generate.shots=2
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbrv3b"
