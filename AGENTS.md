@@ -45,6 +45,8 @@ This file is the entry point for every coding agent. `CLAUDE.md` points here.
    and tmux sessions `lawrag-*`. Log every run in `docs/ops/compute-log.md`.
 7. **Never print secrets** (`.env`: HF token, Modal profile).
 8. Every merged change / result / decision adds a step to [`docs/CHANGELOG.md`](docs/CHANGELOG.md).
+9. **Test first.** New code is built with the `tdd` skill: one failing test through the public interface, then the minimal code, repeat; fake only external boundaries (LLM client, HTTP, GPU).
+   A new tool / module without its tests does not count as done.
 
 ## Layout
 
@@ -53,17 +55,19 @@ src/        CODE — on PYTHONPATH; class map in docs/reference/structure.md
 ├─ corpus/    DatasetBuilder · QASet · CorpusReader · DieuNodeParser
 ├─ index/     Chunker · IndexStore (nodes + FAISS, cached in data/index/<key>/)
 ├─ retrieve/  RetrieverFactory (dense | bm25 | hybrid + reranker) · Retrieval (cached in data/cache/retrieval/)
-├─ generate/  Prompt (prompts/*.md) · Generator (OpenAI-compatible LLM) · FakeGenerator
+├─ generate/  Prompt (prompts/*.md) · Generator (OpenAI-compatible LLM, MBR) · ReactGenerator (tools) · WebSearch · Gate · FakeGenerator
 ├─ evaluate/  metrics (exact port) · Evaluator · PairedBootstrap
+├─ kg/        KG (rule-built legal graph, SQLite) · render_related
+├─ train/     SFT / reranker data + LoRA scripts · grpo.py (run in the box's training envs)
 ├─ pipeline.py RAGPipeline · Experiment        config.py  Config + load()
 ├─ records.py  Question · Passage · Prediction  runs.py    Run · Ledger
 ├─ ops/        RemoteBox (ssh + rsync + tmux: push, setup, serve vLLM, run, status, stop, pull) · modal_app.py
 └─ cli.py      one subcommand per make target
 tests/      CHECKS — unit/ (no data, no models) · smoke/ (whole pipeline, BM25 + fake LLM)
-configs/    WHAT TO RUN — base.yaml (every knob) · exp/<group><n>_<what>.yaml (diff only) · backends/{l40s,mac,fake}.yaml
+configs/    WHAT TO RUN — base.yaml (every knob) · exp/<group><n>_<what>.yaml (diff only) · backends/{l40s,mac,fake}.yaml · queues/*.txt (box job queues)
 data/       INPUTS + OUTPUTS (gitignored except runs/results.tsv) — raw/ processed/ index/ cache/
             runs/<exp>__<hash>/ {config.yaml, meta.json, predictions.jsonl, metrics.json} · runs/results.tsv (ledger)
-docs/       TO READ — GLOSSARY · CHANGELOG · ADR/ · plan/ · reference/ · notes/ · ops/ · notebooks/ (explore only) · report/
+docs/       TO READ — GLOSSARY · CHANGELOG · ADR/ · plan/ · reference/ · notes/ · research/ (web-research output) · ops/ · notebooks/ (explore only) · report/
 ```
 
 Framework: **LlamaIndex** for RAG parts (node parsers, FAISS index, BM25, query fusion, rerank, OpenAI-like LLM),

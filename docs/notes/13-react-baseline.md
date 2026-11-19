@@ -15,7 +15,7 @@ vLLM: `serve <model> --gpu N --tools` adds `--enable-auto-tool-choice --tool-cal
 Arms (configs/exp/A7_react.yaml, dev_clean 166): raw model no tools; ReAct + 5 initial passages; ReAct without initial passages.
 Later arms: + KG tools (rule-built cites/amends graph), + web search (only if the assignment allows it at inference; cache + leak filter), then SFT on trajectories.
 
-## Tool-design research (2026-11-19, research_react_tools/, weak evidence, snippets only)
+## Tool-design research (2026-11-19, docs/research/react-tools/, weak evidence, snippets only)
 - No clean accuracy-vs-tool-count study for 1–4B; a vendor report has an off-the-shelf Qwen3.5-4B at ~6 % with dozens of tools, 71 % after fine-tuning. Small models (3B–14B) gain from tools mainly after RL/SFT on tool use (Search-R1 +20 % at 3B), prompting alone is weak.
 - Agents over-search (20–28 % of search steps unnecessary) and under-search; iteration helps multi-hop, adds noise on simple lookups; no single-shot vs iterative result on legal QA, none for Vietnamese or <4B.
 - Graph/neighbour expansion gains are confounded by retrieval depth (use a quantity-matched control, k=10); no quantified gain for amendment tools or web search.

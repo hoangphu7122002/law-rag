@@ -245,7 +245,7 @@
   then completes the answer; `mbr` samples one answer per temperature and keeps the most central by ROUGE-L.
 - `RemoteBox.queue`: a `serve <model> --gpu N` line swaps our LLM server between runs (queue stops if it fails).
   LLM server gets `--max-model-len 32768`.
-- Configs `A3_G1, A3_Q0–Q3, A3_R0–R1` (retrieval = A2e); `configs/queue_a3.txt` runs them on dev.
+- Configs `A3_G1, A3_Q0–Q3, A3_R0–R1` (retrieval = A2e); `configs/queues/a3.txt` runs them on dev.
 
 ## Step 20 — SFT v0, decontamination, reranker fine-tune, KD0 (2026-11-19)
 
@@ -305,7 +305,7 @@
 
 - `generate/react.py` + `Generate.agent / max_turns / agent_initial_k`: ReAct loop on the raw Qwen3.5-2B with native tool calls
   (`search_law`, `get_article`), datamate loop guards, 5 unit tests; `serve ... --tools` adds the vLLM tool-call flags; `configs/exp/A7_react.yaml`,
-  queue `configs/queue_react_g0.txt` (runs after the GRPO queues). Notes: `docs/notes/13-react-baseline.md`, research in `research_react_tools/`.
+  queue `configs/queues/react_g0.txt` (runs after the GRPO queues). Notes: `docs/notes/13-react-baseline.md`, research in `docs/research/react-tools/`.
 - Measured: gold Điều in top-5 for 239/264 dev and 159/177 test questions; only 2 / 3 of the misses have the gold Điều within ±1 of a retrieved one →
   no `neighbors` tool.
 - `src/kg/` rule-built legal KG in SQLite from vbpl metadata + relationships (171,556 docs, 989,692 edges, `cli kg-build`), updatable
@@ -315,7 +315,7 @@
   records each relation on both documents). `KG.related(hops, per_hop, max_total)` + `render_related` + `kg_related` ReAct tool + `generate.agent_tools` built
   RED→GREEN (84 tests pass). Nothing of the KG has run on a GPU yet.
 - Web search tool (TinyFish provider, cache, domain allow-list, test-answer leak filter) and `generate.agent_tools` / `generate.web` switches built test-first (98 tests);
-  design + arms T0–T3 in `docs/notes/15-web-search.md`; draft queue `configs/queue_tools_g0.txt` (not queued). No external call made yet.
+  design + arms T0–T3 in `docs/notes/15-web-search.md`; draft queue `configs/queues/tools_g0.txt` (not queued). No external call made yet.
 - Billing facts: TinyFish Search is free only on Hobby (30/min); Builder = 150/min at $0.005 / query. Spend cap (`generate.web.max_cost_usd`, persistent over runs), key from a 600 file
   (`generate.web.key_file`), rate limits in config; 108 tests. Arms T1 (KG) and T2/T3 (web, Builder, cap $6) queued on the raw Qwen3.5-2B after the ReAct baseline (queues 185128 / 185131).
 - Optional answer gate `generate.check` (`generate/check.py`, test-first): `grounded_citation`; MBR drops failing candidates (fallback: keep all), ReAct nudges once. Reference answers fail it in 17 % of dev

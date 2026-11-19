@@ -16,14 +16,14 @@ Measurement arms (each vs. the arm above it, paired bootstrap on dev_clean / dev
 | T1 (+KG) | search_law, get_article, kg_related |
 | T2 (+web) | search_law, get_article, web_search |
 | T3 (+KG +web) | search_law, get_article, kg_related, web_search |
-Each with a non-agent control that adds the same number of passages statically (research_react_tools/).
+Each with a non-agent control that adds the same number of passages statically (docs/research/react-tools/).
 
 Open points (need the user):
 1. Is calling the web at inference allowed by the assignment? Unknown; default off.
 2. The questions are sent to an external service when the tool is on (outward-facing); needs the user's go-ahead and a key; no private data is in the query (question text only).
 3. Reference answers may come from the web: a result can contain the answer → leak filter above; check which sites the references use before allowing domains.
 
-## Cost decision (research_tinyfish_cost/, 2026-11-19)
+## Cost decision (docs/research/tinyfish-cost/, 2026-11-19)
 - TinyFish official pricing page: **Search $0 per request, Fetch $0 per URL**; limits Search 30/min + 500/hour, Fetch 150 URLs/min + 1,000/day; Agent $0.016/step and
   Browser $0.002/min are the only things that spend the wallet ($12.776) → we use ONLY Search (Fetch later if snippets are not enough). Verify that the wallet balance does not drop.
 - Alternatives (Brave ~$5/1k with strict no-cache terms, Tavily ~$8/1k, Serper ~$1/1k, Exa ~$4–7/1k, Google CSE closed to new customers, DuckDuckGo scraping) are not needed.
@@ -49,9 +49,9 @@ Guard (test-first): `generate.web.cost_per_query` (Hobby 0, Builder 0.005) and `
 "budget reached" error, cached queries still work.
 
 ## Runs queued (2026-11-19 18:51), RAW Qwen3.5-2B, dev_clean (166), TinyFish Builder
-- `configs/queue_tools_web_g0.txt` (GPU0): T2 (search_law, get_article, web_search) then T3 (+ kg_related); web allow-list vbpl.vn, luatvietnam.vn, thuvienphapluat.vn, vanban.chinhphu.vn;
+- `configs/queues/tools_web_g0.txt` (GPU0): T2 (search_law, get_article, web_search) then T3 (+ kg_related); web allow-list vbpl.vn, luatvietnam.vn, thuvienphapluat.vn, vanban.chinhphu.vn;
   150/min, `cost_per_query` 0.005, **`max_cost_usd` 6** (cap over all runs sharing data/cache/web.sqlite), leak filter on.
-- `configs/queue_tools_kg_g1.txt` (GPU1): T1 (search_law, get_article, kg_related), no web.
+- `configs/queues/tools_kg_g1.txt` (GPU1): T1 (search_law, get_article, kg_related), no web.
 - Both start after queue-1119-180219 (T0 + no-tool control + no-initial-passages), which waits for the four GRPO configs → expected overnight.
 - API key: file `/home/app/phunguyen/law_rag_secrets/tinyfish.key` (mode 600, outside the repo; the box account is shared with the datamate team) read via `generate.web.key_file`; never in configs / command lines.
 
