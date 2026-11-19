@@ -28,3 +28,18 @@ def test_changing_the_llm_keeps_the_retrieval_cache_key():
     b = load("configs/exp/B0_baseline.yaml", overrides=["generate.max_tokens=768"], backend="fake")
     assert a.retrieval_key() == b.retrieval_key()
     assert a.run_key() != b.run_key()
+
+
+def test_tool_set_and_web_settings_can_be_overridden_from_the_command_line():
+    from config import load
+
+    c = load("configs/exp/A7_react.yaml", ['generate.agent_tools=["get_article","kg_related"]', 'generate.web.domains=["vbpl.vn"]', "split=dev_clean"])
+    assert c.generate.agent_tools == ["get_article", "kg_related"] and c.generate.web.domains == ["vbpl.vn"] and c.split == "dev_clean"
+
+
+def test_new_agent_fields_at_their_defaults_do_not_change_old_run_keys():
+    from config import load
+
+    a = load("configs/exp/A4_q35_off.yaml").run_key()
+    b = load("configs/exp/A4_q35_off.yaml", ["generate.agent_tools=[\"search_law\",\"get_article\"]"]).run_key()
+    assert a == b

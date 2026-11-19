@@ -46,10 +46,13 @@ class Prompt:
             return "\n\n".join(f"[{i}] ({p.doc})\n{p.text}" for i, p in enumerate(passages, 1))
         return "\n".join(p.text for p in passages)
 
-    def messages(self, question: str, passages: list[Passage]) -> list[dict]:
+    def messages(self, question: str, passages: list[Passage], shots: list[tuple[str, str]] | None = None) -> list[dict]:
         user = self.user.format(context=self.context(passages), question=question)
+        if shots:   # few-shot: nearest train question/answer pairs (generate/shots.py), no context, before the task
+            user = "Ví dụ câu hỏi và cách trả lời tương tự:\n" + "\n\n".join(
+                f"### Câu hỏi : {q}\n### Trả lời : {a}" for q, a in shots) + "\n\n" + user
         return ([{"role": "system", "content": self.system}] if self.system else []) + [{"role": "user", "content": user}]
 
-    def completion(self, question: str, passages: list[Passage]) -> str:
+    def completion(self, question: str, passages: list[Passage], shots: list[tuple[str, str]] | None = None) -> str:
         """For base (non-chat) models: system text, then the user text, ending in a newline like the notebook."""
-        return "\n\n".join(m["content"] for m in self.messages(question, passages)) + "\n"
+        return "\n\n".join(m["content"] for m in self.messages(question, passages, shots)) + "\n"

@@ -45,7 +45,12 @@ class Experiment:
 
     async def _answer_all(self, questions: list[Question], passages: dict[int, list[Passage]]) -> None:
         g = self.cfg.generate
-        generator = (FakeGenerator if self.cfg.backend.name == "fake" else Generator)(g, self.cfg.backend)
+        if g.agent and self.cfg.backend.name != "fake":
+            from generate.react import LawTools, ReactGenerator
+
+            generator = ReactGenerator(g, self.cfg.backend, LawTools(self.cfg))
+        else:
+            generator = (FakeGenerator if self.cfg.backend.name == "fake" else Generator)(g, self.cfg.backend)
         pipeline = RAGPipeline(generator)
         limit = asyncio.Semaphore(g.concurrency)
 

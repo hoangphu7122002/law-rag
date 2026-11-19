@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 CONFIGS = Path("configs")
 
@@ -25,6 +25,8 @@ class Chunk(Strict):
     overlap: int = 50
     lowercase: bool = False
     flatten: bool = False
+    clean: bool = False   # LawCleaner before parsing (strip header / signature / tail blocks, title into metadata)
+    dedup: bool = False   # DocDedup after cleaning: exact + same-number near-duplicate documents
 
 
 class Embed(Strict):
@@ -52,6 +54,20 @@ class Rerank(Strict):
     batch: int = 32
 
 
+class WebCfg(Strict):
+    """Web search tool settings (generate/web.py); the tool is on only when "web_search" is in generate.agent_tools."""
+    provider: Literal["tinyfish"] = "tinyfish"
+    domains: list[str] = []                    # allow-list of hosts (subdomains included); empty = no filter
+    max_results: int = 5
+    calls_per_minute: int = 30                 # TinyFish HOBBY (Search free, 30/min); Builder = 150/min but $0.005 per query (2026-11-19 billing page)
+    calls_per_hour: int = 500
+    cost_per_query: float = 0.0                # USD per paid search: Hobby 0, Builder 0.005
+    max_cost_usd: float | None = None          # hard spending cap over all runs sharing this cache (None = no cap)
+    key_file: str | None = None                # file holding the API key (env TINYFISH_API_KEY wins); keeps the key off command lines
+    cache: str = "data/cache/web.sqlite"       # one external call per distinct query; reruns replay the cache
+    block_test_answers: bool = True            # drop results sharing a 13-gram with a test answer (evaluation integrity)
+
+
 class Generate(Strict):
     model: str
     params_b: float
@@ -60,13 +76,32 @@ class Generate(Strict):
     max_tokens: int = 768
     temperature: float = 0.0
     concurrency: int = 16
+    # sampling (docs/notes/09-inference-configs): None = server / model default, not sent
+    top_p: float | None = None
+    top_k: int | None = None
+    min_p: float | None = None
+    presence_penalty: float | None = None
+    repetition_penalty: float | None = None
+    thinking: bool | None = None   # Qwen3 / 3.5 switch; None for models without one (Vi-Qwen2)
+    think_tokens: int = 1024       # cap on the thought when thinking is on, then "</think>" is forced
+    check: list[str] = []          # optional answer gate (generate/check.py): failing candidates are dropped before the MBR pick; [] = off
+    mbr: list[float] = []          # sample temperatures; non-empty -> MBR pick by ROUGE-L among the samples
 
-    @field_validator("params_b")
-    @classmethod
-    def under_4b(cls, v: float) -> float:
-        if v >= 4.0:
-            raise ValueError(f"answering LLM must have < 4B parameters, got {v}B")
-        return v
+    shots: int = 0                 # few-shot: nearest decontaminated train Q/A pairs prepended to the user turn (generate/shots.py)
+
+    agent: bool = False            # ReAct loop with tools (generate/react.py) instead of one call
+    max_turns: int = 4             # agent: model calls per question (the last one has no tools)
+    agent_tools: list[str] = ["search_law", "get_article"]   # agent: which tools are offered (ablation arms; "kg_related" needs data/kg/kg.sqlite)
+    web: WebCfg = WebCfg()
+    agent_initial_k: int = -1      # agent: passages from the cached retrieval put in the first prompt (-1 = all k, 0 = none)
+
+    teacher: bool = False          # >= 4B allowed only to measure a distillation teacher (KD0); never a reported result
+
+    @model_validator(mode="after")
+    def under_4b(self) -> "Generate":
+        if self.params_b >= 4.0 and not self.teacher:
+            raise ValueError(f"answering LLM must have < 4B parameters, got {self.params_b}B (teacher: true for KD0 only)")
+        return self
 
 
 class Box(Strict):
@@ -99,7 +134,7 @@ def load_backend(name: str) -> Backend:
 class Config(Strict):
     name: str
     note: str = ""
-    split: Literal["train", "dev", "test"] = "dev"
+    split: Literal["train", "dev", "dev_clean", "dev_strict", "test"] = "dev"
     limit: int | None = None
     corpus_limit: int | None = None
     sources: list[str] = ["corpus"]
@@ -116,14 +151,17 @@ class Config(Strict):
         extra = [] if self.sources == ["corpus"] else [self.sources]  # keeps the hash of course-corpus indexes
         if self.embed.engine != "local":
             extra.append(self.embed.engine)
-        return _hash(self.corpus_limit, *extra, self.chunk, self.embed.model, self.embed.passage_prefix, self.embed.normalize, self.embed.max_len,
+        chunk = self.chunk.model_dump(exclude={k for k in ("clean", "dedup") if not getattr(self.chunk, k)})  # old keys unchanged
+        return _hash(self.corpus_limit, *extra, chunk, self.embed.model, self.embed.passage_prefix, self.embed.normalize, self.embed.max_len,
                      self.retrieve.metric)
 
     def retrieval_key(self) -> str:
         return _hash(self.index_key(), self.embed, self.retrieve, self.rerank, self.split, self.limit)
 
     def run_key(self) -> str:
-        return _hash(self.retrieval_key(), self.generate)
+        new = {"top_p", "top_k", "min_p", "presence_penalty", "repetition_penalty", "thinking", "think_tokens", "mbr", "check", "teacher", "shots", "agent", "max_turns", "agent_initial_k", "agent_tools", "web"}
+        g = self.generate.model_dump(exclude={k for k in new if getattr(self.generate, k) == Generate.model_fields[k].default})
+        return _hash(self.retrieval_key(), g)  # unset new fields left out: old run keys unchanged
 
 
 def load(exp: str | Path, overrides: list[str] = (), backend: str | None = None) -> Config:
