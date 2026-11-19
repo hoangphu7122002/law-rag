@@ -347,3 +347,11 @@
 - **ReAct S1 SFT (816 trajectories from v0 compact, seed 1, train)**: trajectories had 0 tool calls (v0 compact never calls tools) -> S1 = plain SFT. react_s1 dev_clean .6011 vs v0 compact .5926 (+.0085 [-.019,+.033] ns), 0/166 trajectories use a tool. Given the oracle bound, S2 repair (DeepSeek V4 Flash / Haiku) for tool use is low value; not pursued unless the user insists.
 - Weight merging: arith_v3b_c3f_a1 (2 shots) dev300 .6516 vs C1 greedy +.019 [+.006,+.034] but dev_clean +.009 [-.012,+.029], dev_strict +.009 [-.025,+.043] -> not accepted; a05 .6406; soup_rl3 zero-shot .6301 (< c3f .6343). c6f MBR8 .6391 (< c3f .6450). c3s2 seed repeat OOM at step 72/150 (GPU0 shared) -> dropped.
 - Ops lessons: tmux run-session names truncate and collide across GPUs (same A7_react/A5_v3b name) -> 'duplicate session' skips runs; release race 'free<20000 refusing' after kill; react_sft must copy preprocessor files (fixed).
+- **Provisional C2** (see docs/plan/candidates.md): task-arithmetic merge arith_v3b_c3f_a1 (v3b + (c3f - v0)) + 2 shots + MBR8 = .6668 vs C1 .6575; paired vs C1 dev_clean +.017 [+.001,+.035], dev_strict +.021 [+.0005,+.043], dev300 +.009 ns. a05 merge MBR8 .6642. Marginal (~10 variants compared) -> confirm with a seed repeat.
+- **Invalid runs (shots=0 by mistake)**: A6_mbrv3b.yaml has no shots field; MBR runs without `--set generate.shots=2` (arith_a1 .6346, oracle .6329, T-mix .6197, T0.5 .6209) are not comparable to C1 and were redone with shots 2. Valid: MBR T0.5 .6428, T0.9 .6582 (~C1), MBR16 v3b .6586 (ns), rl_v3b_c3 greedy .6271 / MBR8 .6512 (< C1).
+- Ops lessons: `sh` queue lines do not block (add `wait ! tmux ls | grep -q lawrag-run-<name>`); tmux run names collide across GPUs and with same-named runs; a serve right after a kill can be refused (<20G free); GPU0 is shared with other users (~6G) so GRPO with long prompts can OOM (use --max-prompt-tokens 3500).
+
+## Step 28 — plan
+1. Confirm C2 with a second MBR sampling pass (queued) and MBR16; if it holds, C2 replaces C1.
+2. Final retrain on train+dev for v3b + c3f RL and merge (alpha 1), then ONE test run of the chosen candidate.
+3. Latency per stage; report, user manual, demo. ReAct stays an optional extra (retrieval is not the bottleneck: oracle +.002 ns).
