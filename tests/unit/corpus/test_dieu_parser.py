@@ -35,3 +35,17 @@ def test_long_article_is_split_and_pieces_keep_the_heading():
     assert len(nodes) > 1
     assert all(n.get_content().startswith("Điều 9. Dài") for n in nodes)
     assert all(n.metadata["doc"] == "x" for n in nodes)
+
+
+def test_nodes_carry_article_heading_and_chapter():
+    from llama_index.core import Document
+
+    from corpus.ingest import DieuNodeParser
+
+    text = "Chương I\nQUY ĐỊNH CHUNG\nĐiều 1. Phạm vi\nNội dung một.\nChương II. QUẢN LÝ\nĐiều 2. Trách nhiệm\nHai."
+    nodes = DieuNodeParser().get_nodes_from_documents([Document(text=text, metadata={"doc": "x"})])
+    by_article = {n.metadata["article"]: n.metadata for n in nodes}
+    assert by_article["2"]["heading"] == "Điều 2. Trách nhiệm"
+    assert by_article["2"]["chapter"] == "Chương II. QUẢN LÝ"
+    assert by_article["1"]["chapter"] == "Chương I"
+    assert "article" in nodes[0].excluded_embed_metadata_keys

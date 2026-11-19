@@ -2,12 +2,12 @@
 
 DatasetBuilder   `make data`: unzip the corpus, clean the RES sheet, write the fixed split
 QASet            the questions of one split
-CorpusReader     law files -> LlamaIndex Documents
-DieuNodeParser   LlamaIndex node parser: one node per Điều (article)
+sources/         CorpusReader, VbplImporter, ExtraData — where documents come from
+ingest/          LawCleaner, DieuNodeParser — LlamaIndex transforms, Document -> nodes
 """
 from corpus.builder import DatasetBuilder
-from corpus.dieu_parser import DieuNodeParser
+from corpus.ingest import DieuNodeParser, LawCleaner
 from corpus.qa import QASet
-from corpus.reader import CorpusReader
+from corpus.sources import CorpusReader
 
-__all__ = ["CorpusReader", "DatasetBuilder", "DieuNodeParser", "QASet"]
+__all__ = ["CorpusReader", "DatasetBuilder", "DieuNodeParser", "LawCleaner", "QASet"]

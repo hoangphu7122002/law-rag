@@ -1,4 +1,4 @@
-from corpus.vbpl import VbplImporter
+from corpus.sources.vbpl import VbplImporter
 
 
 def test_key_matches_course_numbers():

@@ -1,7 +1,10 @@
 """Extra corpus from vbpl.vn (national legal document portal, Ministry of Justice), via the HF dataset
 th1nhng0/vietnamese-legal-documents (CC BY 4.0): metadata.parquet + content.parquet (HTML) in data/raw/vbpl/.
 
-Selection is test-blind: a fixed rule on document metadata only (scope, type, year); no QA split is read.
+Milestones (each its own folder, so earlier indexes stay reproducible):
+  M1 data/processed/vbpl       test-blind metadata rule: central scope, no translations, issued >= 2010
+  M2 data/processed/vbpl_cited same rule from 2000 + every vbpl document the QA answers cite (`include`, from
+                               citations.py; reads all splits incl. test, user decision 2026-11-18)
 Documents already in the course corpus (same number) are skipped, so the course text wins.
 
     VbplImporter().build()   ->  data/processed/vbpl/<number with / -> _>.txt + manifest.parquet
@@ -11,6 +14,8 @@ import re
 import unicodedata
 from pathlib import Path
 from typing import ClassVar
+
+from corpus.keys import law_key
 
 RAW = Path("data/raw/vbpl")
 OUT = Path("data/processed/vbpl")
@@ -22,8 +27,8 @@ class VbplImporter:
     SCOPES: ClassVar[list[str]] = ["Trung ương", "Toàn quốc"]
     SKIP_TYPES: ClassVar[list[str]] = ["Bản dịch văn bản"]  # English translations
 
-    def __init__(self, min_year: int = 2010):
-        self.min_year = min_year
+    def __init__(self, min_year: int = 2010, include: tuple[str, ...] = (), out: Path = OUT):
+        self.min_year, self.include, self.out = min_year, list(include), Path(out)
 
     def build(self) -> int:
         import polars as pl
@@ -34,7 +39,7 @@ class VbplImporter:
         meta = meta.filter(~pl.col("so_ky_hieu").map_elements(self.key, return_dtype=pl.String).is_in(list(course)))
         docs = (pl.scan_parquet(RAW / "content.parquet").filter(pl.col("id").is_in(meta["id"].to_list()))
                 .collect().join(meta, on="id"))
-        OUT.mkdir(parents=True, exist_ok=True)
+        self.out.mkdir(parents=True, exist_ok=True)
         rows, seen = [], set()
         for row in docs.iter_rows(named=True):
             page = row.pop("content_html")
@@ -43,18 +48,18 @@ class VbplImporter:
             if not name or name in seen or len(text) < 200:
                 continue
             seen.add(name)
-            (OUT / f"{name}.txt").write_text(f"{row['title']}\n\n{text}", encoding="utf-8")
+            (self.out / f"{name}.txt").write_text(f"{row['title']}\n\n{text}", encoding="utf-8")
             rows.append({**row, "file": f"{name}.txt"})
-        pl.DataFrame(rows).write_parquet(OUT / "manifest.parquet")
-        print(f"vbpl: {meta.height} selected, {len(rows)} written to {OUT} (course duplicates skipped: {len(course)} known)")
+        pl.DataFrame(rows).write_parquet(self.out / "manifest.parquet")
+        print(f"vbpl: {meta.height} selected, {len(rows)} written to {self.out} (course duplicates skipped: {len(course)} known)")
         return len(rows)
 
     def select(self, meta):
         import polars as pl
 
         year = pl.col("ngay_ban_hanh").str.slice(-4).cast(pl.Int32, strict=False)
-        return meta.filter(pl.col("pham_vi").is_in(self.SCOPES) & ~pl.col("loai_van_ban").is_in(self.SKIP_TYPES)
-                           & (year >= self.min_year) & pl.col("so_ky_hieu").is_not_null())
+        rule = pl.col("pham_vi").is_in(self.SCOPES) & ~pl.col("loai_van_ban").is_in(self.SKIP_TYPES) & (year >= self.min_year)
+        return meta.filter((rule | pl.col("id").is_in(self.include)) & pl.col("so_ky_hieu").is_not_null())
 
     @staticmethod
     def download() -> None:
@@ -68,9 +73,8 @@ class VbplImporter:
 
     @staticmethod
     def key(number: str) -> str:
-        """Comparable law number: NFC, no spaces, upper, '/QĐ-TT' == '/QĐ-TTG'."""
-        k = re.sub(r"\s+", "", unicodedata.normalize("NFC", number or "")).upper()
-        return re.sub(r"-TTG$", "-TT", k)
+        """Comparable law number (corpus.keys.law_key)."""
+        return law_key(number)
 
     @staticmethod
     def filename(number: str) -> str:
