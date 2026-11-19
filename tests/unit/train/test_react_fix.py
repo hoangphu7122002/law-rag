@@ -99,7 +99,6 @@ def test_build_repair_request_contents():
     assert "Hồ sơ giao dịch lưu bao lâu?" in p and REF in p and "50/2024/TT-NHNN" in p and "Điều 5" in p
     assert "get_article" in p and "search_law" in p and "JSON" in p
     assert "Không rõ." not in p            # only messages[:bad_step]
-    assert "sys" not in p.split("Câu hỏi")[0] or True
     assert len(p) < 4000                   # compact: long tool output truncated
 
 
