@@ -53,3 +53,16 @@ def test_agent_seed_changes_run_key_only_when_set():
     k1 = load("configs/exp/A4_q35_off.yaml", ["generate.agent_seed=1"]).run_key()
     k2 = load("configs/exp/A4_q35_off.yaml", ["generate.agent_seed=2"]).run_key()
     assert len({base, k1, k2}) == 3
+
+
+def test_oracle_keeps_retrieval_key_but_changes_run_key():
+    a = load("configs/exp/B0_baseline.yaml", backend="fake")
+    b = load("configs/exp/B0_baseline.yaml", ["retrieve.oracle=true"], backend="fake")
+    assert a.retrieval_key() == b.retrieval_key()
+    assert a.run_key() != b.run_key()
+
+
+def test_oracle_off_leaves_run_key_unchanged():
+    a = load("configs/exp/B0_baseline.yaml", backend="fake")
+    b = load("configs/exp/B0_baseline.yaml", ["retrieve.oracle=false"], backend="fake")
+    assert a.run_key() == b.run_key()

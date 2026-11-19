@@ -33,7 +33,26 @@ class Retrieval:
             for q in tqdm(todo, desc="retrieve"):
                 cached[q.qid] = self._one(q, retriever, reranker)
                 self._append(q.qid, cached[q.qid])
-        return {q.qid: cached[q.qid] for q in questions}
+        out = {q.qid: cached[q.qid] for q in questions}
+        return self._oracle(questions, out) if self.cfg.retrieve.oracle else out
+
+    def _oracle(self, questions: list[Question], top: dict[int, list[Passage]]) -> dict[int, list[Passage]]:
+        from evaluate.retrieval_eval import RetrievalEval
+        from retrieve.oracle import inject_gold
+
+        ev = RetrievalEval()
+        c = self.cfg
+        pool = Retrieval(c.model_copy(update={"rerank": c.rerank.model_copy(update={"model": None}),
+                                              "retrieve": c.retrieve.model_copy(update={"k": c.retrieve.candidates, "oracle": False})})).run(questions)
+        out = {}
+        for q in questions:
+            g = ev.gold.get(q.qid)
+            if not (g and g.pairs):
+                out[q.qid] = top[q.qid]
+                continue
+            is_gold = lambda p, g=g: any(a and f"{k}#{a}" in g.pairs for k, a in [ev.passage_keys({"doc": p.doc, "text": p.text})])
+            out[q.qid] = inject_gold(top[q.qid], pool[q.qid], is_gold)
+        return out
 
     def _one(self, q: Question, retriever, reranker) -> list[Passage]:
         hits = retriever.retrieve(q.text)

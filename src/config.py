@@ -45,6 +45,7 @@ class Retrieve(Strict):
     k: int = 5
     candidates: int = 50
     rrf_k: int = 60
+    oracle: bool = False   # eval ceiling: inject a gold passage at rank 1 (retrieve/oracle.py); not part of retrieval_key
 
 
 class Rerank(Strict):
@@ -158,12 +159,12 @@ class Config(Strict):
                      self.retrieve.metric)
 
     def retrieval_key(self) -> str:
-        return _hash(self.index_key(), self.embed, self.retrieve, self.rerank, self.split, self.limit)
+        return _hash(self.index_key(), self.embed, self.retrieve.model_dump(exclude={"oracle"}), self.rerank, self.split, self.limit)
 
     def run_key(self) -> str:
         new = {"top_p", "top_k", "min_p", "presence_penalty", "repetition_penalty", "thinking", "think_tokens", "mbr", "check", "teacher", "shots", "agent", "max_turns", "agent_initial_k", "agent_tools", "tool_prompt", "agent_seed", "web"}
         g = self.generate.model_dump(exclude={k for k in new if getattr(self.generate, k) == Generate.model_fields[k].default})
-        return _hash(self.retrieval_key(), g)  # unset new fields left out: old run keys unchanged
+        return _hash(self.retrieval_key(), g, *(["oracle"] if self.retrieve.oracle else []))  # unset new fields left out: old run keys unchanged
 
 
 def load(exp: str | Path, overrides: list[str] = (), backend: str | None = None) -> Config:

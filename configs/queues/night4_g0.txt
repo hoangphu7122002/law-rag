@@ -1,0 +1,6 @@
+# Night filler, GPU0 after trajectories seed 2: does MBR with 16 samples add over MBR8 on the best RL model (c3f, dev .6450 MBR8)?
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1119-232824"
+serve /home/app/phunguyen/law_rag/data/models/rl_c3f --gpu 0 --share 0.45
+configs/exp/A6_mbr16.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c3f --set backend.base_url=http://localhost:8000/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbr16"
+do tmux kill-session -t lawrag-llm-g0
