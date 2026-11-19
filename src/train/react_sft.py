@@ -129,6 +129,9 @@ def main() -> None:
     merged.save_pretrained(out, safe_serialization=True)
     tok.save_pretrained(out)
     _sft_lora().complete_config(a.base, out)
+    for f in ("preprocessor_config.json", "video_preprocessor_config.json", "vocab.json"):   # vLLM loads the image processor of the VL checkpoint
+        if (Path(a.base) / f).exists():
+            shutil.copy(Path(a.base) / f, out / f)
     shutil.rmtree(out / "ckpt", ignore_errors=True)
     rec = {"base": a.base, "data": a.data, "rows": len(rows), "examples": len(examples), "trained_tokens": trained, "args": vars(a),
            "train_loss": result.training_loss, "steps": result.global_step, "minutes": round((time.time() - t0) / 60, 1),
