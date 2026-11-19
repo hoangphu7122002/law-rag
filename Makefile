@@ -8,8 +8,17 @@ help:  ## list targets
 data:  ## unzip corpus, clean res.csv, write the fixed split
 	$(CLI) data
 
-vbpl:  ## extra corpus: vbpl.vn central docs >= 2010 -> data/processed/vbpl (test-blind rule)
+vbpl:  ## M1 extra corpus: vbpl.vn central docs >= 2010 (test-blind) -> data/processed/vbpl
 	$(CLI) vbpl
+
+vbpl-cited:  ## M2: vbpl >= 2000 + every doc the QA answers cite -> data/processed/vbpl_cited
+	$(CLI) vbpl --cited
+
+web:  ## cited docs missing from course + vbpl, from luatvietnam.vn sitemaps -> data/processed/web
+	$(CLI) web
+
+extra:  ## public legal datasets for training (zalo, bkai, legal_qa) -> data/raw/extra; decontaminate before use
+	$(CLI) extra $(ARGS)
 
 test:  ## unit tests
 	uv run pytest -q tests
@@ -32,4 +41,4 @@ compare:  ## paired bootstrap: make compare A=data/runs/<a> B=data/runs/<b> [MET
 box:  ## remote GPU box: make box ARGS="autosync on|push|setup|serve <model> --gpu 0|run <exp> [--set k=v]|status|stop <s>|pull|tunnel"
 	$(CLI) box $(ARGS)
 
-.PHONY: help data vbpl test lint smoke run score compare box
+.PHONY: help data vbpl vbpl-cited web extra test lint smoke run score compare box
