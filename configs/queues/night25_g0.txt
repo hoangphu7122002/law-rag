@@ -1,0 +1,5 @@
+# GPU0: C2 model with MBR16 (shots 2); A6_mbr16 name differs from GPU1's A6_mbrv3b.
+serve /home/app/phunguyen/law_rag/data/models/arith_v3b_c3f_a1 --gpu 0 --share 0.45
+configs/exp/A6_mbr16.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/arith_v3b_c3f_a1 --set generate.shots=2 --set backend.base_url=http://localhost:8000/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbr16"
+do tmux kill-session -t lawrag-llm-g0
