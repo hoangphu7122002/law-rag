@@ -1,0 +1,9 @@
+# GPU0: GRPO from v3b retry (OOM at step 7 with 5500 prompt tokens, 82 s/it): shorter prompts (3500), 100 steps; wait for it before serving.
+sh grpo-v3bd env MASTER_PORT=29501 /home/app/phunguyen/law_rag/.rl_env/bin/python src/train/grpo.py --data data/train/q35_v3b --base /home/app/phunguyen/law_rag/data/models/q35_v3b --out data/models/rl_v3b_c3 --steps 100 --lr 1e-5 --gens 8 --batch 1 --accum 4 --max-completion 1024 --use-vllm --cosine --max-prompt-tokens 3500
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-grpo-v3bd"
+serve /home/app/phunguyen/law_rag/data/models/rl_v3b_c3 --gpu 0 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_v3b_c3 --set generate.shots=2 --set backend.base_url=http://localhost:8000/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b"
+configs/exp/A6_mbrv3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_v3b_c3 --set backend.base_url=http://localhost:8000/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbrv3b"
+do tmux kill-session -t lawrag-llm-g0

@@ -1,0 +1,5 @@
+# GPU1: does MBR16 add over MBR8 on the C1 model (v3b + 2 shots)? c3f: MBR8 .6450 -> MBR16 .6524.
+serve /home/app/phunguyen/law_rag/data/models/q35_v3b --gpu 1 --share 0.45
+configs/exp/A6_mbr16.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v3b --set generate.shots=2 --set backend.base_url=http://localhost:8001/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbr16"
+do tmux kill-session -t lawrag-llm-g1
