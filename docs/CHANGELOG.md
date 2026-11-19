@@ -320,3 +320,11 @@
   (`generate.web.key_file`), rate limits in config; 108 tests. Arms T1 (KG) and T2/T3 (web, Builder, cap $6) queued on the raw Qwen3.5-2B after the ReAct baseline (queues 185128 / 185131).
 - Optional answer gate `generate.check` (`generate/check.py`, test-first): `grounded_citation`; MBR drops failing candidates (fallback: keep all), ReAct nudges once. Reference answers fail it in 17 % of dev
   questions (retrieval misses), so it is a preference, not a veto; untested on a GPU run. 118 tests.
+
+## Step 24 — codebase reorganisation, phase 1 (2026-11-19)
+
+- Committed the 143 pending changes in six code groups (corpus, index/retrieve/evaluate, train, generate, kg, ops/cli) + configs + docs, then reorganised (c08e97a).
+- Moved (git mv, no content change): `configs/queue_*.txt` → `configs/queues/*.txt` (43 files), `research_*` → `docs/research/*` (4 folders); references updated.
+- `docs/reference/structure.md` rewritten from the real imports (kg, train, ReAct / web / gate, dev subsets, import-rule table); `AGENTS.md` layout + rule 9 (test first).
+- Deliberately NOT moved yet: `src/train/` and `configs/exp/` (queued GRPO jobs on the box call `src/train/grpo.py`); no `generate/` → `agent/` split (all files < 300 lines today).
+  Phase 2 after the GRPO and ReAct queues finish: optional `agent/` package (react, web, check), box-side helper scripts into `scripts/`, old queue files pruned.
