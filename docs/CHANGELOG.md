@@ -355,3 +355,4 @@
 1. Confirm C2 with a second MBR sampling pass (queued) and MBR16; if it holds, C2 replaces C1.
 2. Final retrain on train+dev for v3b + c3f RL and merge (alpha 1), then ONE test run of the chosen candidate.
 3. Latency per stage; report, user manual, demo. ReAct stays an optional extra (retrieval is not the bottleneck: oracle +.002 ns).
+- MBR noise check: C1 second pass .6512 (first .6575); C2 three passes mean .6638 vs C1 mean .6544 (+.009, ~ sampling noise ±.006) -> C2 provisional, C1 stays the safe candidate.
