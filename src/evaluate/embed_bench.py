@@ -32,17 +32,19 @@ class EmbedBench:
         self.passages, self.queries, self.gold, self.clock, self.groups = passages, queries, gold, clock, groups or {}
         self.keys = keys if keys is not None else article_keys(passages)
 
-    def run(self, embedder, query_prefix: str = "", doc_prefix: str = "", batch: int = 64) -> dict[str, float]:
-        """Prefixes: e5 wants "query: " / "passage: ", Qwen3-Embedding an instruction on the query side only."""
+    def run(self, embedder, query_prefix: str = "", doc_prefix: str = "", batch: int = 64, query_embedder=None) -> dict[str, float]:
+        """Prefixes: e5 wants "query: " / "passage: ", Qwen3-Embedding an instruction on the query side only.
+        `query_embedder` = a different tower for the questions (query-only tuning keeps the document vectors, so the index stays valid)."""
+        query_embedder = query_embedder or embedder
         t0 = self.clock()
         docs = _encode(embedder, [doc_prefix + p.text for p in self.passages], batch)
         passages_per_s = len(self.passages) / max(self.clock() - t0, 1e-9)
         qids = [q for q in self.queries if q in self.gold]
-        qs = _encode(embedder, [query_prefix + self.queries[q] for q in qids], batch)
+        qs = _encode(query_embedder, [query_prefix + self.queries[q] for q in qids], batch)
         single = []                                          # latency of ONE query alone (what a user waits for)
         for q in qids[:20]:
             t = self.clock()
-            embedder([query_prefix + self.queries[q]])
+            query_embedder([query_prefix + self.queries[q]])
             single.append((self.clock() - t) * 1000)
         docs, qs = _unit(docs), _unit(qs)
         pos_of = {}

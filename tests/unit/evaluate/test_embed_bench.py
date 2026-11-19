@@ -218,3 +218,12 @@ def test_groups_survive_a_pool_round_trip(tmp_path):
 
     save_pool(tmp_path / "p.json", POOL, {1: "a"}, {1: {"10/2020/NĐ#1"}}, groups={"dev_clean": [1]})
     assert load_pool(tmp_path / "p.json")[4] == {"dev_clean": [1]}
+
+
+def test_queries_can_use_a_different_embedder_than_documents_for_query_only_tuning():
+    docs_emb, query_emb = Topic(["thuế", "phí", "đất", "nước"]), Topic(["thuế", "phí", "đất", "nước"])
+    bench = EmbedBench(POOL, queries={1: "thuế là gì"}, gold={1: {"10/2020/NĐ#1"}})
+    m = bench.run(docs_emb, query_embedder=query_emb)
+    assert m["art@1"] == 1.0
+    assert all("thuế là gì" not in t for call in docs_emb.calls for t in call)   # documents only went to the document tower
+    assert query_emb.calls and all(len(call) == 1 or call[0] == "thuế là gì" for call in query_emb.calls)
