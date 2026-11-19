@@ -37,10 +37,14 @@ TOOL_HELP = {
 }
 
 
-def system_tools(tools: list[str]) -> str:
-    return ("Bạn có thể dùng công cụ để tìm thêm thông tin nếu ngữ cảnh chưa đủ:\n" + "\n".join(TOOL_HELP[t] for t in tools) +
-            "\nChỉ gọi công cụ khi ngữ cảnh hiện có chưa đủ. Khi đã đủ thông tin, trả lời trực tiếp, không gọi công cụ nữa, "
-            "theo mẫu \"Căn cứ Điều X ... quy định ...\".")
+def system_tools(tools: list[str], style: str = "full") -> str:
+    """Prose appended to the system prompt. The chat template ALSO renders the JSON schemas of the tools, so "compact" leaves out the
+    per-tool list (a duplicate) and keeps what only the prose says: when to call, the answer template, and when to use the web."""
+    use = ("Chỉ gọi công cụ khi ngữ cảnh hiện có chưa đủ. Khi đã đủ thông tin, trả lời trực tiếp, không gọi công cụ nữa, "
+           "theo mẫu \"Căn cứ Điều X ... quy định ...\".")
+    if style == "compact":
+        return use + (" Chỉ dùng web_search khi các công cụ trong kho văn bản không có thông tin." if "web_search" in tools else "")
+    return "Bạn có thể dùng công cụ để tìm thêm thông tin nếu ngữ cảnh chưa đủ:\n" + "\n".join(TOOL_HELP[t] for t in tools) + "\n" + use
 
 
 MAX_HOPS = 4   # absolute safety bound on what the model may ask for (the model is only ADVISED to use 1-2; hop sizes explode)
@@ -154,9 +158,9 @@ class ReactGenerator(Generator):
         init = passages if self.cfg.agent_initial_k < 0 else passages[: self.cfg.agent_initial_k]
         msgs = self.prompt.messages(question, init, self.shots(question))
         if msgs[0]["role"] == "system":
-            msgs[0] = {**msgs[0], "content": msgs[0]["content"] + "\n\n" + system_tools(self.cfg.agent_tools)}
+            msgs[0] = {**msgs[0], "content": msgs[0]["content"] + "\n\n" + system_tools(self.cfg.agent_tools, self.cfg.tool_prompt)}
         else:
-            msgs.insert(0, {"role": "system", "content": system_tools(self.cfg.agent_tools)})
+            msgs.insert(0, {"role": "system", "content": system_tools(self.cfg.agent_tools, self.cfg.tool_prompt)})
         seed = zlib.crc32(question.encode()) & 0x7FFFFFFF
         seen: set[str] = set()
         gate, repaired, context = Gate(self.cfg.check), False, list(init)   # context = what the model has seen (passages + tool results)

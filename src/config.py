@@ -92,6 +92,7 @@ class Generate(Strict):
     agent: bool = False            # ReAct loop with tools (generate/react.py) instead of one call
     max_turns: int = 4             # agent: model calls per question (the last one has no tools)
     agent_tools: list[str] = ["search_law", "get_article"]   # agent: which tools are offered (ablation arms; "kg_related" needs data/kg/kg.sqlite)
+    tool_prompt: Literal["full", "compact"] = "full"   # agent: "compact" drops the per-tool prose list (the chat template already renders the JSON schemas)
     web: WebCfg = WebCfg()
     agent_initial_k: int = -1      # agent: passages from the cached retrieval put in the first prompt (-1 = all k, 0 = none)
 
@@ -159,7 +160,7 @@ class Config(Strict):
         return _hash(self.index_key(), self.embed, self.retrieve, self.rerank, self.split, self.limit)
 
     def run_key(self) -> str:
-        new = {"top_p", "top_k", "min_p", "presence_penalty", "repetition_penalty", "thinking", "think_tokens", "mbr", "check", "teacher", "shots", "agent", "max_turns", "agent_initial_k", "agent_tools", "web"}
+        new = {"top_p", "top_k", "min_p", "presence_penalty", "repetition_penalty", "thinking", "think_tokens", "mbr", "check", "teacher", "shots", "agent", "max_turns", "agent_initial_k", "agent_tools", "tool_prompt", "web"}
         g = self.generate.model_dump(exclude={k for k in new if getattr(self.generate, k) == Generate.model_fields[k].default})
         return _hash(self.retrieval_key(), g)  # unset new fields left out: old run keys unchanged
 

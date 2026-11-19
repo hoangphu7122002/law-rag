@@ -1,0 +1,6 @@
+# Compact tool prompt (drops the duplicated per-tool prose list) on SFT v0, T0 tools, dev_clean; control = A7_react__bbf154af (full prompt, .5709). After the ReAct reruns on GPU1.
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1119-224243"
+serve /home/app/phunguyen/law_rag/data/models/q35_v0 --gpu 1 --share 0.45 --tools
+configs/exp/A7_react.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v0 --set backend.base_url=http://localhost:8001/v1 --set split=dev_clean --set generate.tool_prompt=compact
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react"
+do tmux kill-session -t lawrag-llm-g1

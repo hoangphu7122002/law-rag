@@ -205,3 +205,27 @@ def test_the_full_conversation_of_each_question_is_kept_for_trajectory_training(
     msgs = g.traces["câu hỏi?"]
     assert [m["role"] for m in msgs][-3:] == ["assistant", "tool", "assistant"]
     assert msgs[-3]["tool_calls"][0]["function"]["name"] == "get_article" and msgs[-1]["content"] == "Xong."
+
+
+def test_compact_tool_prompt_drops_the_duplicated_tool_list_but_keeps_the_answer_template():
+    from generate.react import system_tools
+
+    full, compact = system_tools(["search_law", "get_article"]), system_tools(["search_law", "get_article"], "compact")
+    assert "- search_law(" in full and "- search_law(" not in compact and "- get_article(" not in compact
+    assert "Căn cứ Điều X" in compact and len(compact) < len(full) * 0.6
+
+
+def test_compact_prompt_keeps_the_advice_that_only_the_prose_carried():
+    from generate.react import system_tools
+
+    assert "web_search" in system_tools(["search_law", "web_search"], "compact")         # when to use the web is not in the JSON schema
+    assert "web_search" not in system_tools(["search_law", "get_article"], "compact")
+
+
+def test_the_style_is_chosen_by_the_config_and_reaches_the_first_message():
+    cfg = Generate(model="m", params_b=2.0, prompt="vi_rag", agent=True, tool_prompt="compact")
+    g = ReactGenerator(cfg, Backend(name="x", base_url="http://x/v1"), FakeTools())
+    g._oai = FakeOAI([NS(content="ok", tool_calls=None)])
+    run(g)
+    system = g._oai.seen[0]["messages"][0]["content"]
+    assert "Căn cứ Điều X" in system and "- search_law(" not in system
