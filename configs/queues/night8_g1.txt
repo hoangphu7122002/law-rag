@@ -1,0 +1,11 @@
+# GPU1 after the ReAct SFT queue: T1 (+kg) trajectories seed 3, then ORACLE ceiling (gold Điều at rank 1) for v3b + 2 shots, greedy and MBR8.
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1119-night7"
+serve /home/app/phunguyen/law_rag/data/models/q35_v0 --gpu 1 --share 0.45 --tools
+configs/exp/A7_react.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v0 --set backend.base_url=http://localhost:8001/v1 --set split=train --set generate.temperature=0.7 --set generate.agent_seed=3 --set generate.agent_tools=["search_law","get_article","kg_related"]
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react"
+serve /home/app/phunguyen/law_rag/data/models/q35_v3b --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set backend.base_url=http://localhost:8001/v1 --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v3b --set generate.shots=2 --set retrieve.oracle=true
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b"
+configs/exp/A6_mbrv3b.yaml --set backend.base_url=http://localhost:8001/v1 --set retrieve.oracle=true
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbrv3b"
+do tmux kill-session -t lawrag-llm-g1
