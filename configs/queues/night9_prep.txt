@@ -1,0 +1,5 @@
+# CPU only, now: build the merged models (soup of RL variants; v3b + (c3f - v0) task arithmetic, alpha 1 and .5). No GPU.
+do sleep 5
+sh merge-soup env PYTHONPATH=src /home/app/phunguyen/train_env/bin/python -m train.merge soup --models /home/app/phunguyen/law_rag/data/models/rl_c3f /home/app/phunguyen/law_rag/data/models/rl_c5f /home/app/phunguyen/law_rag/data/models/rl_c6f --out /home/app/phunguyen/law_rag/data/models/soup_rl3
+sh merge-arith1 env PYTHONPATH=src /home/app/phunguyen/train_env/bin/python -m train.merge arith --base /home/app/phunguyen/law_rag/data/models/q35_v3b --tuned /home/app/phunguyen/law_rag/data/models/rl_c3f --origin /home/app/phunguyen/law_rag/data/models/q35_v0 --alpha 1.0 --out /home/app/phunguyen/law_rag/data/models/arith_v3b_c3f_a1
+sh merge-arith05 env PYTHONPATH=src /home/app/phunguyen/train_env/bin/python -m train.merge arith --base /home/app/phunguyen/law_rag/data/models/q35_v3b --tuned /home/app/phunguyen/law_rag/data/models/rl_c3f --origin /home/app/phunguyen/law_rag/data/models/q35_v0 --alpha 0.5 --out /home/app/phunguyen/law_rag/data/models/arith_v3b_c3f_a05

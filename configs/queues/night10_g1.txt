@@ -1,0 +1,6 @@
+# c6f MBR8 was skipped (duplicate tmux session name with c5f's MBR8 run); rerun after the merged-model evals.
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1120-003010"
+serve /home/app/phunguyen/law_rag/data/models/rl_c6f --gpu 1 --share 0.45
+configs/exp/A6_mbr.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c6f --set backend.base_url=http://localhost:8001/v1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbr-"
+do tmux kill-session -t lawrag-llm-g1
