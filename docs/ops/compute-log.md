@@ -25,3 +25,4 @@
 | 2026-11-19 | L40S box | GPU0 / GPU1 | ~20 min | 0 (own box) | Full test pass, 13 variants (v0, v2, v3, v3b, hp; k5/k10; shots 0/2/3; rr_v0) | test rougeL .607–.621 (best v3 s0 k5 .6212, v0 k10 .6203, v0 k5 .6175), all errors 0; test-informed, no selection |
 | 2026-11-19 | L40S box | GPU0 / GPU1 | ~2.5 h | 0 (own box) | Step 22: GRPO pilots c1/c2 (50 steps each, HF generation) + dev evals; MBR v0 dev/test | rl_c1 dev .6101, rl_c2 .6064 (v0 .6026); MBR8 v0 dev .6366, test .6451 (v0 .6175) — errors 0 |
 | 2026-11-19 | Modal L40S (profile phuchuynhvinh-fwork) | 1 GPU | ~40 min | ~$1.3 | Step 25: embedder benchmark (7 models + bge-m3 rerun) | AITeamVN best; Qwen3-4B .508 @1; bge-m3 .523 |
+| 2026-11-19 | Modal L40S (profile phuchuynhvinh-fwork) | up to 7 GPUs parallel | ~235 GPU-min | ~$7.9 | Step 26: embedder fine-tune grids (15 variants) | best +.023 Điều@1, not accepted by the paired rule |

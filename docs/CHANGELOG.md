@@ -333,3 +333,7 @@
 - Added `cli embed-bench` (src/evaluate/embed_bench.py, tests) + Modal job src/ops/modal_embed.py; results in docs/research/model-selection/embed_bench_results.md.
 - Result: AITeamVN Vietnamese_Embedding stays best on the pool (Điều@1 .534, MRR .674); Qwen3-Emb-4B/8B .51 @1 but 9-12x slower; bge-m3 .523. Pool is AITeamVN's top-50 (biased); no switch.
 - GRPO (Step 26 pending c3f/c4f): c1f dev greedy .6225 vs v0 .6026 (+.020, CI .0065..0338), c2f .6116 (+.009, ns), c1f MBR8 .6374 vs MBR8 v0 .6366 (no gain over MBR).
+
+## Step 26 — embedder fine-tuning on Modal: negative / borderline result (2026-11-19)
+- src/train/embed_ft.py (MNRL, LoRA/full/query-only/interpolation) + src/ops/modal_embed_ft.py + paired bootstrap in embed-bench; 15 variants on AITeamVN with 4,015 rr_v0 groups.
+- lr 1e-4 hurts (Điều@1 .46-.49 vs .534). Conservative lr 2e-5 / scale 50: +.023 Điều@1 [+.004,+.045] but strict-subset lower bound 0 and no seed reproduction → not accepted; no re-index. Details: docs/research/model-selection/embed_ft_results.md.
