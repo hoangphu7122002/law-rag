@@ -25,7 +25,7 @@ def probe(urls: dict[str, str], get=None, timeout: float = 3.0) -> dict[str, boo
     return out
 
 
-def build_service(cfg, shots_path: str | Path):
+def build_service(cfg, shots_path: str | Path, min_score: float = 0.0):
     """Retriever + reranker (calling the embed / rerank endpoints), Generator (LLM endpoint) with the shot pool loaded from JSON."""
     from generate import Generator
     from generate.shots import ShotStore
@@ -37,4 +37,4 @@ def build_service(cfg, shots_path: str | Path):
     generator = Generator(cfg.generate, cfg.backend)
     if cfg.generate.shots:
         generator._shots = ShotStore.load(shots_path)
-    return QAService(factory.retriever(), factory.reranker(), generator, k=cfg.retrieve.k)
+    return QAService(factory.retriever(), factory.reranker(), generator, k=cfg.retrieve.k, min_score=min_score)

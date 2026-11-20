@@ -35,7 +35,7 @@ Response: `{"answer": "...", "sources": [{"doc", "text", "score"}, ...5], "timin
 Empty question → 422; an endpoint down → 503 with the error.
 
 Variables: `GPU` (device index), `LLM_SHARE` / `EMBED_SHARE` / `RERANK_SHARE` (GPU memory fractions, default .45 / .15 / .15), `API_PORT` (8080), `VLLM_IMAGE`
-(default `vllm/vllm-openai:v0.30.0`, the version the experiments used), `HF_CACHE`, `HF_HUB_OFFLINE`. The api also reads `LAWRAG_EXP`, `SHOTS_PATH`, `PORT`.
+(default `vllm/vllm-openai:v0.30.0`, the version the experiments used), `HF_CACHE`, `HF_HUB_OFFLINE`. The api also reads `LAWRAG_EXP`, `SHOTS_PATH`, `PORT` and `MIN_RERANK_SCORE` (refuse when the best reranker score is below it, default 0.001, 0 = off). A refused answer is the fixed sentence "Dựa trên các ngữ cảnh được cung cấp, chưa tìm thấy quy định liên quan để trả lời câu hỏi này.", the LLM is not called, and the response carries `"refused": true`.
 
 ## Measured (L40S box, GPU 1 shared by the three vLLM endpoints; dev questions through POST /ask, `scripts/api_eval.py`)
 | | n | errors | rougeL | mean | p50 | p95 |

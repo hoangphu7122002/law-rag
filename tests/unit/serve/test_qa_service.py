@@ -49,3 +49,25 @@ def test_ask_reports_stage_timings():
 def test_ask_without_reranker_keeps_dense_order():
     out = asyncio.run(service(k=2, reranker=None).ask("q"))
     assert [s["doc"] for s in out["sources"]] == ["A", "B"] and out["timings"]["rerank_s"] == 0.0
+
+
+class LowScoreReranker:   # nothing in the corpus relates to the question: every cross-encoder score is ~0
+    def postprocess_nodes(self, nodes, query_bundle=None):
+        return [NodeWithScore(node=n.node, score=0.0002) for n in nodes]
+
+
+def test_off_topic_question_is_refused_without_calling_the_llm():
+    class NoLLM:
+        async def answer(self, question, passages):
+            raise AssertionError("the LLM must not be called")
+
+    svc = QAService(FakeRetriever(), LowScoreReranker(), NoLLM(), k=2, min_score=0.001)
+    out = asyncio.run(svc.ask("Hôm nay thời tiết ở Hà Nội thế nào?"))
+    assert out["refused"] is True and "chưa tìm thấy" in out["answer"].lower()
+    assert out["timings"]["generate_s"] == 0.0 and len(out["sources"]) == 2
+
+
+def test_relevant_question_is_not_refused_and_default_guard_is_off():
+    out = asyncio.run(QAService(FakeRetriever(), ReverseReranker(), FakeGenerator(), k=2, min_score=0.001).ask("q"))
+    assert out["refused"] is False
+    assert asyncio.run(QAService(FakeRetriever(), LowScoreReranker(), FakeGenerator(), k=2).ask("q"))["refused"] is False
