@@ -1,0 +1,7 @@
+# GPU1: react_g1 (tools used in 100% of questions, but its own search queries found the gold Dieu in only 66%: rougeL .651 when found, .315 when missed). Inference-side fix: every search_law call also retrieves with the original question.
+serve /home/app/phunguyen/law_rag/data/models/react_g1 --gpu 1 --share 0.45 --tools
+configs/exp/A7_react.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/react_g1 --set backend.base_url=http://localhost:8001/v1 --set split=dev_clean --set generate.tool_prompt=force --set generate.agent_initial_k=0 --set generate.tools_url=http://localhost:8300 --set generate.search_with_question=true
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react.*-g1"
+configs/exp/A7_react.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/react_g1 --set backend.base_url=http://localhost:8001/v1 --set split=dev_strict --set generate.tool_prompt=force --set generate.agent_initial_k=0 --set generate.tools_url=http://localhost:8300 --set generate.search_with_question=true
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react.*-g1"
+do tmux kill-session -t lawrag-llm-g1
