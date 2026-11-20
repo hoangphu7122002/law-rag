@@ -1,0 +1,10 @@
+# GPU1 after both teacher runs: build G1 data (gold final answers, 9B tool turns) and SFT the raw 2B; then eval on dev_clean + dev_strict (force prompt, no min_tool_calls) via the shared endpoint.
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react"
+sh react-g1 sh scripts/react_g1.sh
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-react-g1"
+serve /home/app/phunguyen/law_rag/data/models/react_g1 --gpu 1 --share 0.45 --tools
+configs/exp/A7_react.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/react_g1 --set backend.base_url=http://localhost:8001/v1 --set split=dev_clean --set generate.tool_prompt=force --set generate.agent_initial_k=0 --set generate.tools_url=http://localhost:8300
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react.*-g1"
+configs/exp/A7_react.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/react_g1 --set backend.base_url=http://localhost:8001/v1 --set split=dev_strict --set generate.tool_prompt=force --set generate.agent_initial_k=0 --set generate.tools_url=http://localhost:8300
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react.*-g1"
+do tmux kill-session -t lawrag-llm-g1
