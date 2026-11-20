@@ -116,7 +116,7 @@ class RemoteBox:
         One GPU holds all three (gpu_share per kind); flags follow datamate (bf16, prefix caching, big batches)."""
         self.shell(self._serve_script(model, gpu, kind))
 
-    def _serve_script(self, model: str, gpu: int, kind: str = "llm", replace: bool = False, share: float | None = None, tools: bool = False) -> str:
+    def _serve_script(self, model: str, gpu: int, kind: str = "llm", replace: bool = False, share: float | None = None, tools: bool = False, quant: str = "") -> str:
         """Shell that starts the server and waits until it answers (exit != 0 on failure).
         replace: kill our existing server on that GPU first (queue `serve` lines switch the LLM between runs)."""
         b, port, session = self.box, self.PORTS[kind] + gpu, f"{PREFIX}{kind}-g{gpu}"
@@ -124,6 +124,8 @@ class RemoteBox:
         flags = b.llm_args if kind == "llm" else ["--runner", "pooling", *b.pooling_args]
         if tools:   # native tool calls (generate/react.py); Qwen3.5's chat template uses the qwen3_coder XML format
             flags = [*flags, "--enable-auto-tool-choice", "--tool-call-parser", "qwen3_coder"]
+        if quant:   # e.g. fp8: weights quantised at load time (latency experiments)
+            flags = [*flags, "--quantization", quant]
         server = (f"{self._env()} CUDA_VISIBLE_DEVICES={gpu} HF_HOME={b.hf_home} {b.vllm} serve {model} "
                   f"--host 127.0.0.1 --port {port} --seed 0 --gpu-memory-utilization {share or b.gpu_share[kind]} "
                   f"{' '.join(flags)} 2>&1 | tee {log}")
@@ -186,7 +188,8 @@ class RemoteBox:
             if exp == "serve":
                 g = int(args[args.index("--gpu") + 1]) if "--gpu" in args else gpu
                 share = float(args[args.index("--share") + 1]) if "--share" in args else None   # e.g. a 9B teacher alone on a GPU
-                script = self._serve_script(args[0], g, replace=True, share=share, tools="--tools" in args)
+                script = self._serve_script(args[0], g, replace=True, share=share, tools="--tools" in args,
+                                       quant=args[args.index("--quant") + 1] if "--quant" in args else "")
                 lines += [wait, f"( {script} ) || {{ echo 'serve failed, queue stopped'; exit 1; }}"]
                 continue
             session, job = self._job(exp, gpu, args)

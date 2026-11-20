@@ -1,0 +1,11 @@
+# GPU0 (parallel to GPU1): apply the v3b recipe to Qwen2.5-3B-legal-vn (bqbbao6, 3.09B, raw dev .4553): SFT data with ITS template (no <think> block) -> SFT -> greedy (shots 2) -> MBR8. Compare with C1 (A5_v3b__177b2411 / A6_mbrv3b__544aee20).
+sh sftdata-q25 cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH uv run python -m cli sft-data configs/exp/A3_Q3.yaml --name q25_v3b --k-range 3,10 --oracle 0.7 --shots 0,1,2,3 --refuse 0.2 --set generate.model=/home/app/phunguyen/law_rag/data/models/raw_qwen25_legalvn --set generate.params_b=3.09 > data/runs/logs/sftdata-q25.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-sftdata-q25"
+sh train-q25v3b cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/q25_v3b --base /home/app/phunguyen/law_rag/data/models/raw_qwen25_legalvn --out data/models/q25_v3b --epochs 3 --max-length 12288 --batch 1 --accum 16 > data/runs/logs/train-q25v3b.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-train-q25v3b"
+serve /home/app/phunguyen/law_rag/data/models/q25_v3b --gpu 0 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q25_v3b --set generate.params_b=3.09 --set backend.base_url=http://localhost:8000/v1 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
+configs/exp/A6_mbrv3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q25_v3b --set generate.params_b=3.09 --set backend.base_url=http://localhost:8000/v1 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbrv3b.*-g0"
+do tmux kill-session -t lawrag-llm-g0

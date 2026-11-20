@@ -1,0 +1,16 @@
+# GPU1: RAW legal models on dev (vi_rag, shots 0, greedy, cached retrieval). ViLegalQwen3 is gated (needs HF login) -> skipped. Control = raw Qwen3.5-2B. No external APIs.
+sh dl-raw cd /home/app/phunguyen/law_rag && .venv/bin/python -c "from huggingface_hub import snapshot_download; snapshot_download('VLSP2025-LegalSML/qwen3-1.7b-legal-pretrain', local_dir='/home/app/phunguyen/law_rag/data/models/raw_legalsml'); snapshot_download('bqbbao6/Qwen2.5-3B-legal-vn', local_dir='/home/app/phunguyen/law_rag/data/models/raw_qwen25_legalvn'); snapshot_download('thangvip/qwen3-1.7b-vietnamese-legal-grpo-phase-2', local_dir='/home/app/phunguyen/law_rag/data/models/raw_thangvip_grpo')" > data/runs/logs/dl-raw.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dl-raw"
+serve /home/app/phunguyen/law_rag/data/models/raw_legalsml --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/raw_legalsml --set generate.params_b=1.72 --set backend.base_url=http://localhost:8001/v1 --set generate.shots=0
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+serve /home/app/phunguyen/law_rag/data/models/raw_qwen25_legalvn --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/raw_qwen25_legalvn --set generate.params_b=3.09 --set backend.base_url=http://localhost:8001/v1 --set generate.shots=0
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+serve /home/app/phunguyen/law_rag/data/models/raw_thangvip_grpo --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/raw_thangvip_grpo --set generate.params_b=1.72 --set backend.base_url=http://localhost:8001/v1 --set generate.shots=0
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+serve Qwen/Qwen3.5-2B --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=Qwen/Qwen3.5-2B --set generate.params_b=2.27 --set backend.base_url=http://localhost:8001/v1 --set generate.shots=0
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1

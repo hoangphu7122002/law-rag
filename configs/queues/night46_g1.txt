@@ -1,0 +1,9 @@
+# GPU1: DPO A (lr 2e-5, beta 0.1, 1 epoch, 1211 pairs from v3b own samples) -> eval greedy then MBR8 on dev300 (compare with C1: A5_v3b__177b2411 greedy, A6_mbrv3b__544aee20 MBR).
+sh dpo-a cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/dpo.py --pairs data/train/pref_v3b/pairs.jsonl --base data/models/q35_v3b --out data/models/dpo_a --lr 2e-5 --beta 0.1 > data/runs/logs/dpo-a.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo-a"
+serve /home/app/phunguyen/law_rag/data/models/dpo_a --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_a --set backend.base_url=http://localhost:8001/v1 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+configs/exp/A6_mbrv3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_a --set backend.base_url=http://localhost:8001/v1 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbrv3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1

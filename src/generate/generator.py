@@ -79,11 +79,15 @@ class Generator:
     async def answer(self, question: str, passages: list[Passage]) -> str:
         if not self.cfg.mbr:
             return await self.sample(question, passages)
-        cands = list(await asyncio.gather(*(self.sample(question, passages, t) for t in self.cfg.mbr)))
+        cands = await self.candidates(question, passages)
         if self.cfg.check:   # optional gate: keep candidates that pass; if none does, keep them all (never end up with nothing)
             gate = Gate(self.cfg.check)
             cands = [c for c in cands if gate.passes(c, passages)] or cands
         return self.mbr_pick(cands)
+
+    async def candidates(self, question: str, passages: list[Passage]) -> list[str]:
+        """One sample per MBR temperature, before any gate or pick (also used to measure the best-of-n ceiling)."""
+        return list(await asyncio.gather(*(self.sample(question, passages, t) for t in self.cfg.mbr)))
 
     async def sample(self, question: str, passages: list[Passage], temperature: float | None = None) -> str:
         if self.cfg.mode != "chat":

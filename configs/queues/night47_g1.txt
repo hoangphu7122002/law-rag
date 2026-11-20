@@ -1,0 +1,10 @@
+# GPU1: latency + FP8 for the DPO A model (alone on the GPU, concurrency 1 = per-question latency). dpo_a_bf16 / dpo_a_fp8 are symlinks of dpo_a (distinct run keys). Same weights; fp8 = vLLM --quantization fp8.
+sh mk-links cd /home/app/phunguyen/law_rag/data/models && ln -sfn dpo_a dpo_a_bf16 && ln -sfn dpo_a dpo_a_fp8
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-mk-links"
+serve /home/app/phunguyen/law_rag/data/models/dpo_a_bf16 --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_a_bf16 --set backend.base_url=http://localhost:8001/v1 --set generate.shots=2 --set generate.concurrency=1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+serve /home/app/phunguyen/law_rag/data/models/dpo_a_fp8 --gpu 1 --share 0.45 --quant fp8
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_a_fp8 --set backend.base_url=http://localhost:8001/v1 --set generate.shots=2 --set generate.concurrency=1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1

@@ -1,0 +1,7 @@
+# GPU1: generator ceiling. v3b + 2 shots, 8 candidates (greedy + 7 x T0.7) per dev question; greedy / MBR / best-of-n vs reference. No training.
+serve /home/app/phunguyen/law_rag/data/models/q35_v3b --gpu 1 --share 0.45
+sh oracle-clean cd /home/app/phunguyen/law_rag && PYTHONPATH=src uv run python scripts/mbr_oracle.py configs/exp/A6_mbrv3b.yaml data/runs/mbr_oracle_dev_clean.jsonl --set generate.shots=2 --set split=dev_clean --set backend.base_url=http://localhost:8001/v1 > data/runs/logs/oracle-clean.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-oracle-clean"
+sh oracle-strict cd /home/app/phunguyen/law_rag && PYTHONPATH=src uv run python scripts/mbr_oracle.py configs/exp/A6_mbrv3b.yaml data/runs/mbr_oracle_dev_strict.jsonl --set generate.shots=2 --set split=dev_strict --set backend.base_url=http://localhost:8001/v1 > data/runs/logs/oracle-strict.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-oracle-strict"
+do tmux kill-session -t lawrag-llm-g1

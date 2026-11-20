@@ -1,0 +1,10 @@
+# GPU1 (after the raw-model evals): DPO round 2 on v3b's own pairs (1211): lr 5e-5, beta 0.1, + 0.1 x SFT loss on the chosen answer (stabiliser); round 1 (lr 2e-5) gave greedy +.019 on dev300 but nothing on top of MBR.
+wait ! tmux has-session -t lawrag-queue-1120-173933 2>/dev/null
+sh dpo-b cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/dpo.py --pairs data/train/pref_v3b/pairs.jsonl --base data/models/q35_v3b --out data/models/dpo_b --lr 5e-5 --beta 0.1 --sft-weight 0.1 > data/runs/logs/dpo-b.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo-b"
+serve /home/app/phunguyen/law_rag/data/models/dpo_b --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_b --set backend.base_url=http://localhost:8001/v1 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+configs/exp/A6_mbrv3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_b --set backend.base_url=http://localhost:8001/v1 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbrv3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1

@@ -81,3 +81,17 @@ def test_gate_drops_ungrounded_candidates_before_the_consensus_pick():
 def test_when_every_candidate_fails_the_gate_the_pick_falls_back_to_all_of_them():
     bad = "Căn cứ Điều 99 quy định"
     assert run_mbr(["grounded_citation"], [bad, bad, bad, bad]) == bad
+
+
+def test_candidates_returns_every_sample_and_answer_picks_among_them():
+    from records import Passage
+
+    g = gen(mbr=[0.0, 0.7, 0.7])
+    outs = iter(["a b c d", "a b c e", "x y z"])
+
+    async def fake_sample(q, passages, temperature=None):
+        return next(outs)
+
+    g.sample = fake_sample
+    cands = asyncio.run(g.candidates("q", [Passage("p", "d", "Điều 5. Nội dung", 1.0)]))
+    assert cands == ["a b c d", "a b c e", "x y z"]

@@ -1,0 +1,5 @@
+# GPU1: DPO candidates. v3b samples (greedy + 7 x T0.7) on its own train prompts (refusal rows skipped); pairs built later by src/train/pref_data.py.
+serve /home/app/phunguyen/law_rag/data/models/q35_v3b --gpu 1 --share 0.5
+sh pref-sample cd /home/app/phunguyen/law_rag && PYTHONPATH=src uv run python scripts/pref_sample.py --data data/train/q35_v3b --out data/train/pref_v3b/cands.jsonl --base-url http://localhost:8001/v1 --model /home/app/phunguyen/law_rag/data/models/q35_v3b > data/runs/logs/pref-sample.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pref-sample"
+do tmux kill-session -t lawrag-llm-g1
