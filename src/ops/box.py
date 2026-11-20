@@ -177,10 +177,10 @@ class RemoteBox:
                 lines += [f"until {cmd}; do sleep 60; done" if exp == "wait" else f"{cmd} || true"]
                 continue
             if exp == "tools":   # ["tools", exp_yaml, *--set k=v]: the shared tools endpoint (generate/tools_service.py) on :8300, CPU, one copy of the index
-                cmd = " ".join(shlex.quote(a) for a in ["configs/exp/" + args[0] if "/" not in args[0] else args[0], *args[1:]])
+                exp_path = "configs/exp/" + args[0] if "/" not in args[0] else args[0]   # the index + docstore peak above the 32 GB per-run cap: own cap 44 GB
                 sets = " ".join(f"--set {shlex.quote(a)}" for a in args[1:])
                 lines += ["tmux kill-session -t lawrag-tools 2>/dev/null || true",
-                          f"tmux new -d -s lawrag-tools {shlex.quote(f'cd {b.root} && export {self._env()} PATH=$HOME/.local/bin:$PATH HF_HOME={b.hf_home} && PYTHONPATH=src systemd-run --user --scope -q -p MemoryMax={MAX_RAM_GB}G .venv/bin/python -m generate.tools_service --exp {args[0]} {sets} --port 8300 2>&1 | tee {RUNS}/logs/tools.log')}",
+                          f"tmux new -d -s lawrag-tools {shlex.quote(f'cd {b.root} && export {self._env()} PATH=$HOME/.local/bin:$PATH HF_HOME={b.hf_home} && PYTHONPATH=src systemd-run --user --scope -q -p MemoryMax=44G .venv/bin/python -m generate.tools_service --exp {exp_path} {sets} --port 8300 2>&1 | tee {RUNS}/logs/tools.log')}",
                           f"until grep -q 'tools endpoint on' {RUNS}/logs/tools.log 2>/dev/null; do tmux has-session -t lawrag-tools 2>/dev/null || {{ echo 'tools endpoint died'; exit 1; }}; sleep 5; done; echo 'ready: tools endpoint :8300'"]
                 continue
             if exp == "serve":
