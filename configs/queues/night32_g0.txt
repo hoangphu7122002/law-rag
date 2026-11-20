@@ -1,0 +1,8 @@
+# GPU0 after the 2-tool trajectories: force-prompt trajectories on TRAIN with 3 tools (+kg_related, seed 2) then 4 tools (+web_search, seed 3; web is rate-limited to 500 calls/h by config).
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1120-071825"
+serve /home/app/phunguyen/law_rag/data/models/q35_v0 --gpu 0 --share 0.45 --tools
+configs/exp/A7_react.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v0 --set backend.base_url=http://localhost:8000/v1 --set split=train --set generate.tool_prompt=force --set generate.agent_initial_k=0 --set generate.agent_seed=2 --set generate.temperature=0.7 --set generate.agent_tools=[search_law,get_article,kg_related]
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react.*-g0"
+configs/exp/A7_react.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v0 --set backend.base_url=http://localhost:8000/v1 --set split=train --set generate.tool_prompt=force --set generate.agent_initial_k=0 --set generate.agent_seed=3 --set generate.temperature=0.7 --set generate.agent_tools=[search_law,get_article,kg_related,web_search] --set generate.web.key_file=/home/app/phunguyen/.tinyfish_key
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react.*-g0"
+do tmux kill-session -t lawrag-llm-g0
