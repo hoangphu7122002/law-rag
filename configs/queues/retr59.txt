@@ -1,0 +1,33 @@
+# Retrieval-only ablation (no LLM): dense vs reranker (candidates 20/50/100) vs BM25 vs hybrid(+rerank), dev and test, k=10. Output: data/runs/logs/retr-<variant>-<split>.log (one JSON line: doc@k / Dieu@k / MRR).
+sh retr-dense-dev cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=dev --set retrieve.k=10 --set rerank.model=null > data/runs/logs/retr-dense-dev.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-dense-dev"
+sh retr-rr50-dev cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=dev --set retrieve.k=10  > data/runs/logs/retr-rr50-dev.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-rr50-dev"
+sh retr-rr20-dev cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=dev --set retrieve.k=10 --set retrieve.candidates=20 > data/runs/logs/retr-rr20-dev.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-rr20-dev"
+sh retr-rr100-dev cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=dev --set retrieve.k=10 --set retrieve.candidates=100 > data/runs/logs/retr-rr100-dev.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-rr100-dev"
+sh retr-bm25-dev cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=dev --set retrieve.k=10 --set retrieve.kind=bm25 --set rerank.model=null > data/runs/logs/retr-bm25-dev.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-bm25-dev"
+sh retr-bm25rr-dev cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=dev --set retrieve.k=10 --set retrieve.kind=bm25 > data/runs/logs/retr-bm25rr-dev.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-bm25rr-dev"
+sh retr-hyb-dev cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=dev --set retrieve.k=10 --set retrieve.kind=hybrid --set rerank.model=null > data/runs/logs/retr-hyb-dev.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-hyb-dev"
+sh retr-hybrr-dev cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=dev --set retrieve.k=10 --set retrieve.kind=hybrid > data/runs/logs/retr-hybrr-dev.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-hybrr-dev"
+sh retr-dense-test cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=test --set retrieve.k=10 --set rerank.model=null > data/runs/logs/retr-dense-test.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-dense-test"
+sh retr-rr50-test cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=test --set retrieve.k=10  > data/runs/logs/retr-rr50-test.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-rr50-test"
+sh retr-rr20-test cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=test --set retrieve.k=10 --set retrieve.candidates=20 > data/runs/logs/retr-rr20-test.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-rr20-test"
+sh retr-rr100-test cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=test --set retrieve.k=10 --set retrieve.candidates=100 > data/runs/logs/retr-rr100-test.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-rr100-test"
+sh retr-bm25-test cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=test --set retrieve.k=10 --set retrieve.kind=bm25 --set rerank.model=null > data/runs/logs/retr-bm25-test.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-bm25-test"
+sh retr-bm25rr-test cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=test --set retrieve.k=10 --set retrieve.kind=bm25 > data/runs/logs/retr-bm25rr-test.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-bm25rr-test"
+sh retr-hyb-test cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=test --set retrieve.k=10 --set retrieve.kind=hybrid --set rerank.model=null > data/runs/logs/retr-hyb-test.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-hyb-test"
+sh retr-hybrr-test cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=test --set retrieve.k=10 --set retrieve.kind=hybrid > data/runs/logs/retr-hybrr-test.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-hybrr-test"

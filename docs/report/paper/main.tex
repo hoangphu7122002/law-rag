@@ -31,7 +31,7 @@ We study retrieval-augmented question answering (RAG) over Vietnamese legal text
 
 %------------------------------------------------------------------------------
 \section{Introduction}
-Legal question answering is a demanding RAG setting: the corpus is large and heavily cross-referenced, answers must cite the right article, and a small model that is deployable on a single GPU must reproduce the register of statutory text. The assignment fixes the evaluation (five lexical/semantic similarity metrics against reference answers), restricts the answering model to under $4$B parameters, and provides a deliberately naive baseline. We treat it as an empirical-systems problem: decompose the pipeline into retrieval, generation, decoding and post-training, run controlled ablations in each, and keep only changes that survive a significance test on a development split.
+Retrieval-augmented generation \cite{lewis2020rag,rag_survey} grounds a language model in retrieved passages; legal question answering is a demanding setting for it: the corpus is large and heavily cross-referenced, answers must cite the right article, and a small model that is deployable on a single GPU must reproduce the register of statutory text. The assignment fixes the evaluation (five lexical/semantic similarity metrics against reference answers), restricts the answering model to under $4$B parameters, and provides a deliberately naive baseline. We treat it as an empirical-systems problem: decompose the pipeline into retrieval, generation, decoding and post-training, run controlled ablations in each, and keep only changes that survive a significance test on a development split.
 
 \paragraph{Contributions.}
 \begin{enumerate}[leftmargin=*]
@@ -41,6 +41,17 @@ Legal question answering is a demanding RAG setting: the corpus is large and hea
 \item A systematic negative-results record and an oracle analysis showing where the remaining error lies (answer wording, not retrieval) (Sections~\ref{sec:negative} and~\ref{sec:analysis}).
 \item A reproducible, containerised QA service with separate LLM, embedding and reranking endpoints, a refusal guard for off-topic questions, and measured latency (Section~\ref{sec:deploy}).
 \end{enumerate}
+
+%------------------------------------------------------------------------------
+\section{Related Work}
+\paragraph{Retrieval-augmented generation and legal NLP.}
+RAG combines a retriever with a generator \cite{lewis2020rag}; \cite{rag_survey} survey chunking, retrieval, reranking and generation choices. Legal NLP has produced English benchmarks \cite{lexglue,legalbench} and, for Vietnamese, pretrained legal models \cite{vilegallm} built on Vietnamese encoders \cite{phobert} or multilingual decoder families \cite{qwen25,qwen3}. Reported Vietnamese legal results mostly concern retrieval or classification rather than free-form answers scored against references, which is the setting here.
+\paragraph{Retrieval and reranking.}
+Dense bi-encoders \cite{dpr,sbert,bgem3} retrieve candidates cheaply; cross-encoders \cite{monobert} re-score a short list more accurately, and lexical scoring \cite{bm25} can be fused with dense ranks \cite{rrf}. We follow this two-stage design and measure each component. Context length matters for the generator \cite{lostmiddle}, which motivates keeping $k$ small.
+\paragraph{Adapting small generators.}
+Parameter-efficient fine-tuning \cite{lora} and retrieval-aware training with distractor and injected gold passages \cite{raft} teach a small model the answer register. Policy-gradient methods \cite{ppo,instructgpt} and their group-relative variants \cite{grpo,r1} optimise a verifiable reward, while DPO \cite{dpo} and reference-free relatives \cite{simpo} optimise preferences without a reward model; weight-space operations \cite{soups,taskarith} combine checkpoints. We use the evaluation metric itself as the reward and apply DPO \emph{on-policy and iteratively}.
+\paragraph{Decoding and agents.}
+Minimum-Bayes-risk decoding \cite{mbr,freitag} and self-consistency \cite{selfcons} choose among samples by agreement; we show it recovers only part of the best-of-$n$ headroom and that DPO can move that selection into the model. Agentic RAG with tools \cite{react,selfrag,searchr1} lets the model decide what to retrieve, but with a 2B model and retrieval already near the ceiling it did not help.
 
 %------------------------------------------------------------------------------
 \section{Task, Data and Evaluation Protocol}\label{sec:data}
@@ -61,7 +72,7 @@ Nothing a model is trained on may contain knowledge tied to the test split. We d
 Because $45\%$ of development questions share a \dieu{} with retained training pairs (test: $0\%$) and $72\%$ share a 13-gram (test: $32\%$), plain dev is optimistic for fine-tuned models. We report \texttt{dev} ($300$), \texttt{dev\_clean} ($166$; no shared \dieu) and \texttt{dev\_strict} ($74$; additionally no shared non-boilerplate 13-gram), the latter being the closest to the test condition.
 
 \subsection{Metrics and significance}
-We report the five course metrics (cosine similarity of Vietnamese SBERT embeddings, Jaccard, token overlap, unigram BLEU with brevity penalty, and \rl{} F1 \cite{rouge}), computed with a line-for-line port of the baseline code on lower-cased, punctuation-stripped text; \rl{} is the primary metric. Differences between systems are assessed with a paired bootstrap \cite{bootstrap} over questions ($95\%$ intervals). A change is \emph{accepted} only if the lower bound is positive on \texttt{dev}, and it must not be negative on \texttt{dev\_clean}/\texttt{dev\_strict}. Run-to-run noise is non-negligible: greedy decoding with vLLM varies by about $\pm0.003$ \rl{} between identical runs and $8$-sample MBR by about $\pm0.006$.
+We report the five course metrics (cosine similarity of Vietnamese SBERT embeddings, Jaccard, token overlap, unigram BLEU with brevity penalty, and \rl{} F1 \cite{rouge}), computed with a line-for-line port of the baseline code on lower-cased, punctuation-stripped text; \rl{} is the primary metric. Differences between systems are assessed with a paired bootstrap \cite{bootstrap,bergk} over questions ($95\%$ intervals). A change is \emph{accepted} only if the lower bound is positive on \texttt{dev}, and it must not be negative on \texttt{dev\_clean}/\texttt{dev\_strict}. Run-to-run noise is non-negligible: greedy decoding with vLLM varies by about $\pm0.003$ \rl{} between identical runs and $8$-sample MBR by about $\pm0.006$.
 
 \paragraph{Protocol.}
 All model and hyper-parameter selection used the development split. The final configuration was fixed on dev before being scored on the $200$-question test split; earlier configurations were also scored on test during development (Table~\ref{tab:testold}), which we report for completeness.
@@ -92,10 +103,10 @@ All model and hyper-parameter selection used the development split. The final co
 \end{figure}
 
 \subsection{Retrieval}
-Documents are cleaned (headers, signatures and tails removed), de-duplicated, and split with one chunk per \dieu{} (long articles are split at $2{,}000$ characters with $100$ overlap). Chunks are embedded with the AITeamVN Vietnamese Embedding model (568M parameters, $512$ tokens) into an inner-product FAISS index \cite{faiss}; the top $50$ are re-scored by the AITeamVN Vietnamese Reranker cross-encoder (max length $1{,}024$) and the top $k{=}5$ are passed to the generator. Both models are served by vLLM \cite{vllm} pooling servers.
+Documents are cleaned (headers, signatures and tails removed), de-duplicated, and split with one chunk per \dieu{} (long articles are split at $2{,}000$ characters with $100$ overlap). Chunks are embedded with the AITeamVN Vietnamese Embedding model (568M parameters, $512$ tokens; a bge-m3-style encoder \cite{bgem3} fine-tuned for Vietnamese) into an inner-product FAISS index \cite{faiss}; the top $50$ are re-scored by the AITeamVN Vietnamese Reranker cross-encoder \cite{monobert} (max length $1{,}024$) and the top $k{=}5$ are passed to the generator. Both models are served by vLLM \cite{vllm} pooling servers; the pipeline is built with LlamaIndex \cite{llamaindex} and training uses TRL \cite{trl}.
 
 \subsection{Generator and supervised fine-tuning}
-The answering model is Qwen3.5-2B ($2.27$B parameters; thinking mode disabled). The prompt contains the retrieved \dieu{} passages, optionally two demonstrations (the nearest decontaminated training questions by token Jaccard, with their reference answers), and the question. Supervised fine-tuning uses LoRA \cite{lora} ($r{=}32$, all linear layers) on the decontaminated pairs rendered with exactly the inference prompt, with loss on the answer only. The final recipe (\emph{v3b}) combines: (a)~random $k\in[3,10]$ passages per example; (b)~\emph{gold injection}: with probability $0.7$ the gold \dieu{} is inserted when retrieval missed it (RAFT-style \cite{raft}); (c)~$0$--$3$ demonstrations per example; (d)~with probability $0.2$ an additional row whose context was retrieved for an unrelated question, with a refusal as target. Training runs $3$ epochs (effective batch $16$, max length $12{,}288$).
+The answering model is Qwen3.5-2B ($2.27$B parameters; Qwen family \cite{qwen3}; thinking mode disabled). The prompt contains the retrieved \dieu{} passages, optionally two demonstrations (the nearest decontaminated training questions by token Jaccard, with their reference answers), and the question. Supervised fine-tuning uses LoRA \cite{lora} ($r{=}32$, all linear layers) on the decontaminated pairs rendered with exactly the inference prompt, with loss on the answer only. The final recipe (\emph{v3b}) combines: (a)~random $k\in[3,10]$ passages per example; (b)~\emph{gold injection}: with probability $0.7$ the gold \dieu{} is inserted when retrieval missed it (RAFT-style \cite{raft}); (c)~$0$--$3$ demonstrations per example; (d)~with probability $0.2$ an additional row whose context was retrieved for an unrelated question, with a refusal as target. Training runs $3$ epochs (effective batch $16$, max length $12{,}288$).
 
 \subsection{Decoding}
 \textbf{Greedy} decoding (temperature $0$, top-$p$ $0.95$, $\le 1{,}024$ new tokens) needs one generation per question. \textbf{MBR} decoding \cite{mbr} samples $n{-}1$ candidates at temperature $0.7$ in addition to the greedy one and returns the candidate with the highest mean \rl{} to the others,
@@ -111,7 +122,7 @@ R=0.6\,\mathrm{RL}+0.2\,\mathrm{TO}+0.2\,\mathrm{cite}-p_{\mathrm{copy}}-p_{\mat
 \end{equation}
 where $\mathrm{cite}$ is the fraction of reference \dieu{} numbers present in the answer, $p_{\mathrm{copy}}$ penalises copying $>90\%$ of the prompt's 8-grams, and $p_{\mathrm{len}}$ is a two-sided band around the reference length; a cosine variant replaces part of the lexical weight by sentence-embedding cosine.
 \paragraph{On-policy DPO.} For each training prompt we draw $8$ samples (greedy $+7$ at $T{=}0.7$) from the current model, score them with the reward above, and form one preference pair (best, worst) when the reward gap is $\ge0.1$ and the reference is not a refusal. Direct Preference Optimisation \cite{dpo} (LoRA $r{=}32$, $\beta{=}0.1$, learning rate $2\!\times\!10^{-5}$, one epoch, effective batch $16$, reference = adapter disabled) is trained on these pairs. \emph{Iterating} (sampling again from the improved model) gives round~2.
-\paragraph{Weight-space merging.} We also test task arithmetic \cite{taskarith}, $\theta=\theta_{\mathrm{SFT}}+\alpha(\theta_{\mathrm{RL}}-\theta_{\mathrm{base}})$.
+\paragraph{Weight-space merging.} We also test weight averaging \cite{soups} and task arithmetic \cite{taskarith}, $\theta=\theta_{\mathrm{SFT}}+\alpha(\theta_{\mathrm{RL}}-\theta_{\mathrm{base}})$.
 
 \subsection{Serving}
 The QA service (Section~\ref{sec:deploy}) calls three vLLM endpoints (LLM, embedder, reranker), returns the answer, its reranked sources and per-stage timings, and \emph{refuses} when the best reranker score is below $\tau{=}0.001$ (no corpus support), avoiding invented answers to off-topic questions.
@@ -209,7 +220,7 @@ A2d, dev / test & .644/.648 & .932/.922 & .591/.610 & .905/.898 & .765/.755\\
 \bottomrule
 \end{tabular}
 \end{table}
-On test, \dieu{}@5/10/20 is $.898/.944/.966$, so enlarging $k$ buys little recall and, for the fine-tuned generator, \emph{k}=10 was not better than $k{=}5$ (dev \rl{} $.612$ vs $.633$ for v3b).
+On test, \dieu{}@5/10/20 is $.898/.944/.966$, so enlarging $k$ buys little recall and, for the fine-tuned generator, $k{=}10$ was not better than $k{=}5$ (longer contexts dilute the relevant passage \cite{lostmiddle}; dev \rl{} $.612$ vs $.633$ for v3b).
 
 \paragraph{Trained retrieval components did not help generation.}
 Fine-tuning the reranker on $4{,}015$ groups raised pipeline \dieu{}@1 from $.587$ to $.712$ on dev but \emph{not} generation quality ($.6325\to.6253$). Fifteen embedder fine-tuning variants (LoRA/full, several learning rates) gave at best $+0.023$ \dieu{}@1 \ci{+0.004}{+0.045} without reaching the acceptance rule. Among zero-shot alternatives, AITeamVN's embedder (\dieu{}@1 $.534$, MRR $.674$ on its own top-50 pool) beat bge-m3 ($.523$) and Qwen3-Embedding-4B/8B ($.51$, 9--12$\times$ slower). Embedding the chapter/scope line into chunks and a kNN prior over training questions also showed no significant gain.
@@ -333,7 +344,7 @@ Thinking mode & SFT $.590$ vs $.603$; ReAct $.513$ vs $.574$ & Fine-tuned in non
 FP8 weights (vLLM) & $.646$ vs $.654$ ($-.009$ \ci{-.020}{+.002}) for $21\%$ lower latency & Quality loss not worth it\\
 Cascade: MBR only if uncertain & 30\% MBR: $.644$ at $3.1$ generations (MBR-8 $.658$ at $8$) & Reranker margin weakly predicts MBR gain ($+.036/.021/.019$ by tercile)\\
 Forced \textit{Căn cứ \ldots} opening & dropped before running & Oracle article injection gives only $+.004$\\
-Distillation from a 9B teacher & raw teacher $.41$--$.43$ $<$ SFT 2B & Teacher does not follow the reference register\\
+Distillation \cite{hinton} from a 9B teacher & raw teacher $.41$--$.43$ $<$ SFT 2B & Teacher does not follow the reference register\\
 Legal-domain base models & see Section~\ref{sec:generator} & Knowledge comes from retrieval\\
 \bottomrule
 \end{tabular}
@@ -447,5 +458,32 @@ Reference answers fail the grounded-citation check in $17\%$ of dev questions. P
 \bibitem{react} S.\,Yao et al. ReAct: synergizing reasoning and acting in language models. \textit{ICLR}, 2023.
 \bibitem{taskarith} G.\,Ilharco et al. Editing models with task arithmetic. \textit{ICLR}, 2023.
 \bibitem{faiss} J.\,Johnson, M.\,Douze, H.\,J\'egou. Billion-scale similarity search with GPUs. \textit{IEEE Trans.\ Big Data}, 2019.
+\bibitem{lewis2020rag} P.\,Lewis et al. Retrieval-augmented generation for knowledge-intensive NLP tasks. \textit{NeurIPS}, 2020.
+\bibitem{rag_survey} Y.\,Gao et al. Retrieval-augmented generation for large language models: a survey. arXiv:2312.10997, 2023.
+\bibitem{dpr} V.\,Karpukhin et al. Dense passage retrieval for open-domain question answering. \textit{EMNLP}, 2020.
+\bibitem{sbert} N.\,Reimers and I.\,Gurevych. Sentence-BERT: sentence embeddings using Siamese BERT-networks. \textit{EMNLP-IJCNLP}, 2019.
+\bibitem{bgem3} J.\,Chen et al. BGE M3-Embedding: multi-lingual, multi-functionality, multi-granularity text embeddings through self-knowledge distillation. arXiv:2402.03216, 2024.
+\bibitem{monobert} R.\,Nogueira and K.\,Cho. Passage re-ranking with BERT. arXiv:1901.04085, 2019.
+\bibitem{bm25} S.\,Robertson and H.\,Zaragoza. The probabilistic relevance framework: BM25 and beyond. \textit{Foundations and Trends in Information Retrieval}, 3(4), 2009.
+\bibitem{rrf} G.\,V.\,Cormack, C.\,L.\,A.\,Clarke, S.\,Buettcher. Reciprocal rank fusion outperforms Condorcet and individual rank learning methods. \textit{SIGIR}, 2009.
+\bibitem{lostmiddle} N.\,F.\,Liu et al. Lost in the middle: how language models use long contexts. \textit{TACL}, 12, 2024.
+\bibitem{qwen3} A.\,Yang et al. Qwen3 technical report. arXiv:2505.09388, 2025.
+\bibitem{qwen25} Qwen Team. Qwen2.5 technical report. arXiv:2412.15115, 2024.
+\bibitem{phobert} D.\,Q.\,Nguyen and A.\,T.\,Nguyen. PhoBERT: pre-trained language models for Vietnamese. \textit{Findings of EMNLP}, 2020.
+\bibitem{legalbench} N.\,Guha et al. LegalBench: a collaboratively built benchmark for measuring legal reasoning in large language models. \textit{NeurIPS Datasets and Benchmarks}, 2023.
+\bibitem{lexglue} I.\,Chalkidis et al. LexGLUE: a benchmark dataset for legal language understanding in English. \textit{ACL}, 2022.
+\bibitem{instructgpt} L.\,Ouyang et al. Training language models to follow instructions with human feedback. \textit{NeurIPS}, 2022.
+\bibitem{ppo} J.\,Schulman et al. Proximal policy optimization algorithms. arXiv:1707.06347, 2017.
+\bibitem{r1} DeepSeek-AI. DeepSeek-R1: incentivizing reasoning capability in LLMs via reinforcement learning. arXiv:2501.12948, 2025.
+\bibitem{simpo} Y.\,Meng, M.\,Xia, D.\,Chen. SimPO: simple preference optimization with a reference-free reward. \textit{NeurIPS}, 2024.
+\bibitem{soups} M.\,Wortsman et al. Model soups: averaging weights of multiple fine-tuned models improves accuracy without increasing inference time. \textit{ICML}, 2022.
+\bibitem{selfcons} X.\,Wang et al. Self-consistency improves chain of thought reasoning in language models. \textit{ICLR}, 2023.
+\bibitem{freitag} M.\,Freitag et al. High quality rather than high model probability: minimum Bayes risk decoding with neural metrics. \textit{TACL}, 10, 2022.
+\bibitem{selfrag} A.\,Asai et al. Self-RAG: learning to retrieve, generate, and critique through self-reflection. \textit{ICLR}, 2024.
+\bibitem{searchr1} B.\,Jin et al. Search-R1: training LLMs to reason and leverage search engines with reinforcement learning. arXiv:2503.09516, 2025.
+\bibitem{bergk} T.\,Berg-Kirkpatrick, D.\,Burkett, D.\,Klein. An empirical investigation of statistical significance in NLP. \textit{EMNLP}, 2012.
+\bibitem{hinton} G.\,Hinton, O.\,Vinyals, J.\,Dean. Distilling the knowledge in a neural network. arXiv:1503.02531, 2015.
+\bibitem{trl} L.\,von Werra et al. TRL: Transformer reinforcement learning. \url{https://github.com/huggingface/trl}, 2020.
+\bibitem{llamaindex} J.\,Liu. LlamaIndex. \url{https://github.com/run-llama/llama_index}, 2022.
 \end{thebibliography}
 \end{document}
