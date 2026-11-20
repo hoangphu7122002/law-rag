@@ -1,8 +1,8 @@
 """One shared tools endpoint (like datamate's serve adapters): the index / docstore / reranker client / KG / web search live in ONE process,
 every run (and every worker thread of a run) calls it over HTTP, so a 10-15 GB docstore is held once instead of once per run.
 
-    PYTHONPATH=src python -m generate.tools_service --exp configs/exp/A7_react.yaml --port 8100
-    ... --set generate.tools_url=http://localhost:8100       # the agent then uses RemoteTools instead of building its own index
+    PYTHONPATH=src python -m generate.tools_service --exp configs/exp/A7_react.yaml --port 8300
+    ... --set generate.tools_url=http://localhost:8300       # the agent then uses RemoteTools instead of building its own index
 
 Endpoints (POST JSON): /search_law {query} -> [passage]; /article {law, dieu} -> {text}; /related {law, hops} -> [..]|null; /web {query} -> [..].
 search_law results are cached by query (trajectory sampling repeats the same queries a lot)."""
@@ -15,7 +15,7 @@ from types import SimpleNamespace
 from records import Passage
 
 
-def make_server(tools, host: str = "127.0.0.1", port: int = 8100) -> ThreadingHTTPServer:
+def make_server(tools, host: str = "127.0.0.1", port: int = 8300) -> ThreadingHTTPServer:
     cache: dict[str, list[dict]] = {}
     lock = threading.Lock()
 
@@ -82,7 +82,7 @@ def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--exp", required=True)
     p.add_argument("--set", action="append", default=[])
-    p.add_argument("--port", type=int, default=8100)
+    p.add_argument("--port", type=int, default=8300)
     a = p.parse_args()
     srv = make_server(LawTools(load(a.exp, a.set, None)), "0.0.0.0", a.port)
     print(f"tools endpoint on :{a.port}", flush=True)
