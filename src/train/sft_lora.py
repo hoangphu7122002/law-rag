@@ -19,7 +19,7 @@ def complete_config(base: str, out: Path) -> None:
     (2026-11-19 bug: the base's index.json + shard were copied and would have made vLLM serve the BASE weights)."""
     from huggingface_hub import snapshot_download
 
-    base_dir = Path(snapshot_download(base, allow_patterns=["*.json", "*.jinja"]))
+    base_dir = Path(base) if Path(base).is_dir() else Path(snapshot_download(base, allow_patterns=["*.json", "*.jinja"]))   # a local SFT/raw base dir or a hub id
     for f in base_dir.iterdir():
         if f.suffix in (".json", ".jinja") and not f.name.endswith(".index.json") and not (out / f.name).exists():
             shutil.copy(f, out / f.name)
@@ -30,7 +30,7 @@ def clean_merged(base: str, out: Path) -> None:
     same bytes (size + first MiB). Our own merged weights always differ, so they are kept."""
     from huggingface_hub import snapshot_download
 
-    base_dir = Path(snapshot_download(base, allow_patterns=["*.json"]))
+    base_dir = Path(base) if Path(base).is_dir() else Path(snapshot_download(base, allow_patterns=["*.json"]))
     for f in list(out.iterdir()):
         b = (base_dir / f.name)
         if not (f.name.endswith(".index.json") or ".safetensors" in f.name) or not b.exists():
