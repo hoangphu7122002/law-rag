@@ -376,3 +376,17 @@ Earlier "ReAct S1 null / ReAct below RAG" were measured on agents that NEVER cal
 - **Raw (no fine-tune) models on dev300, vi_rag, shots 0, greedy**: Qwen2.5-3B-legal-vn (bqbbao6) **.4553**, Vi-Qwen2-3B-RAG .4229, Qwen3.5-2B .3991, LegalSML qwen3-1.7b-legal-pretrain (base only) .2408, thangvip qwen3-1.7b legal GRPO .2126; ViLegalQwen3-1.7B skipped (gated: needs HF access). Sources: docs/research/legal-models/ (ViLegalLM paper: legal pretraining adds only +0.4..+0.7 ROUGE-L on generation after the same fine-tuning).
 - **Parallel lines running** (both GPUs): GPU0 Qwen2.5-3B-legal-vn with the v3b recipe (q25_v3b data with its own chat template, SFT 3 ep, greedy + MBR8; user asked to continue to greedy + DPO even if it does not beat C1), GPU1 DPO round 2 on v3b pairs (lr 5e-5, + .1 SFT term, dpo_b).
 - **Candidate for deployment (proposal):** DPO greedy bf16 (~.65, 1 generation); C1/C2 + MBR8 stays the accuracy mode.
+
+### Step 29 addendum — iterative DPO, seed check, Qwen2.5-3B line (2026-11-20 evening; all dev300, shots 2)
+| model | greedy | MBR8 | notes |
+|---|---|---|---|
+| C1 (v3b) | .6325 | .6575 | reference |
+| dpo_a (round 1: v3b samples, lr 2e-5) | .6514 / .6543 | .6592 | +.019 greedy [+.001,+.038] |
+| dpo_b (round 1 pairs, lr 5e-5 + .1 SFT term) | .6421 | .6593 | worse than dpo_a: stronger step does not help |
+| **dpo_a2** (round 2: dpo_a's own samples, 898 pairs, lr 2e-5) | **.6637** | **.6721** | greedy +.0312 [+.0142,+.0491] vs C1 (dev_clean +.0127 ns, dev_strict +.0229 ns); MBR8 +.0146 [-.001,+.030]; MBR4 .6670 |
+| dpo_a2s2 (same, seed 777) | .6623 | .6652 | seed check: greedy -.0015 vs dpo_a2 (replicates), +.0298 [+.0107,+.0496] vs C1 |
+| dpo_a3 (round 3 from dpo_a2, 906 pairs) | .6348 | .6419 | degraded (-.029 [-.045,-.012]); answers 2000 chars vs ref 1583 -> over-optimisation, stop at round 2 |
+- Qwen2.5-3B-legal-vn line (v3b recipe with its own template; src/train/sft_lora.py local-base fix, TDD): raw .4553 -> SFT .6153 / MBR8 .6358 -> +DPO .6247 / .6435; below C1 on every setting (dev_clean greedy -.0346 sig). Legal pretraining/3B size gives no edge after SFT.
+- Iterative-DPO greedy (1 generation) beats C1 MBR8 (8 generations); MBR on top adds only +.003 (MBR4 .6670, MBR8 .6721/.6652 for two seeds) -> deployment = dpo_a2 greedy bf16. Latency (bf16, generation only, L40S, concurrency 1): p50 2.7 s, p95 6.3 s.
+- Caveats: all selections on dev (rounds are noisy: .654/.664/.635); dev_clean / dev_strict gains vs C1 are not significant (n=166/74); seed replication supports round 2. Test NOT touched for any of these.
+- Final plan: retrain SFT (v3b recipe) on train+dev, then 2 DPO rounds with the same recipe, ONE test run, report as test-informed (test already seen for earlier configs).

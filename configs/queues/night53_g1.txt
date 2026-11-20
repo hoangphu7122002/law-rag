@@ -1,0 +1,15 @@
+# GPU1: iterative DPO round 3. dpo_a2 (round 2 from dpo_a, 898 pairs) gave greedy dev300 .6637 (+.031 [+.014,+.049] vs C1 greedy) and MBR8 .6721 (+.015 [-.001,+.030] vs C1 MBR). Round 3: sample from dpo_a2 -> pairs -> DPO lr 2e-5 -> dpo_a3 -> greedy + MBR8.
+serve /home/app/phunguyen/law_rag/data/models/dpo_a2 --gpu 1 --share 0.5
+sh pref-sample-a2 cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/pref_sample.py --data data/train/q35_v3b --out data/train/pref_dpoa2/cands.jsonl --base-url http://localhost:8001/v1 --model /home/app/phunguyen/law_rag/data/models/dpo_a2 > data/runs/logs/pref-sample-a2.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pref-sample-a2"
+do tmux kill-session -t lawrag-llm-g1
+sh pairs-a2 cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/build_pairs.py data/train/pref_dpoa2/cands.jsonl data/train/pref_dpoa2/pairs.jsonl --min-margin 0.1 > data/runs/logs/pairs-a2.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pairs-a2"
+sh dpo-a3 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/dpo.py --pairs data/train/pref_dpoa2/pairs.jsonl --base data/models/dpo_a2 --out data/models/dpo_a3 --lr 2e-5 --beta 0.1 > data/runs/logs/dpo-a3.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo-a3"
+serve /home/app/phunguyen/law_rag/data/models/dpo_a3 --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_a3 --set backend.base_url=http://localhost:8001/v1 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+configs/exp/A6_mbrv3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_a3 --set backend.base_url=http://localhost:8001/v1 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbrv3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1
