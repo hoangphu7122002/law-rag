@@ -1,0 +1,7 @@
+# TEST (user 2026-11-20: "chạy test cấu hình này đi"): dpo_a2 greedy (the chosen deployment config), then MBR8 as the accuracy mode. Same retrieval as the dev runs.
+serve /home/app/phunguyen/law_rag/data/models/dpo_a2 --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_a2 --set backend.base_url=http://localhost:8001/v1 --set generate.shots=2 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+configs/exp/A6_mbrv3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_a2 --set backend.base_url=http://localhost:8001/v1 --set generate.shots=2 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbrv3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1

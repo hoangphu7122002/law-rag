@@ -390,3 +390,17 @@ Earlier "ReAct S1 null / ReAct below RAG" were measured on agents that NEVER cal
 - Iterative-DPO greedy (1 generation) beats C1 MBR8 (8 generations); MBR on top adds only +.003 (MBR4 .6670, MBR8 .6721/.6652 for two seeds) -> deployment = dpo_a2 greedy bf16. Latency (bf16, generation only, L40S, concurrency 1): p50 2.7 s, p95 6.3 s.
 - Caveats: all selections on dev (rounds are noisy: .654/.664/.635); dev_clean / dev_strict gains vs C1 are not significant (n=166/74); seed replication supports round 2. Test NOT touched for any of these.
 - Final plan: retrain SFT (v3b recipe) on train+dev, then 2 DPO rounds with the same recipe, ONE test run, report as test-informed (test already seen for earlier configs).
+
+## Step 30 — test (2026-11-20 evening)
+Test split (200 questions, 0 errors, 0 empty), retrieval as in the dev runs (dense top-50 + Vietnamese_Reranker top-5), 2 shots, bf16. Metrics cosine / jaccard / token overlap / bleu1 / rougeL:
+| model | cos | jac | tok | bleu1 | rougeL |
+|---|---|---|---|---|---|
+| course baseline (naive RAG, B0) | .6020 | – | – | – | .171 |
+| v0 greedy | – | – | – | – | .6175 |
+| v3b greedy | – | – | – | – | .6073 |
+| v0 + MBR8 | – | – | – | – | .6451 |
+| **dpo_a2 greedy (chosen deployment config)** | .9158 | .6729 | .7344 | .5820 | **.6433** |
+| dpo_a2s2 greedy (second seed) | .9153 | .6652 | .7073 | .5775 | .6377 |
+| dpo_a2 + MBR8 (accuracy mode) | .9176 | .6805 | .7275 | .5873 | **.6521** |
+- dpo_a2 greedy is +.026 rougeL over v3b greedy and v0 greedy on test with one generation per question; both seeds agree (.6433 / .6377). MBR8 on top adds +.009 (.6521).
+- Latency in these runs (concurrency 16) is not a single-request latency (p50 ~9 s, p95 ~18 s); single request, generation only, L40S: p50 2.7 s, p95 6.3 s (dev, concurrency 1).
