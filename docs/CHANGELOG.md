@@ -421,3 +421,9 @@ Test split (200 questions, 0 errors, 0 empty), retrieval as in the dev runs (den
 - Table 1 of the report now has all five metrics for every row (v0 MBR-8: .915/.677/.761/.599/.645; v3b greedy 2 shots: .905/.656/.735/.538/.607).
 - `scripts/manual_check_sheet.py` + `evaluate.faithfulness.sample_rows` (TDD): `docs/report/manual_check.csv`, 20 test answers (one per ROUGE-L stratum) with empty columns for a human check (right article / content / invented facts / still in force).
 - Queue `seed57_g0`: v3b recipe re-trained with seed 777 (SFT noise check), greedy + MBR-8 on dev300.
+
+## Step 34 — ablations of the final system and best combined configuration (2026-11-21)
+- One-factor ablations on dev300 (greedy, dpo_a2, reference .6637): no reranker .641 (−.022 [−.039,−.006]); rerank candidates 20 .663 / 100 .651; k=3 .657, k=8 .666 (+.002, n.s.); shots 0 .633 (−.030), 1 .656, 3 .651. DPO round-1 design vs dpo_a (.6543): pair margin .05 .655, .2 .641; beta .05 .642, .3 .652. No setting beats the current final per the rule (lower CI > 0), so the best combined configuration equals the current final; no further test run.
+- SFT seed check (v3b recipe, seed 777): dev greedy .603 / MBR-8 .6405 vs .6325 / .6575 for the reported seed; SFT stage is seed-sensitive (DPO on top of seed 2 not run). Added to Limitations.
+- Retrieval-only ablation (dev/test, k=10): dense, dense+rerank 20/50/100, BM25, BM25+rerank, hybrid RRF, hybrid+rerank; dense+rerank is best, BM25 far worse, hybrid ≤ dense. Table in report §4.2.
+- Bug fix: `QueryFusionRetriever` defaulted to an OpenAI LLM (hybrid runs died silently with "No API key"); now `llm=MockLLM()`, test `tests/unit/retrieve/test_hybrid_factory.py` (261 tests).

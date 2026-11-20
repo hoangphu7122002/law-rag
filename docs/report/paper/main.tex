@@ -225,6 +225,26 @@ On test, \dieu{}@5/10/20 is $.898/.944/.966$, so enlarging $k$ buys little recal
 \paragraph{Trained retrieval components did not help generation.}
 Fine-tuning the reranker on $4{,}015$ groups raised pipeline \dieu{}@1 from $.587$ to $.712$ on dev but \emph{not} generation quality ($.6325\to.6253$). Fifteen embedder fine-tuning variants (LoRA/full, several learning rates) gave at best $+0.023$ \dieu{}@1 \ci{+0.004}{+0.045} without reaching the acceptance rule. Among zero-shot alternatives, AITeamVN's embedder (\dieu{}@1 $.534$, MRR $.674$ on its own top-50 pool) beat bge-m3 ($.523$) and Qwen3-Embedding-4B/8B ($.51$, 9--12$\times$ slower). Embedding the chapter/scope line into chunks and a kNN prior over training questions also showed no significant gain.
 
+\begin{table}[H]
+\centering
+\caption{Retrieval variants (retrieval only, top-10 returned; dev / test; documents $n{=}281/193$, articles $n{=}264/177$ with a recoverable gold). ``+rr$N$'' = reranker over $N$ candidates; hybrid = reciprocal-rank fusion of dense and BM25.}\label{tab:retrabl}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Retriever & Doc@1 & Doc@5 & \dieu{}@1 & \dieu{}@5 & Doc MRR\\
+\midrule
+Dense (no reranker) & .619/.596 & .890/.891 & .542/.548 & .845/.842 & .737/.721\\
+Dense + rr20 & .651/.648 & .929/.928 & .591/.610 & .894/.904 & .775/.761\\
+\textbf{Dense + rr50 (final)} & .644/.648 & \best{.932}/.922 & .591/.610 & \best{.905}/.898 & .769/.760\\
+Dense + rr100 & .644/.648 & .929/.907 & .587/.610 & .898/.887 & .767/.758\\
+BM25 & .434/.389 & .648/.648 & .250/.288 & .496/.509 & .525/.488\\
+BM25 + rr & .587/.586 & .833/.788 & .515/.542 & .754/.712 & .693/.672\\
+Hybrid (RRF) & .541/.539 & .851/.824 & .432/.452 & .761/.751 & .674/.661\\
+Hybrid + rr & .637/.643 & .936/.912 & .580/.610 & .905/.893 & .768/.753\\
+\bottomrule
+\end{tabular}
+\end{table}
+Lexical retrieval is far weaker than the dense embedder on this task (Doc@5 $.65$ vs.\ $.89$), and fusing it with dense results lowers recall compared with dense alone; after reranking, hybrid is on par with dense (dev) but not better, so the simpler dense + reranker stack is kept. Reranking adds about $+0.04$ Doc@5 and $+0.06$ \dieu{}@5, and its depth ($20$--$100$ candidates) matters little at the retrieval level.
+
 \paragraph{Retrieval is not the bottleneck for the fine-tuned model.}
 Injecting the gold \dieu{} at rank~1 (oracle) improves dev \rl{} by only $+0.004$ \ci{-0.003}{+0.012} for the SFT model, so remaining error is attributed to generation.
 
@@ -331,6 +351,37 @@ DPO round 3 ($\mathrm{dpo}_{a3}$) & .635 & .642 & $-.029$ \ci{-.045}{-.012} vs r
 
 \paragraph{Findings.} (i)~MBR is the most reliable single technique on the SFT model ($+0.034$ dev \ci{+0.020}{+0.048}; $+0.028$ test, $.645$ vs $.618$, \ci{+0.011}{+0.044}), but costs $n\times$ generation. (ii)~GRPO moves greedy dev \rl{} by $+0.01$ to $+0.03$ depending on the reward (final variants span $.612$--$.634$), and RL from the v3b checkpoint does not beat plain v3b + MBR. (iii)~Merging the RL delta into v3b is marginal and sits at the MBR noise level. (iv)~DPO on \emph{own} samples with the evaluation reward is the best trade-off: round~2 under \emph{greedy} decoding ($.664$) exceeds C1 with MBR-8 ($.658$) at one eighth of the generation cost, MBR adds only $+0.003$ to $+0.008$ on top, and round~3 over-optimises. The round-2 gain replicates across two seeds ($.6637$ vs $.6623$ dev; $.6433$ vs $.6377$ test), which mitigates the risk that round~2 is a lucky checkpoint selected on dev.
 
+\subsection{Ablations of the final system and best combined configuration}\label{sec:ablation}
+Starting from the final system (DPO round~2, greedy, $k{=}5$, $2$ shots, reranker over $50$ dense candidates; dev \rl{} $.6637$), each inference-side factor was varied alone and each round-1 DPO design choice was varied against the reference round-1 model ($\mathrm{dpo}_a$, $.6543$). The acceptance rule was fixed beforehand: a change is adopted only if the lower bound of the paired $95\%$ interval on dev ($n{=}300$) is above zero and it is not worse on \texttt{dev\_clean} and \texttt{dev\_strict}; ties keep the cheaper setting.
+\begin{table}[H]
+\centering
+\caption{One-factor ablations on dev ($n{=}300$, greedy, final model unless stated). Difference is against the final system ($.6637$) with a paired-bootstrap interval; $\ast$ = interval excludes zero (worse).}\label{tab:abl}
+\begin{tabular}{@{}llcl@{}}
+\toprule
+Factor & Setting & \rl{} & Difference\\
+\midrule
+Reranker & none (dense top-5) & .641 & $-.022$ \ci{-.039}{-.006}$^\ast$\\
+ & 20 candidates & .663 & $-.001$ \ci{-.012}{+.010}\\
+ & 50 candidates (final) & .664 & --\\
+ & 100 candidates & .651 & $-.013$ \ci{-.023}{-.003}$^\ast$\\
+Passages $k$ & 3 & .657 & $-.007$ \ci{-.018}{+.004}\\
+ & 5 (final) & .664 & --\\
+ & 8 & .666 & $+.002$ \ci{-.010}{+.016} (n.s.)\\
+Shots & 0 & .633 & $-.030$ \ci{-.049}{-.013}$^\ast$\\
+ & 1 & .656 & $-.008$ \ci{-.023}{+.007}\\
+ & 2 (final) & .664 & --\\
+ & 3 & .651 & $-.013$ \ci{-.025}{-.002}$^\ast$\\
+\midrule
+\multicolumn{4}{@{}l}{\emph{DPO round~1 design} (from SFT v3b; reference $\mathrm{dpo}_a$: margin $.1$, $\beta{=}.1$, $.654$)}\\
+Pair margin & $0.05$ & .655 & $\approx$ reference\\
+ & $0.2$ & .641 & $-.013$ vs.\ reference\\
+$\beta$ & $0.05$ & .642 & $-.012$ vs.\ reference\\
+ & $0.3$ & .652 & $-.002$ vs.\ reference\\
+\bottomrule
+\end{tabular}
+\end{table}
+No single factor improves on the final configuration: the reranker over $50$ candidates, $k{=}5$ and two shots are at or near the optimum, and removing the reranker costs $0.022$. The only nominally better setting ($k{=}8$, $+.002$) is not significant and would lengthen the context, so it is not adopted. No DPO design variant exceeds the reference ($0.1$/$0.1$), hence the two-round recipe was not re-run. \textbf{Best combined configuration:} because the per-factor winners coincide with the final configuration, the combination \emph{is} the final system, and no further test run was made; we found no further gain from combining the best per-factor settings. The ablation grid was evaluated on dev only, so these conclusions inherit the selection caveats of Section~\ref{sec:limits}.
+
 \subsection{Negative and null results}\label{sec:negative}
 \begin{table}[H]
 \centering
@@ -400,9 +451,9 @@ Single-request stage means are retrieve $0.08$\,s, rerank $0.21$\,s and generate
 Ten questions were sent to the live service (transcript in \texttt{docs/report/demo.md}): six development questions with references (\rl{} $.558,.617,.753,.601,.675,.821$; mean $.671$), three free questions (traffic fines, personal income tax deductions, capital adequacy ratio), and one off-topic question (``weather in Hanoi''). For the traffic question the system answers in the reference register (``\textit{Căn cứ theo khoản 1 Điều 6 Nghị định 100/2019/NĐ-CP được sửa đổi bởi \ldots}'') and quotes the retrieved article; we did not verify its legal validity (the retrieved text may predate later amendments), which illustrates that the metric rewards similarity to references, not legal correctness. The first run of the off-topic question exposed a failure (an invented, repeating weather bulletin while every reranker score was $0.000$), which motivated the refusal guard: with $\tau{=}0.001$ the service now answers with the fixed refusal sentence in $0.3$\,s without calling the LLM, and only $4$ of $300$ dev questions fall below $\tau$.
 
 %------------------------------------------------------------------------------
-\section{Limitations and Threats to Validity}
+\section{Limitations and Threats to Validity}\label{sec:limits}
 \begin{itemize}[leftmargin=*]
-\item \textbf{Selection on dev.} Up to about ten variants were compared in several stages on a $300$-question dev set; intervals are paired but not corrected for multiple comparisons, and the \texttt{dev\_clean} (166) and \texttt{dev\_strict} (74) subsets are small. Round~2 DPO is replicated by a second seed on both dev and test, other gains are single-run.
+\item \textbf{Selection on dev.} Up to about ten variants were compared in several stages on a $300$-question dev set; intervals are paired but not corrected for multiple comparisons, and the \texttt{dev\_clean} (166) and \texttt{dev\_strict} (74) subsets are small. Round~2 DPO is replicated by a second DPO seed on both dev and test, other gains are single-run. The SFT stage itself is seed-sensitive: a second SFT seed (v3b) reached only $.603$ greedy / $.641$ MBR-8 on dev against $.633$ / $.658$ for the reported seed, so the absolute level of the pipeline depends on the SFT run; DPO on top of the second SFT seed was not run.
 \item \textbf{Test-set history.} The $200$-question test set was also scored for earlier configurations (Table~\ref{tab:testold}); the final configuration was fixed on dev beforehand. Test \rl{} differences below $\approx0.02$ are within bootstrap noise.
 \item \textbf{Reference-style metric.} All metrics are lexical or embedding similarity to references written in a fixed template; they do not measure legal correctness, and models fine-tuned on the same template are favoured. Train and test answers share $13$-grams in $32\%$ of test questions.
 \item \textbf{Retrieval store.} The index was extended with laws cited by the QA set (permitted by the protocol: the store may hold laws but no test QA pairs); law-hit is $0.62$ on test; for the remaining questions (including those without an extractable law identifier) the answer must rely on related passages.
