@@ -319,6 +319,24 @@ Legal-domain base models & see Section~\ref{sec:generator} & Knowledge comes fro
 \paragraph{Where the error is.}
 For the SFT model (v0) on dev, questions where the gold \dieu{} is retrieved \emph{and} cited ($n{=}205$) score \rl{} $.702$; those where it is retrieved but another article is cited ($n{=}28$) score $.397$; retrieval misses ($n{=}25$) score $.295$. Over $281$ dev questions whose reference cites an article, the v3b model cites the same article in $68.3\%$ of cases and the round-1 DPO model in $70.5\%$, with \rl{} $.73$--$.76$ when the citation matches and $.43$--$.46$ when it does not. Perfect retrieval is worth at most $\approx0.06$ \rl{} on dev, and the oracle experiment shows $+0.004$ for the SFT model, so the dominant remaining term is the wording and length of the answer: predicted answers have a median of $315$ words against $294$ for the reference, and truncating to the reference length would add $+0.028$.
 
+\paragraph{What can be checked automatically.}
+Legal validity, and whether a provision is still in force, cannot be judged without a legal expert, but three properties can be measured without one (Table~\ref{tab:checks}). On the test split, $67\%$ of answers cite \emph{every} article that the reference cites and $78\%$ name a legal document that the reference names, so roughly a third of the answers miss at least one reference article, the main error type. In contrast, invented figures are rare: $96.5\%$ of the numeric tokens in the answers occur in the retrieved passages or in the question, and $88\%$ of the answers that contain numbers are fully grounded (the references themselves are grounded at $90.7\%$, since they sometimes use information outside the retrieved texts). Answers reproduce $66\%$ of their 8-grams verbatim from the sources against $55\%$ for the references, i.e.\ the model quotes more than the annotators did, consistent with the length excess noted above. Worked examples ordered from easy to hard are given in Appendix~\ref{app:examples}.
+\begin{table}[H]
+\centering
+\caption{Automatic checks of the final system's test answers ($n{=}200$). Agreement rates are over the questions whose reference contains an article or a law identifier; grounding is over the answers that contain numbers.}\label{tab:checks}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Check & System answers & References (context)\\
+\midrule
+Cites every article cited by the reference & .670 & --\\
+Names a legal document named by the reference & .782 & --\\
+Numeric tokens found in sources or question (mean) & .965 & .907\\
+Answers whose numbers are all grounded & .880 & --\\
+8-gram quotation rate from the retrieved passages & .664 & .546\\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \paragraph{Headroom.}
 Choosing, per question, the best of $8$ samples with knowledge of the reference reaches $.726$ (dev\_clean), $0.08$ above MBR; no deployable selector is known to reach this. The literature we surveyed reports no verified Vietnamese legal QA result with \rl{} of $0.8$--$0.9$ against independent references; the closest are $\approx0.66$ for style-matched fine-tuning, so a score near $0.65$ with a 2B model is competitive.
 
@@ -353,7 +371,7 @@ Ten questions were sent to the live service (transcript in \texttt{docs/report/d
 \item \textbf{Reference-style metric.} All metrics are lexical or embedding similarity to references written in a fixed template; they do not measure legal correctness, and models fine-tuned on the same template are favoured. Train and test answers share $13$-grams in $32\%$ of test questions.
 \item \textbf{Retrieval store.} The index was extended with laws cited by the QA set (permitted by the protocol: the store may hold laws but no test QA pairs); law-hit is $0.62$ on test; for the remaining questions (including those without an extractable law identifier) the answer must rely on related passages.
 \item \textbf{Non-determinism.} Greedy decoding varies by $\pm0.003$ \rl{} across identical vLLM runs; MBR by $\pm0.006$.
-\item \textbf{Legal validity.} Answers are generated from retrieved texts that may be outdated or superseded and are not legal advice; correctness was not assessed by legal experts.
+\item \textbf{Legal validity.} Answers are generated from retrieved texts that may be outdated or superseded and are not legal advice; correctness was not assessed by legal experts. The automatic checks of Table~\ref{tab:checks} bound only citation agreement and faithfulness to the retrieved text, not currency or legal soundness.
 \item \textbf{Scope of deployment test.} Latency was measured on one shared GPU; no multi-user load test has been run.
 \end{itemize}
 
@@ -383,6 +401,10 @@ v0 + MBR-8 & .6451 & --\\
 \end{tabular}
 \end{table}
 All variants fall in $.607$--$.621$ (greedy), within the $\pm0.02$ bootstrap noise of one another, which is why test was not used for selection.
+
+\section{Worked examples, from easy to hard}\label{app:examples}
+Twelve test questions are shown, evenly spread over the \rl{} range of the final system (greedy), from the easiest (top) to the hardest (bottom), each with its ground-truth answer. Long texts are truncated (``\ldots''). The header gives the per-question \rl{}, whether the answer cites the same article and law as the ground truth, and the share of its numbers found in the retrieved passages. Easy cases reproduce the template and quote the right article; middle cases cite the right law but a different article or paraphrase more; the hardest cases are questions whose reference is not supported by the retrieved text (the law is missing from the store) or asks something the retrieved article does not contain.
+\input{appendix_examples}
 
 \section{Data and corpus details}
 Reference answers fail the grounded-citation check in $17\%$ of dev questions. Public auxiliary datasets (legal QA, a retrieval benchmark and a Zalo legal set) were screened for overlap with the QA set before any training use (exact matches $0$; near-duplicates $\le 52$ rows). Reranker training groups: $4{,}015$ (course $1{,}137$, Zalo $2{,}878$).
