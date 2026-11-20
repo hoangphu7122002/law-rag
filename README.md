@@ -41,7 +41,7 @@ The retrieval store may contain full laws; **no model is ever trained on anythin
 
 ## 3. Reproducing the results
 
-Everything is driven by a YAML experiment (`configs/exp/<id>.yaml`, only the differences from `configs/base.yaml`), a backend (`configs/backends/*.yaml`: where the LLM / embedder / reranker endpoints are) and `--set key=value` overrides.
+Scripts in `scripts/` and `python -m cli` expect `PYTHONPATH=src`. Everything is driven by a YAML experiment (`configs/exp/<id>.yaml`, only the differences from `configs/base.yaml`), a backend (`configs/backends/*.yaml`: where the LLM / embedder / reranker endpoints are) and `--set key=value` overrides.
 A run writes `data/runs/<exp>__<hash>/{config.yaml, predictions.jsonl, metrics.json}` and a row in `data/runs/results.tsv`; same configuration = same directory (runs resume).
 Embedding, reranking and the LLM are **inference endpoints** (vLLM, OpenAI-compatible); start them as in [`docs/ops/l40s.md`](docs/ops/l40s.md) (`make box ARGS="serve <model> --gpu 0 [--kind embed|rerank]"`) or any compatible server and set the URLs in the backend file.
 
