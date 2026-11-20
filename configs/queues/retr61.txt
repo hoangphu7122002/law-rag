@@ -1,0 +1,7 @@
+# re-run of the hybrid variants that died silently (OOM suspected); one at a time
+sh retr-hybrr-dev cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=dev --set retrieve.k=10 --set retrieve.kind=hybrid > data/runs/logs/retr-hybrr-dev.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-hybrr-dev"
+sh retr-hyb-dev cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=dev --set retrieve.k=10 --set retrieve.kind=hybrid --set rerank.model=null > data/runs/logs/retr-hyb-dev.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-hyb-dev"
+sh retr-hybrr-test cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=test --set retrieve.k=10 --set retrieve.kind=hybrid > data/runs/logs/retr-hybrr-test.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-hybrr-test"

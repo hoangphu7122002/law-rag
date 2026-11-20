@@ -1,4 +1,5 @@
 """Config -> LlamaIndex retriever + reranker. The only place that knows which class each `kind` means."""
+from llama_index.core.llms import MockLLM
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.retrievers import BaseRetriever, QueryFusionRetriever
 
@@ -23,7 +24,7 @@ class RetrieverFactory:
         if kind == "hybrid":
             n = self.cfg.retrieve.candidates
             return QueryFusionRetriever([self.dense(n), self.bm25(n)], mode="reciprocal_rerank",
-                                        similarity_top_k=self.top_n, num_queries=1, use_async=False)
+                                        similarity_top_k=self.top_n, num_queries=1, use_async=False, llm=MockLLM())  # no query rewriting: the LLM is never called, but must not default to OpenAI
         raise ValueError(f"unknown retrieve.kind {kind!r}")
 
     def reranker(self) -> BaseNodePostprocessor | None:
