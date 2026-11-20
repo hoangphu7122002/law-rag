@@ -271,3 +271,13 @@ def test_min_tool_calls_nudges_a_model_that_answers_without_calling_a_tool():
 def test_min_tool_calls_zero_keeps_the_old_behaviour():
     g = gen([NS(content="Căn cứ Điều 5.", tool_calls=None)])
     assert run(g) == "Căn cứ Điều 5." and len(g._oai.seen) == 1
+
+
+def test_without_initial_passages_the_user_message_is_just_the_question_no_refusal_rule():
+    cfg = Generate(model="m", params_b=2.0, prompt="vi_rag", max_turns=3, agent=True, agent_initial_k=0)
+    g = ReactGenerator(cfg, Backend(name="x", base_url="http://x/v1"), FakeTools())
+    g._oai = FakeOAI([NS(content="Căn cứ Điều 5.", tool_calls=None)])
+    run(g, "Mức phạt là bao nhiêu?")
+    user = [m for m in g._oai.seen[0]["messages"] if m["role"] == "user"][0]["content"]
+    assert "Mức phạt là bao nhiêu?" in user
+    assert "từ chối" not in user and "Ngữ cảnh" not in user     # the RAG rule would make the model refuse an empty context instead of searching

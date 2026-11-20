@@ -161,6 +161,8 @@ class ReactGenerator(Generator):
     async def answer(self, question: str, passages: list[Passage]) -> str:
         init = passages if self.cfg.agent_initial_k < 0 else passages[: self.cfg.agent_initial_k]
         msgs = self.prompt.messages(question, init, self.shots(question))
+        if not init:   # no passages given: the RAG user text ("refuse if the context has no answer") would make the model refuse an empty context instead of searching
+            msgs = [m if m["role"] != "user" else {"role": "user", "content": f"### Câu hỏi :\n{question}\n\n### Trả lời :"} for m in msgs]
         if msgs[0]["role"] == "system":
             msgs[0] = {**msgs[0], "content": msgs[0]["content"] + "\n\n" + system_tools(self.cfg.agent_tools, self.cfg.tool_prompt)}
         else:
