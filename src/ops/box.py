@@ -154,7 +154,7 @@ class RemoteBox:
             name += "-" + "-".join(re.sub(r"[^\w.]+", "_", v) for v in sets)[:40]
         argv = " ".join(shlex.quote(a) for a in args)
         job = f"{prefix}uv run python -m cli run {shlex.quote(exp)} {argv} 2>&1 | tee {RUNS}/logs/{name}.log"
-        return f"{PREFIX}run-{name}", job
+        return f"{PREFIX}run-{name}-g{gpu}", job   # per-GPU suffix: same-named runs on both GPUs no longer collide
 
     def run(self, exp: str, gpu: int = 0, args: list[str] = ()) -> None:
         """One experiment in tmux `lawrag-run-<exp>`; the embedder / reranker use `gpu`; the LLM server must be up."""
