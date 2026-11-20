@@ -95,6 +95,7 @@ class Generate(Strict):
     agent_tools: list[str] = ["search_law", "get_article"]   # agent: which tools are offered (ablation arms; "kg_related" needs data/kg/kg.sqlite)
     tool_prompt: Literal["full", "compact", "force"] = "full"   # agent: "compact" drops the per-tool prose list (the chat template already renders the JSON schemas)
     min_tool_calls: int = 0        # agent: if the model answers before making this many tool calls, remind it to call the tools first (datamate-style corrective observation)
+    search_with_question: bool = False   # agent: every search_law call also retrieves with the original question and mixes the hits (the model's own paraphrased query alone found the gold Điều in only 66 % of cases)
     tools_url: str = ""            # agent: URL of the shared tools endpoint (generate/tools_service.py); "" = build the index inside this run
     agent_seed: int = 0            # agent: 0 = the original per-question sampling seed; other values give independent trajectories for the same question
     web: WebCfg = WebCfg()
@@ -164,7 +165,7 @@ class Config(Strict):
         return _hash(self.index_key(), self.embed, self.retrieve.model_dump(exclude={"oracle"}), self.rerank, self.split, self.limit)
 
     def run_key(self) -> str:
-        new = {"top_p", "top_k", "min_p", "presence_penalty", "repetition_penalty", "thinking", "think_tokens", "mbr", "check", "teacher", "shots", "agent", "max_turns", "agent_initial_k", "agent_tools", "tool_prompt", "agent_seed", "min_tool_calls", "tools_url", "web"}
+        new = {"top_p", "top_k", "min_p", "presence_penalty", "repetition_penalty", "thinking", "think_tokens", "mbr", "check", "teacher", "shots", "agent", "max_turns", "agent_initial_k", "agent_tools", "tool_prompt", "agent_seed", "min_tool_calls", "tools_url", "search_with_question", "web"}
         g = self.generate.model_dump(exclude={k for k in new if getattr(self.generate, k) == Generate.model_fields[k].default} | {"tools_url"})
         return _hash(self.retrieval_key(), g, *(["oracle"] if self.retrieve.oracle else []))  # unset new fields left out: old run keys unchanged
 

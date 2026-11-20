@@ -15,6 +15,7 @@ Loop guards (datamate part 5: ca1 lost 42 % of its turns to errors, repeats and 
   - a tool error is returned to the model as text, never raised.
 """
 import asyncio
+from itertools import zip_longest
 import json
 import threading
 import re
@@ -210,13 +211,13 @@ class ReactGenerator(Generator):
             for c in calls:
                 key = c.function.name + c.function.arguments
                 out = ("Bạn đã gọi đúng công cụ này với cùng tham số rồi; hãy dùng kết quả trước đó hoặc trả lời." if key in seen
-                       else await asyncio.to_thread(self.run_tool, c.function.name, c.function.arguments))
+                       else await asyncio.to_thread(self.run_tool, c.function.name, c.function.arguments, question))
                 seen.add(key)
                 context.append(Passage("tool", "", out, 0.0))
                 msgs.append({"role": "tool", "tool_call_id": c.id, "content": out})
         return ""
 
-    def run_tool(self, name: str, arguments: str) -> str:
+    def run_tool(self, name: str, arguments: str, question: str = "") -> str:
         try:
             a = json.loads(arguments or "{}")
             if name not in self.cfg.agent_tools:
@@ -231,6 +232,13 @@ class ReactGenerator(Generator):
                 return "\n".join(f"- {r['title'][:100]} ({r['url']}): {r['snippet'][:WEB_SNIPPET_CHARS]}" for r in rs) or "Không tìm thấy kết quả trên web."
             if name == "search_law":
                 ps = self.tools.search_law(str(a["query"]))
+                if self.cfg.search_with_question and question:
+                    qs, seen_pid, mixed = self.tools.search_law(question), set(), []
+                    for x, y in zip_longest(qs, ps):   # the question's own hits first, then the model's query: same k results
+                        for p in (x, y):
+                            if p is not None and p.pid not in seen_pid:
+                                seen_pid.add(p.pid), mixed.append(p)
+                    ps = mixed[: max(len(qs), len(ps))]
                 return "\n\n".join(f"[{i}] ({p.doc})\n{p.text[:RESULT_CHARS]}" for i, p in enumerate(ps, 1)) or "Không tìm thấy."
             if name == "get_article":
                 return (self.tools.article(a["law"], int(a["dieu"])) or "Không tìm thấy Điều này.")[:ARTICLE_CHARS]

@@ -303,3 +303,19 @@ def test_concurrent_first_tool_calls_build_the_index_only_once():
     [x.start() for x in ts]
     [x.join() for x in ts]
     assert len(built) == 1
+
+
+def test_search_with_question_mixes_the_questions_own_hits_into_every_search_result():
+    class T(FakeTools):
+        def search_law(self, q):
+            self.calls.append(("search", q))
+            return [Passage(f"{q}-{i}", "d", f"{q} text {i}", 1.0) for i in range(5)]
+
+    cfg = Generate(model="m", params_b=2.0, prompt="vi_rag", max_turns=3, agent=True, search_with_question=True)
+    g = ReactGenerator(cfg, Backend(name="x", base_url="http://x/v1"), T())
+    g._oai = FakeOAI([NS(content="", tool_calls=[call("search_law", '{"query": "truy vấn riêng"}')]), NS(content="Căn cứ Điều 5.", tool_calls=None)])
+    run(g, "câu hỏi gốc?")
+    assert ("search", "câu hỏi gốc?") in g.tools.calls and ("search", "truy vấn riêng") in g.tools.calls
+    tool_msg = [m for m in g._oai.seen[-1]["messages"] if m["role"] == "tool"][0]["content"]
+    assert "câu hỏi gốc? text 0" in tool_msg and "truy vấn riêng text 0" in tool_msg    # both sources present
+    assert tool_msg.count("[") == 5                                                    # still k results
