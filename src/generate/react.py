@@ -16,6 +16,7 @@ Loop guards (datamate part 5: ca1 lost 42 % of its turns to errors, repeats and 
 """
 import asyncio
 import json
+import threading
 import re
 import zlib
 
@@ -82,6 +83,7 @@ class LawTools:
     def __init__(self, cfg, provider=None, blocked_texts: list[str] | None = None):
         self.cfg, self._retriever, self._reranker, self._articles = cfg, None, None, None
         self._provider, self._blocked, self._web = provider, blocked_texts, None
+        self._lock = threading.RLock()   # tool calls run in worker threads: the index must be built ONCE (each copy is ~10 GB of RAM)
 
     @property
     def web(self):
@@ -100,6 +102,11 @@ class LawTools:
                                   cost_per_query=w.cost_per_query, max_cost_usd=w.max_cost_usd)
         return self._web
 
+    def _ensure_built(self) -> None:
+        with self._lock:
+            if self._retriever is None:
+                self._build()
+
     def _build(self) -> None:
         from index import IndexStore
         from retrieve.factory import RetrieverFactory
@@ -112,8 +119,7 @@ class LawTools:
         from llama_index.core import QueryBundle
         from llama_index.core.schema import MetadataMode
 
-        if self._retriever is None:
-            self._build()
+        self._ensure_built()
         hits = self._retriever.retrieve(query)
         if self._reranker is not None:
             hits = self._reranker.postprocess_nodes(hits, query_bundle=QueryBundle(query))
@@ -128,15 +134,15 @@ class LawTools:
         return self._kg.related(law_key(str(law)), hops)
 
     def article(self, law: str, dieu: int) -> str:
-        if self._articles is None:
-            if self._retriever is None:
-                self._build()
-            idx: dict[tuple[str, str], list[str]] = {}
-            for n in self.store.nodes():
-                m = HEADING.search(n.get_content()[:400])
-                if m:
-                    idx.setdefault((stem_key(n.metadata.get("doc", "")), m.group(1)), []).append(n.get_content())
-            self._articles = idx
+        with self._lock:
+            if self._articles is None:
+                self._ensure_built()
+                idx: dict[tuple[str, str], list[str]] = {}
+                for n in self.store.nodes():
+                    m = HEADING.search(n.get_content()[:400])
+                    if m:
+                        idx.setdefault((stem_key(n.metadata.get("doc", "")), m.group(1)), []).append(n.get_content())
+                self._articles = idx
         parts = self._articles.get((law_key(str(law)), str(dieu)))
         return "\n".join(parts) if parts else ""
 

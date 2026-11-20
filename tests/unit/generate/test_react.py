@@ -281,3 +281,25 @@ def test_without_initial_passages_the_user_message_is_just_the_question_no_refus
     user = [m for m in g._oai.seen[0]["messages"] if m["role"] == "user"][0]["content"]
     assert "Mức phạt là bao nhiêu?" in user
     assert "từ chối" not in user and "Ngữ cảnh" not in user     # the RAG rule would make the model refuse an empty context instead of searching
+
+
+def test_concurrent_first_tool_calls_build_the_index_only_once():
+    import threading
+    import time
+
+    from generate.react import LawTools
+
+    built = []
+
+    class Slow(LawTools):
+        def _build(self):
+            built.append(1)
+            time.sleep(0.2)                      # a real build reads a ~10 GB docstore: concurrent builds exhausted the RAM (OOM, exit 137)
+            self._retriever, self._reranker = object(), None
+            self.store = NS(nodes=lambda: [])
+
+    t = Slow(cfg=None)
+    ts = [threading.Thread(target=t.article, args=("50/2024/TT", 5)) for _ in range(6)]
+    [x.start() for x in ts]
+    [x.join() for x in ts]
+    assert len(built) == 1
