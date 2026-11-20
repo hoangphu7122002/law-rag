@@ -66,3 +66,10 @@ def test_oracle_off_leaves_run_key_unchanged():
     a = load("configs/exp/B0_baseline.yaml", backend="fake")
     b = load("configs/exp/B0_baseline.yaml", ["retrieve.oracle=false"], backend="fake")
     assert a.run_key() == b.run_key()
+
+
+def test_tools_url_does_not_change_the_run_key():
+    from config import load
+
+    a, b = load("configs/exp/A7_react.yaml"), load("configs/exp/A7_react.yaml", ["generate.tools_url=http://localhost:8100"])
+    assert a.run_key() == b.run_key()

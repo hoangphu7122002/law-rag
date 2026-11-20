@@ -48,7 +48,13 @@ class Experiment:
         if g.agent and self.cfg.backend.name != "fake":
             from generate.react import LawTools, ReactGenerator
 
-            generator = ReactGenerator(g, self.cfg.backend, LawTools(self.cfg))
+            if g.tools_url:
+                from generate.tools_service import RemoteTools
+
+                tools = RemoteTools(g.tools_url)   # shared endpoint: the index lives in one process, not in every run
+            else:
+                tools = LawTools(self.cfg)
+            generator = ReactGenerator(g, self.cfg.backend, tools)
         else:
             generator = (FakeGenerator if self.cfg.backend.name == "fake" else Generator)(g, self.cfg.backend)
         pipeline = RAGPipeline(generator)
