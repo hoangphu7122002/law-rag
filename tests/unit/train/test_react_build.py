@@ -65,3 +65,27 @@ def test_gold_dieu_takes_the_article_number_of_each_gold_pair():
 
     assert gold_dieu({"50/2024/TT-NHNN#5", "01/2020/QH14#12a"}) == {"5", "12a"}
     assert gold_dieu(None) == set()
+
+
+def gold_row(qid, tool_text, final="Câu trả lời dài dòng của mô hình gốc."):
+    r = row(qid, answer=final, tools=["search_law"])
+    r["messages"][3]["content"] = tool_text
+    return r
+
+
+def test_rewrite_gold_replaces_the_final_answer_when_the_tools_returned_the_gold_article():
+    from train.react_build import rewrite_gold
+
+    r = gold_row("q1", "[1] (50_2024_TT-NHNN) Thông tư 50/2024\nĐiều 5. Lãi suất là 1%.")
+    out = rewrite_gold([r], {"q1": REF}, {"q1": {"50/2024/TT-NHNN#5"}}, {"q1"})
+    assert len(out) == 1 and out[0]["messages"][-1]["content"] == REF and out[0]["messages"][-2]["role"] == "tool"
+    assert r["messages"][-1]["content"] != REF                                    # input not mutated
+
+
+def test_rewrite_gold_drops_missed_retrieval_no_tool_use_and_unkept_questions():
+    from train.react_build import rewrite_gold
+
+    miss = gold_row("q1", "[1] (99_2020_ND-CP) Nghị định\nĐiều 5. Khác.")
+    no_tool = row("q1")
+    other = gold_row("q2", "[1] (50_2024_TT-NHNN) T\nĐiều 5. Lãi suất.")
+    assert rewrite_gold([miss, no_tool, other], {"q1": REF, "q2": REF}, {"q1": {"50/2024/TT-NHNN#5"}, "q2": {"50/2024/TT-NHNN#5"}}, {"q1"}) == []
