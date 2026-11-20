@@ -17,7 +17,7 @@ from config import Box, load_backend
 from runs import RUNS, Ledger
 
 PREFIX = "lawrag-"
-MIN_RAM_GB, MIN_DISK_GB, MAX_RAM_GB = 24, 20, 32   # an M2 run holds docstore + FAISS (~10-15 GB RAM); 62 GB box shared with others
+MIN_RAM_GB, MIN_DISK_GB, MAX_RAM_GB = 14, 20, 32   # an M2 run holds docstore + FAISS (~10-15 GB RAM); 62 GB box shared with others
 MAX_RUNS = 2  # LLM-bound runs on cached retrieval are light; never queue two index builds side by side
 LABEL = "com.lawrag.autosync"  # launchd agent on the Mac
 CODE_EXCLUDES = [".git", ".venv", ".rl_env", ".cache", "data", "__pycache__", ".pytest_cache", ".ruff_cache"]
