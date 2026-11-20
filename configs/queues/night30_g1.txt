@@ -1,5 +1,6 @@
 # GPU1: all 4 tools (search_law, get_article, kg_related, web_search) with the force prompt; web key read from a 600-mode file on the box (never in the repo).
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react"
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1120-071543"
 serve /home/app/phunguyen/law_rag/data/models/q35_v0 --gpu 1 --share 0.45 --tools
 configs/exp/A7_react.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v0 --set backend.base_url=http://localhost:8001/v1 --set split=dev_clean --set generate.tool_prompt=force --set generate.agent_initial_k=0 --set generate.agent_tools=[search_law,get_article,kg_related,web_search] --set generate.web.key_file=/home/app/phunguyen/.tinyfish_key
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react"
