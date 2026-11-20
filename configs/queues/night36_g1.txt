@@ -1,0 +1,6 @@
+# GPU1: raw 2B ReAct (force prompt, min_tool_calls=1) through the shared tools endpoint started by the GPU0 queue.
+wait curl -s -m 20 -X POST localhost:8300/article -H "Content-Type: application/json" -d '{"law":"x","dieu":1}' | grep -q text
+serve Qwen/Qwen3.5-2B --gpu 1 --share 0.45 --tools
+configs/exp/A7_react.yaml --set generate.model=Qwen/Qwen3.5-2B --set generate.params_b=2.0 --set backend.base_url=http://localhost:8001/v1 --set split=dev_clean --set generate.tool_prompt=force --set generate.agent_initial_k=0 --set generate.min_tool_calls=1 --set generate.tools_url=http://localhost:8300
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react.*-g1"
+do tmux kill-session -t lawrag-llm-g1
