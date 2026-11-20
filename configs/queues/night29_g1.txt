@@ -1,0 +1,6 @@
+# GPU1: same force prompt with kg_related added (3 of the 4 tools; web_search needs TINYFISH_API_KEY which is not on the box).
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react"
+serve /home/app/phunguyen/law_rag/data/models/q35_v0 --gpu 1 --share 0.45 --tools
+configs/exp/A7_react.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v0 --set backend.base_url=http://localhost:8001/v1 --set split=dev_clean --set generate.tool_prompt=force --set generate.agent_initial_k=0 --set generate.agent_tools=[search_law,get_article,kg_related]
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react"
+do tmux kill-session -t lawrag-llm-g1
