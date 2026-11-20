@@ -122,7 +122,7 @@ The QA service (Section~\ref{sec:deploy}) calls three vLLM endpoints (LLM, embed
 \subsection{Main results on the test split}
 \begin{table}[H]
 \centering
-\caption{Test split ($n{=}200$, no errors). The first row is the course baseline (answer-only decoding). Cosine/Jaccard/token overlap/BLEU-1 are not available for every historical run (``--'').}\label{tab:main}
+\caption{Test split ($n{=}200$, no errors). The first row is the course baseline (answer-only decoding). All five metrics are reported for every row.}\label{tab:main}
 \begin{tabular}{@{}lccccc@{}}
 \toprule
 System & Cos. & Jacc. & Tok. & BLEU-1 & \rl{}\\
@@ -131,11 +131,36 @@ Course baseline (SBERT + Qwen1.5-1.8B) & .602 & .164 & .191 & .138 & .171\\
 + better embedder/reranker, Vi-Qwen2-3B-RAG & .671 & .226 & .211 & .126 & .171\\
 + index with cited laws (M2) & .812 & .500 & .555 & .412 & .443\\
 SFT Qwen3.5-2B (v0), greedy & .905 & .658 & .754 & .563 & .618\\
-SFT v0 + MBR-8 & -- & -- & -- & -- & .645\\
+SFT v0 + MBR-8 & .915 & .677 & .761 & .599 & .645\\
+SFT v3b (2 shots), greedy & .905 & .656 & .735 & .538 & .607\\
 \midrule
 \best{Final: SFT + 2 DPO rounds, greedy} & \best{.916} & \best{.673} & \best{.734} & \best{.582} & \best{.643}\\
 \quad second seed, greedy & .915 & .665 & .707 & .578 & .638\\
 \quad + MBR-8 (accuracy mode) & .918 & .681 & .728 & .587 & \best{.652}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Significance on test.}
+Table~\ref{tab:testboot} gives paired-bootstrap differences (10{,}000 resamples over the 200 test questions). The improvement over the baseline is large on every metric, and the final greedy system is significantly better than both SFT models. MBR-8 on top of the final system and the second seed are not distinguishable from it, so the single-generation system is the recommended one.
+\begin{table}[H]
+\centering
+\caption{Paired bootstrap on the test split ($n{=}200$): mean difference (B$-$A) with $95\%$ interval.}\label{tab:testboot}
+\begin{tabular}{@{}llccc@{}}
+\toprule
+A & B & Metric & Difference & $95\%$ CI\\
+\midrule
+Course baseline & Final, greedy & \rl{} & $+.472$ & \ci{+.439}{+.505}\\
+ & & BLEU-1 & $+.444$ & \ci{+.407}{+.479}\\
+ & & Cosine & $+.314$ & \ci{+.292}{+.336}\\
+ & & Jaccard & $+.509$ & \ci{+.478}{+.539}\\
+ & & Token overlap & $+.543$ & \ci{+.509}{+.576}\\
+SFT v0, greedy & Final, greedy & \rl{} & $+.026$ & \ci{+.004}{+.049}\\
+SFT v3b, greedy & Final, greedy & \rl{} & $+.036$ & \ci{+.013}{+.058}\\
+SFT v0, greedy & SFT v0, MBR-8 & \rl{} & $+.028$ & \ci{+.011}{+.044}\\
+SFT v0, MBR-8 & Final, MBR-8 & \rl{} & $+.007$ & \ci{-.014}{+.028} (n.s.)\\
+Final, greedy & Final, MBR-8 & \rl{} & $+.009$ & \ci{-.004}{+.022} (n.s.)\\
+Final, seed 2, greedy & Final, greedy & \rl{} & $+.006$ & \ci{-.009}{+.019} (n.s.)\\
 \bottomrule
 \end{tabular}
 \end{table}

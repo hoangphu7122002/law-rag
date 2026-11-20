@@ -68,6 +68,16 @@ def pick_by_quantile(rows: list[dict], n: int, key: str = "rouge") -> list[dict]
     return [ordered[round(i * (len(ordered) - 1) / (n - 1))] if n > 1 else ordered[0] for i in range(n)]
 
 
+def sample_rows(rows: list[dict], n: int, seed: int = 7, key: str = "rouge") -> list[dict]:
+    """n rows, one from each of n equal-size score strata (random inside the stratum, seeded): a fair sample for a manual check."""
+    import random
+
+    rng = random.Random(seed)
+    ordered = sorted(rows, key=lambda r: r[key])
+    size = len(ordered) / n
+    return [rng.choice(ordered[int(i * size):max(int((i + 1) * size), int(i * size) + 1)]) for i in range(n)]
+
+
 def latex_escape(text: str) -> str:
     out = text.replace("\\", r"\textbackslash{}")
     for ch, rep in {"&": r"\&", "%": r"\%", "$": r"\$", "#": r"\#", "_": r"\_", "{": r"\{", "}": r"\}", "~": r"\textasciitilde{}", "^": r"\textasciicircum{}"}.items():

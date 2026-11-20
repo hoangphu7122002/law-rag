@@ -1,0 +1,462 @@
+qid,rouge_l,question,ground_truth,system_answer,retrieved_docs,right_article,right_content,invented_facts,still_in_force,notes
+1204,0.176,"Từ ngày 01/01/2025, việc không tiến hành xác thực sinh trắc học ảnh hưởng thế nào đến khả năng thực hiện các giao dịch ngân hàng (rút tiền ATM, chuyển khoản, dùng thẻ)? Có trường hợp, hình thức hay ngoại lệ nào được phép không cần sinh trắc học không? Và quy định về xác thực khi chuyển khoản trên 10 triệu áp dụng ra sao?","Tóm tắt nội dung pháp luật nêu trong văn bản:
+
+1) Không xác thực sinh trắc học thì không được rút tiền ATM/ giao dịch chuyển khoản (quy định chung)
+- Căn cứ tại điểm c khoản 5 Điều 17 Thông tư 17/2024/TT-NHNN (có hiệu lực thi hành từ ngày 01/01/2025) quy định về khách hàng chỉ được thực hiện rút tiền, giao dịch thanh toán bằng phương tiện điện tử trên tài khoản thanh toán khi đã hoàn thành việc đối chiếu khớp đúng giấy tờ tùy thân và thông tin sinh trắc học của chủ tài khoản hoặc người đại diện (đối với khách hàng cá nhân) hoặc người đại diện hợp pháp (đối với khách hàng tổ chức) với:
+
+(1) Dữ liệu sinh trắc học được lưu trong bộ phận lưu trữ thông tin được mã hóa của thẻ căn cước công dân hoặc thẻ căn cước của người đó đã được xác thực chính xác là do cơ quan Công an cấp hoặc thông qua xác thực tài khoản định danh điện tử của người đó do Hệ thống định danh và xác thực điện tử tạo lập; hoặc
+
+(2) Dữ liệu sinh trắc học được thu thập thông qua gặp mặt trực tiếp người đó đối với trường hợp là người nước ngoài không sử dụng danh tính điện tử, người gốc Việt Nam chưa xác định được quốc tịch; hoặc
+
+(3) Dữ liệu sinh trắc học đã được thu thập và kiểm tra (đảm bảo sự khớp đúng giữa dữ liệu sinh trắc học của người đó với dữ liệu sinh trắc học trong bộ phận lưu trữ thông tin được mã hóa của thẻ căn cước công dân hoặc thẻ căn cước đã được xác thực chính xác là do cơ quan Công an cấp hoặc với dữ liệu sinh trắc học của người đó thông qua xác thực tài khoản định danh điện tử do Hệ thống định danh và xác thực điện tử tạo lập); hoặc
+
+(4) Dữ liệu sinh trắc học của người đó được lưu trong Cơ sở dữ liệu quốc gia về dân cư trong trường hợp sử dụng thẻ căn cước công dân không có bộ phận lưu trữ thông tin được mã hóa;
+
+- Bên cạnh đó, căn cứ tại khoản 6 Điều 16 Thông tư 18/2024/TT-NHNN (có hiệu lực thi hành từ ngày 01/01/2025) quy định thẻ ngân hàng chỉ được sử dụng để thực hiện giao dịch thẻ bằng phương tiện điện tử khi đã hoàn thành việc đối chiếu đảm bảo khớp đúng giấy tờ tùy thân và thông tin sinh trắc học của chủ thẻ với:
+
+(1) Dữ liệu sinh trắc học được lưu trong bộ phận lưu trữ thông tin được mã hóa của thẻ căn cước công dân hoặc thẻ căn cước đã được xác thực chính xác là do cơ quan Công an cấp hoặc thông qua xác thực tài khoản định danh điện tử của người đó do Hệ thống định danh và xác thực điện tử tạo lập; hoặc
+
+(2) Dữ liệu sinh trắc học đã được thu thập và kiểm tra (đảm bảo sự khớp đúng giữa dữ liệu sinh trắc học của người đó với dữ liệu sinh trắc học trong bộ phận lưu trữ thông tin được mã hóa của thẻ căn cước công dân hoặc thẻ căn cước đã được xác thực chính xác là do cơ quan Công an cấp hoặc với dữ liệu sinh trắc học của người đó thông qua xác thực tài khoản định danh điện tử do Hệ thống định danh và xác thực điện tử tạo lập); hoặc
+
+(3) Dữ liệu sinh trắc học được thu thập thông qua gặp mặt trực tiếp người đó đối với trường hợp là người nước ngoài không sử dụng danh tính điện tử, người gốc Việt Nam chưa xác định được quốc tịch; hoặc
+
+(4) Dữ liệu sinh trắc học của người đó được lưu trong Cơ sở dữ liệu quốc gia về dân cư trong trường hợp sử dụng thẻ căn cước công dân không có bộ phận lưu trữ thông tin được mã hóa.
+
+Kết luận theo văn bản: từ 01/01/2025, nếu không xác thực sinh trắc học thì không được rút tiền ATM/ giao dịch chuyển khoản.
+
+2) Về rút tiền mặt bằng thẻ vật lý (ngoại lệ nêu trong văn bản):
+Văn bản nêu rõ: ""Tuy nhiên, luật không đề cập đến việc không được rút tiền mặt bằng thẻ vật lý. Do đó, khách hàng chưa xác thực sinh trắc học có thể rút tiền mặt bằng thẻ vật lý."" (theo nội dung cung cấp).
+
+3) Xác thực sinh trắc học đối với các giao dịch chuyển khoản (mức và hình thức xác thực):
+- Căn cứ theo Phụ lục 01 Phân loại giao dịch thanh toán trực tuyến ban hành kèm theo Thông tư 50/2024/TT-NHNN quy định về khách hàng cá nhân khi chuyển khoản, nạp/rút tiền từ ví điện tử > 10 triệu/lần hoặc ≤ 10 triệu/lần nhưng > 20 triệu/ngày.
+
+- Căn cứ theo Phụ lục 02 Xác nhận giao dịch thanh toán trực tuyến ban hành kèm theo Thông tư 50/2024/TT-NHNN quy định hình thức xác thực khi chuyển khoản trên 10 triệu như sau:
+  - OTP gửi qua SMS/Voice hoặc Soft OTP/Token OTP loại cơ bản hoặc chữ ký điện tử,
+  - Và kết hợp khớp đúng thông tin sinh trắc học.
+
+- Bên cạnh đó, căn cứ tại điểm c khoản 5 Điều 17 Thông tư 17/2024/TT-NHNN quy định ngân hàng bắt buộc xác thực sinh trắc học đối với mọi giao dịch chuyển tiền. Do đó, nếu khách hàng cá nhân khi chuyển khoản, nạp/rút tiền từ ví điện tử < 10 triệu/lần vẫn phải thực hiện xác thực sinh trắc học.
+
+Tóm lại (theo nội dung văn bản):
+- Giao dịch rút tiền ATM và giao dịch thanh toán bằng phương tiện điện tử trên tài khoản: phải hoàn thành đối chiếu giấy tờ tùy thân và thông tin sinh trắc học theo các nguồn dữ liệu được quy định (thẻ căn cước mã hóa, Cơ sở dữ liệu quốc gia về dân cư, xác thực tài khoản định danh điện tử, hoặc thu thập trực tiếp trong các trường hợp đặc thù). Nếu chưa xác thực sinh trắc học thì không được thực hiện các giao dịch điện tử này từ 01/01/2025.
+- Tuy nhiên, luật không quy định cấm rút tiền mặt bằng thẻ vật lý; theo văn bản cung cấp, khách hàng chưa xác thực sinh trắc học có thể rút tiền mặt bằng thẻ vật lý.
+- Với chuyển khoản trên 10 triệu, bắt buộc phải sử dụng hai hình thức xác thực (OTP/Soft OTP/Token/Chữ ký điện tử kết hợp với khớp thông tin sinh trắc học). Ngoài ra, theo Thông tư 17/2024, ngân hàng phải bắt buộc xác thực sinh trắc học đối với mọi giao dịch chuyển tiền, do đó kể cả các giao dịch nhỏ hơn mức 10 triệu vẫn phải có xác thực sinh trắc học theo quy định này.","Căn cứ theo khoản 1 Điều 10 Thông tư 50/2024/TT-NHNN được sửa đổi bởi khoản 1 Điều 6 Thông tư 77/2025/TT-NHNN quy định về xác thực thông tin sinh trắc học khi mở tài khoản ngân hàng online và thực hiện các giao dịch như sau:
+Điều 10. Xác thực thông tin sinh trắc học
+1. Ngân hàng, chi nhánh ngân hàng nước ngoài ban hành quy định nội bộ về quy trình, thủ tục xác thực thông tin sinh trắc học phù hợp với quy định tại Thông tư này, pháp luật về phòng, chống rửa tiền, đảm bảo an toàn, bảo mật và bao gồm tối thiểu các bước như sau:
+a) Xác thực thông tin sinh trắc học của chủ tài khoản đối với khách hàng là cá nhân;
+b) Xác thực thông tin sinh trắc học của người đại diện hợp pháp đối với khách hàng là tổ chức;
+[...]
+
+Như vậy, từ ngày 01/01/2025, việc không xác thực thông tin sinh trắc học sẽ không được phép thực hiện các giao dịch ngân hàng sau:
+- Rút tiền tại ATM;
+- Chuyển khoản;
+- Sử dụng thẻ ngân hàng.
+
+Ngoài ra, đối với giao dịch chuyển khoản trên 10 triệu đồng, khách hàng vẫn phải thực hiện xác thực thông tin sinh trắc học. Cụ thể:
+- Đối với khách hàng là cá nhân: phải thực hiện xác thực bằng phương pháp sinh trắc học (xác thực khuôn mặt, xác thực vân tay, xác thực giọng nói...).
+- Đối với khách hàng là tổ chức: phải thực hiện xác thực thông tin sinh trắc học của người đại diện hợp pháp.
+
+Lưu ý: Thông tư 50/2024/TT-NHNN có hiệu lực từ ngày 01/01/2025.",77_2025_TT-NHNN; 45_2025_TT-NHNN; 17_2021_TT-NHNN; 165_2018_NĐ-CP; 50_2024_TT-NHNN,,,,,
+747,0.21,Luật quy định những nhiệm vụ và quyền hạn cụ thể nào cho Ngân hàng Nhà nước Việt Nam?,"Căn cứ theo Điều 4 Luật Ngân hàng Nhà nước Việt Nam 2010, Ngân hàng Nhà nước Việt Nam có các nhiệm vụ và quyền hạn dưới đây:
+- Hoạt động của Ngân hàng Nhà nước nhằm ổn định giá trị đồng tiền; bảo đảm an toàn hoạt động ngân hàng và hệ thống các tổ chức tín dụng; bảo đảm sự an toàn, hiệu quả của hệ thống thanh toán quốc gia; góp phần thúc đẩy phát triển kinh tế - xã hội theo định hướng xã hội chủ nghĩa.
+- Tham gia xây dựng chiến lược và kế hoạch phát triển kinh tế - xã hội của đất nước.
+- Xây dựng chiến lược phát triển ngành ngân hàng trình cơ quan nhà nước có thẩm quyền phê duyệt và tổ chức thực hiện.
+- Ban hành hoặc trình cơ quan nhà nước có thẩm quyền ban hành văn bản quy phạm pháp luật về tiền tệ và ngân hàng; tuyên truyền, phổ biến và kiểm tra theo thẩm quyền văn bản quy phạm pháp luật về tiền tệ và ngân hàng.
+- Xây dựng chỉ tiêu lạm phát hằng năm để Chính phủ trình Quốc hội quyết định và tổ chức thực hiện.
+- Tổ chức, điều hành và phát triển thị trường tiền tệ.
+- Tổ chức hệ thống thống kê, dự báo về tiền tệ và ngân hàng; công khai thông tin về tiền tệ và ngân hàng theo quy định của pháp luật.
+- Tổ chức in, đúc, bảo quản, vận chuyển tiền giấy, tiền kim loại; thực hiện nghiệp vụ phát hành, thu hồi, thay thế và tiêu huỷ tiền giấy, tiền kim loại.
+- Cấp, sửa đổi, bổ sung, thu hồi giấy phép thành lập và hoạt động của tổ chức tín dụng, giấy phép thành lập chi nhánh ngân hàng nước ngoài, giấy phép thành lập văn phòng đại diện của tổ chức tín dụng nước ngoài, tổ chức nước ngoài khác có hoạt động ngân hàng; cấp, thu hồi giấy phép hoạt động cung ứng dịch vụ trung gian thanh toán cho các tổ chức không phải là ngân hàng; cấp, thu hồi giấy phép hoạt động cung ứng dịch vụ thông tin tín dụng cho các tổ chức; chấp thuận việc mua, bán, chia, tách, hợp nhất, sáp nhập và giải thể tổ chức tín dụng theo quy định của pháp luật.
+- Thực hiện đại diện chủ sở hữu phần vốn của Nhà nước tại doanh nghiệp thực hiện chức năng, nhiệm vụ của Ngân hàng Nhà nước, tổ chức tín dụng có vốn nhà nước theo quy định của pháp luật; được sử dụng vốn pháp định để góp vốn thành lập doanh nghiệp đặc thù nhằm thực hiện chức năng, nhiệm vụ của Ngân hàng Nhà nước theo quyết định của Thủ tướng Chính phủ.
+- Kiểm tra, thanh tra, giám sát ngân hàng; xử lý vi phạm pháp luật về tiền tệ và ngân hàng theo quy định của pháp luật.
+- Quyết định áp dụng biện pháp xử lý đặc biệt đối với tổ chức tín dụng vi phạm nghiêm trọng các quy định của pháp luật về tiền tệ và ngân hàng, gặp khó khăn về tài chính, có nguy cơ gây mất an toàn cho hệ thống ngân hàng, gồm mua cổ phần của tổ chức tín dụng; đình chỉ, tạm đình chỉ, miễn nhiệm chức vụ người quản lý, người điều hành của tổ chức tín dụng; quyết định sáp nhập, hợp nhất, giải thể tổ chức tín dụng; đặt tổ chức tín dụng vào tình trạng kiểm soát đặc biệt; thực hiện nhiệm vụ, quyền hạn của mình theo quy định của pháp luật về phá sản đối với tổ chức tín dụng.
+- Chủ trì, phối hợp với các cơ quan hữu quan xây dựng chính sách, kế hoạch và tổ chức thực hiện phòng, chống rửa tiền.
+- Thực hiện quản lý nhà nước về bảo hiểm tiền gửi theo quy định của pháp luật về bảo hiểm tiền gửi.
+- Chủ trì lập, theo dõi, dự báo và phân tích kết quả thực hiện cán cân thanh toán quốc tế.
+- Tổ chức, quản lý, giám sát hệ thống thanh toán quốc gia, cung ứng dịch vụ thanh toán cho các ngân hàng; tham gia tổ chức và giám sát sự vận hành của các hệ thống thanh toán trong nền kinh tế.
+- Quản lý nhà nước về ngoại hối, hoạt động ngoại hối và hoạt động kinh doanh vàng.
+- Quản lý Dự trữ ngoại hối nhà nước.
+- Quản lý việc vay, trả nợ, cho vay và thu hồi nợ nước ngoài theo quy định của pháp luật.
+- Chủ trì, phối hợp với cơ quan có liên quan chuẩn bị nội dung, tiến hành đàm phán, ký kết điều ước quốc tế với tổ chức tài chính, tiền tệ quốc tế mà Ngân hàng Nhà nước là đại diện và là đại diện chính thức của người vay quy định tại điều ước quốc tế theo phân công, uỷ quyền của Chủ tịch nước hoặc Chính phủ.
+- Tổ chức thực hiện hợp tác quốc tế về tiền tệ và ngân hàng.
+- Đại diện cho Nhà nước Cộng hoà xã hội chủ nghĩa Việt Nam tại các tổ chức tiền tệ và ngân hàng quốc tế.
+- Tổ chức hệ thống thông tin tín dụng và cung ứng dịch vụ thông tin tín dụng; thực hiện chức năng quản lý nhà nước đối với các tổ chức hoạt động thông tin tín dụng.
+- Làm đại lý và thực hiện các dịch vụ ngân hàng cho Kho bạc Nhà nước.
+- Tham gia với Bộ Tài chính về việc phát hành trái phiếu Chính phủ, trái phiếu do Chính phủ bảo lãnh.
+- Tổ chức đào tạo, bồi dưỡng nghiệp vụ về tiền tệ và ngân hàng; nghiên cứu, ứng dụng khoa học và công nghệ ngân hàng.
+- Nhiệm vụ, quyền hạn khác theo quy định của pháp luật.","Căn cứ theo Điều 3 Luật Ngân hàng Nhà nước Việt Nam 2010 quy định về nhiệm vụ và quyền hạn của Ngân hàng Nhà nước Việt Nam như sau:
+- Thực hiện chính sách tiền tệ quốc gia.
+- Quản lý và điều hành hoạt động ngoại hối.
+- Quản lý nhà nước về ngân hàng thương mại, tổ chức tín dụng, hoạt động ngân hàng, hoạt động cung ứng dịch vụ thanh toán, hoạt động cung ứng dịch vụ thông tin tín dụng, hoạt động cung ứng dịch vụ tài chính vi mô.
+- Quản lý nhà nước về hoạt động của các tổ chức khác có liên quan đến hoạt động ngân hàng, hoạt động cung ứng dịch vụ thanh toán, hoạt động cung ứng dịch vụ thông tin tín dụng, hoạt động cung ứng dịch vụ tài chính vi mô.
+- Quản lý nhà nước về hoạt động của các tổ chức khác thuộc phạm vi quản lý của Ngân hàng Nhà nước theo quy định của pháp luật.
+- Quản lý nhà nước về hoạt động của các tổ chức khác có liên quan đến hoạt động ngân hàng, hoạt động cung ứng dịch vụ thanh toán, hoạt động cung ứng dịch vụ thông tin tín dụng, hoạt động cung ứng dịch vụ tài chính vi mô theo quy định của pháp luật.
+- Quản lý, giám sát hoạt động của các tổ chức tín dụng, ngân hàng thương mại theo quy định của pháp luật.
+- Thực hiện các nhiệm vụ khác theo quy định của pháp luật.",77_VBHN-NHNN; 77_VBHN-NHNN; 77_VBHN-NHNN; 77_VBHN-NHNN; 26_2025_NĐ-CP,,,,,
+556,0.366,Danh sách và trụ sở của 20 Kho bạc Nhà nước khu vực có hiệu lực kể từ 11/6/2025 được bố trí ở những địa điểm nào?,"Địa điểm 20 Kho bạc Nhà nước khu vực từ ngày 11/6/2025 ở đâu?Ngày 11/6/2025, Bộ Tài chính đã ban hành Quyết định 2020/QĐ-BTC năm 2025.TOÀN VĂN Quyết định 2020 QĐ BTC ngày 11/6/2025 sửa đổi Quyết định 385/QĐ-BTC về chức năng, nhiệm vụ, quyền hạn và cơ cấu tổ chức của Kho bạc Nhà nước như sau:Tải về
+
+Theo Phụ lục Tên gọi, trụ sở và địa bàn quản lý của Kho bạc Nhà nước khu vực ban hành kèm theo Quyết định 2020/QĐ-BTC năm 2025 thì danh sách 20 Kho bạc Nhà nước khu vực như sau:
+
+Xem chi tiết danh sách 20 Kho bạc Nhà nước khu vực từ ngày 11/6/2025 theo Địa bàn quản lý, trụ sở chính:
+
+STT  Tên đơn vị  Địa bàn quản lý  Trụ sở chính
+1    Tại đây     Hà Nội                                  Hà Nội
+2    Tại đây     Thành phố Hồ Chí Minh                  Thành phố Hồ Chí Minh
+3    Tại đây     Hải Phòng, Quảng Ninh                   Hải Phòng
+4    Tại đây     Hưng Yên                                Hưng Yên
+5    Tại đây     Ninh Bình                               Ninh Bình
+6    Tại đây     Bắc Ninh, Lạng Sơn                      Bắc Ninh
+7    Tại đây     Thái Nguyên, Cao Bằng                   Thái Nguyên
+8    Tại đây     Tuyên Quang, Phú Thọ                    Phú Thọ
+9    Tại đây     Lào Cai, Lai Châu                       Lào Cai
+10   Tại đây     Điện Biên, Lạng Sơn                     Điện Biên
+11   Tại đây     Thanh Hóa, Nghệ An                      Thanh Hóa
+12   Tại đây     Hà Tĩnh, Quảng Trị                      Hà Tĩnh
+13   Tại đây     Huế, Đà Nẵng                            Đà Nẵng
+14   Tại đây     Khánh Hòa, Đắk Lắk                      Khánh Hòa
+15   Tại đây     Gia Lai, Quảng Ngãi                      Gia Lai
+16   Tại đây     Lâm Đồng                                Lâm Đồng
+17   Tại đây     Đồng Nai                                Đồng Nai
+18   Tại đây     Tây Ninh, Đồng Tháp                     Tây Vinh
+19   Tại đây     Vĩnh Long, Cần Thơ                      Cần Thơ
+20   Tại đây     An Giang, Cà Mau                        An Giang
+
+Xem thêm toàn bộ danh sách địa bàn quản lý của 20 Kho bạc Nhà nước khu vực từ ngày 11/6/2025:
+
+STT  Tên đơn vị
+1    Kho bạc Nhà nước khu vực I      Tại đây
+2    Kho bạc Nhà nước khu vực II     Tại đây
+3    Kho bạc Nhà nước khu vực III    Tại đây
+4    Kho bạc Nhà nước khu vực IV     Tại đây
+5    Kho bạc Nhà nước khu vực V      Tại đây
+6    Kho bạc Nhà nước khu vực VI     Tại đây
+7    Kho bạc Nhà nước khu vực VII    Tại đây
+8    Kho bạc Nhà nước khu vực VIII   Tại đây
+9    Kho bạc Nhà nước khu vực IX     Tại đây
+10   Kho bạc Nhà nước khu vực X      Tại đây
+11   Kho bạc Nhà nước khu vực XI     Tại đây
+12   Kho bạc Nhà nước khu vực XII    Tại đây
+13   Kho bạc Nhà nước khu vực XIII   Tại đây
+14   Kho bạc Nhà nước khu vực XIV    Tại đây
+15   Kho bạc Nhà nước khu vực XV     Tại đây
+16   Kho bạc Nhà nước khu vực XVI    Tại đây
+17   Kho bạc Nhà nước khu vực XVII   Tại đây
+18   Kho bạc Nhà nước khu vực XVIII  Tại đây
+19   Kho bạc Nhà nước khu vực XIX    Tại đây
+20   Kho bạc Nhà nước khu vực XX     Tại đây
+
+Trên đây là thông tin về Địa điểm 20 Kho bạc Nhà nước khu vực từ ngày 11/6/2025.
+
+Địa điểm 20 Kho bạc Nhà nước khu vực từ ngày 11/6/2025 ở đâu? (Hình từ Internet)","Căn cứ theo Phụ lục Quyết định 2020/QĐ-BTC năm 2025 quy định tên gọi, trụ sở và địa bàn quản lý của Kho bạc Nhà nước khu vực như sau:
+- Tên đơn vị: Kho bạc Nhà nước khu vực I, Hà Nội.
+- Tên đơn vị: Kho bạc Nhà nước khu vực II, Thành phố Hồ Chí Minh, Bình Dương, Bà Rịa - Vũng Tàu.
+- Tên đơn vị: Kho bạc Nhà nước khu vực III, Hải Phòng, Hải Dương, Quảng Ninh.
+- Tên đơn vị: Kho bạc Nhà nước khu vực IV, Hưng Yên, Thái Bình.
+- Tên đơn vị: Kho bạc Nhà nước khu vực V, Hà Nam, Nam Định, Ninh Bình.
+- Tên đơn vị: Kho bạc Nhà nước khu vực VI, Bắc Giang, Bắc Ninh, Lạng Sơn.
+- Tên đơn vị: Kho bạc Nhà nước khu vực VII, Thái Nguyên, Bắc Kạn, Cao Bằng.
+- Tên đơn vị: Kho bạc Nhà nước khu vực VIII, Tuyên Quang, Hà Giang, Vĩnh Phúc, Phú Thọ, Hòa Bình.
+- Tên đơn vị: Kho bạc Nhà nước khu vực IX, Yên Bái, Lào Cai, Lai Châu.
+- Tên đơn vị: Kho bạc Nhà nước khu vực X, Điện Biên, Sơn La.
+- Tên đơn vị: Kho bạc Nhà nước khu vực XI, Thanh Hóa, Nghệ An.
+- Tên đơn vị: Kho bạc Nhà nước khu vực XII, Hà Tĩnh, Quảng Bình, Quảng Trị.
+- Tên đơn vị: Kho bạc Nhà nước khu vực XIII, Huế, Đà Nẵng, Quảng Nam.
+- Tên đơn vị: Kho bạc Nhà nước khu vực XIV, Khánh Hòa, Ninh Thuận, Phú Yên, Đắk Lắk.
+- Tên đơn vị: Kho bạc Nhà nước khu vực XV, Gia Lai, Bình Định, Kon Tum, Quảng Ngãi.
+- Tên đơn vị: Kho bạc Nhà nước khu vực XVI, Lâm Đồng, Bình Thuận, Đắk Nông.
+- Tên đơn vị: Kho bạc Nhà nước khu vực XVII, Bình Phước, Đồng Nai.
+- Tên đơn vị: Kho bạc Nhà nước khu vực XVIII, Long An, Tây Ninh, Tiền Giang, Đồng Tháp.
+- Tên đơn vị: Kho bạc Nhà nước khu vực XIX, Trà Vinh, Bến Tre, Vĩnh Long, Sóc Trăng, Cần Thơ, Hậu Giang.
+- Tên đơn vị: Kho bạc Nhà nước khu vực XX, Kiên Giang, An Giang, Cà Mau, Bạc Liêu.
+
+Lưu ý: Quyết định 2020/QĐ-BTC năm 2025 có hiệu lực kể từ ngày 11/6/2025.",2020_QĐ-BTC__403001; 28_2022_TT-BCA; 2020_QĐ-BTC__403001; 166_2025_NĐ-CP; 33_2017_TT-BTC,,,,,
+789,0.386,Khái niệm cho vay trả góp được quy định như thế nào theo văn bản của Ngân hàng Nhà nước và những nét đặc trưng chính của hình thức cho vay trả góp là gì?,"Cho vay trả góp là gì? Đặc điểm của cho vay trả góp là gì?Căn cứ khoản 3 Điều 3 Thông tư 43/2016/TT-NHNN được sửa đổi bởi khoản 1 Điều 1 Thông tư 18/2019/TT-NHNN quy định như sau:Điều 3. Giải thích từ ngữTrong Thông tư này, các từ ngữ dưới đây được hiểu như sau:1. Cho vay tiêu dùng là việc công ty tài chính cho vay bằng đồng Việt Nam đối với khách hàng là cá nhân nhằm đáp ứng nhu cầu vốn mua, sử dụng hàng hóa, dịch vụ cho mục đích tiêu dùng của khách hàng, gia đình của khách hàng đó với tổng dư nợ cho vay tiêu dùng đối với một khách hàng tại công ty tài chính đó không vượt quá 100.000.000 đồng (một trăm triệu đồng). Mức tổng dư nợ quy định tại khoản này không áp dụng đối với cho vay tiêu dùng để mua ôtô và sử dụng ôtô đó làm tài sản bảo đảm cho chính khoản vay đó theo quy định của pháp luật.2. Nhu cầu vốn mua, sử dụng hàng hóa, dịch vụ quy định tại khoản 1 Điều này bao gồm:a) Mua phương tiện đi lại, đồ dùng, trang thiết bị gia đình;b) Chi phí học tập, khám, chữa bệnh, du lịch, văn hóa, thể dục, thể thao;c) Chi phí sửa chữa nhà ở.3. Cho vay trả góp là hình thức cho vay tiêu dùng của công ty tài chính đối với khách hàng, theo đó công ty tài chính và khách hàng thỏa thuận trả nợ gốc và lãi tiền vay theo nhiều kỳ hạn.4. Phương án sử dụng vốn là tập hợp các thông tin về tổng số tiền cần sử dụng, số tiền cần vay, thời gian vay vốn, mục đích sử dụng vốn.Theo đó, hoạt động cho vay trả góp của công ty tài chính là hình thức cho vay tiêu dùng của công ty tài chính đối với khách hàng, theo đó công ty tài chính và khách hàng thỏa thuận trả nợ gốc và lãi tiền vay theo nhiều kỳ hạn.Như vậy có thể hiểu, hoạt động cho vay trả góp của ngân hàng là hoạt động ngân hàng cùng người vay xác định và thoả thuận số lãi vốn vay phải trả cộng với số nợ gốc được chia ra để trả nợ theo nhiều kì hạn trong thời hạn cho vay.Đặc điểm của cho vay trả góp là: hằng tháng người vay phải trả lãi và một phần số nợ gốc; tuỳ từng trường hợp, ngân hàng sẽ cho vay trả góp dưới hình thức cho vay tín chấp hoặc cho vay thế chấp.Cho vay trả góp là gì? Đặc điểm của cho vay trả góp là gì? (Hình từ Internet)","Căn cứ theo khoản 4 Điều 3 Thông tư 43/2016/TT-NHNN quy định về giải thích từ ngữ như sau:
+Điều 3. Giải thích từ ngữ
+Trong Thông tư này, các từ ngữ dưới đây được hiểu như sau:
+[...]4. Phương án sử dụng vốn là tập hợp các thông tin về tổng số tiền cần sử dụng, số tiền cần vay, thời gian vay vốn, mục đích sử dụng vốn.
+5. Cho vay trả góp là hình thức cho vay tiêu dùng của công ty tài chính đối với khách hàng, theo đó công ty tài chính và khách hàng thỏa thuận trả nợ gốc và lãi tiền vay theo nhiều kỳ hạn.
+6. Cho vay theo hạn mức tín dụng là hình thức cho vay tiêu dùng của công ty tài chính theo đó khách hàng được vay vốn trong phạm vi một số tiền nhất định được xác định và duy trì trong một thời gian nhất định.
+7. Cho vay trả góp là hình thức cho vay tiêu dùng của công ty tài chính đối với khách hàng, theo đó công ty tài chính và khách hàng thỏa thuận trả nợ gốc và lãi tiền vay theo nhiều kỳ hạn.
+
+Như vậy, cho vay trả góp là hình thức cho vay tiêu dùng của công ty tài chính đối với khách hàng, theo đó công ty tài chính và khách hàng thỏa thuận trả nợ gốc và lãi tiền vay theo nhiều kỳ hạn.",43_2016_TT-NHNN; 284_2000_QĐ-NHNN1; 1627_2001_QĐ-NHNN; 32_2024_QH15; 75_2011_NĐ-CP,,,,,
+1119,0.422,Khi nào phải tiến hành sao kê và công bố chi tiết về số tiền quyên góp cho vùng lũ theo quy định?,"Căn cứ theo khoản 4 Điều 14 Nghị định 93/2021/NĐ-CP quy định về công khai đóng góp tự nguyện như sau:Điều 14. Công khai đóng góp tự nguyện[...]4. Thời điểm công khai:a) Công khai văn bản về việc tổ chức kêu gọi, vận động các tổ chức, cá nhân đóng góp tiền, hiện vật đóng góp tự nguyện ngay sau khi ban hành;b) Công khai thời gian, địa điểm, cách thức tiếp nhận tiền, hiện vật đóng góp tự nguyện trước từ 01 đến 03 ngày bắt đầu tổ chức thực hiện;c) Công khai kết quả vận động, tiếp nhận và phân phối nguồn đóng góp tự nguyện: Công khai tổng số tiền, hiện vật đã vận động, tiếp nhận chậm nhất sau 15 ngày kể từ khi kết thúc thời gian tiếp nhận; công khai tổng số tiền, hiện vật đã phân phối, sử dụng chậm nhất sau 30 ngày kể từ khi kết thúc thời gian phân phối, sử dụng;d) Công khai đối tượng hỗ trợ, chính sách hỗ trợ và mức hỗ trợ ngay từ khi bắt đầu thực hiện hỗ trợ, phân phối tiền, hiện vật đóng góp tự nguyện.5. Thời gian công khai:a) Niêm yết công khai tại trụ sở tổ chức, cơ quan, đơn vị, điểm sinh hoạt cộng đồng và công khai trên Trang thông tin điện tử trong 30 ngày;b) Thông báo trên các phương tiện thông tin đại chúng: 03 số liên tiếp báo viết, 03 ngày liên tiếp trên chương trình của đài phát thanh, đài truyền hình.Theo đó, thời điểm sao kê số tiền ủng hộ vùng lũ chậm nhất sau 15 ngày kể từ khi kết thúc thời gian tiếp nhận; công khai tổng số tiền đã phân phối, sử dụng chậm nhất sau 30 ngày kể từ khi kết thúc thời gian phân phối, sử dụng;","Căn cứ theo Điều 16 Nghị định 93/2021/NĐ-CP quy định về vận động quyên góp, tiếp nhận tài trợ như sau:
+Điều 16. Vận động quyên góp, tiếp nhận tài trợ
+1. Quỹ được vận động quyên góp, vận động tài trợ trong nước và nước ngoài nhằm thực hiện mục đích hoạt động theo quy định của Điều lệ Quỹ và theo quy định của pháp luật.
+2. Các khoản vận động quyên góp, tài trợ của các cá nhân, tổ chức trong và ngoài nước cho Quỹ phải được nộp ngay vào Quỹ theo đúng quy định hiện hành của Nhà nước, đồng thời công khai thông tin qua trang thông tin điện tử của tổ chức (nếu có) để công chúng và các nhà tài trợ có điều kiện kiểm tra, giám sát.
+3. Việc tổ chức vận động đóng góp hỗ trợ khắc phục khó khăn chỉ thực hiện khi xảy ra thiên tai, hỏa hoạn, sự cố nghiêm trọng làm thiệt hại lớn về người và tài sản của nhân dân. Hội đồng quản lý Quỹ quyết định tổ chức vận động đóng góp và thực hiện hỗ trợ theo hướng dẫn của Ủy ban Trung ương Mặt trận Tổ quốc Việt Nam.
+4. Đối với khoản tài trợ, quyên góp, ủng hộ khắc phục hậu quả lũ lụt, thiên tai, cứu trợ khẩn cấp thực hiện chi đầy đủ 100% ngay sau khi nhận được tiền và tài sản. Đối với những khoản tài trợ có mục đích, mục tiêu phải thực hiện đúng theo yêu cầu của nhà tài trợ.
+
+Theo đó, công khai số tiền quyên góp cho vùng lũ phải thực hiện như sau:
+- Công khai kết quả vận động, tiếp nhận và phân phối nguồn đóng góp tự nguyện: Công khai tổng số tiền, hiện vật đã vận động, tiếp nhận chậm nhất sau 15 ngày kể từ khi kết thúc thời gian tiếp nhận; công khai tổng số tiền, hiện vật đã phân phối, sử dụng chậm nhất sau 30 ngày kể từ khi kết thúc thời gian phân phối, sử dụng;
+- Công khai đối tượng hỗ trợ, chính sách hỗ trợ và mức hỗ trợ ngay từ khi bắt đầu thực hiện hỗ trợ, phân phối tiền, hiện vật đóng góp tự nguyện.
+
+Như vậy, việc công khai số tiền quyên góp cho vùng lũ phải thực hiện trong thời gian từ 15 đến 30 ngày kể từ khi kết thúc thời gian tiếp nhận và phân phối.",93_2021_NĐ-CP; 02_2013_TT-BNV; 136_2024_NĐ-CP; 64_2008_NĐ-CP; 88_2015_QH13,,,,,
+2620,0.52,"Hiện nay, cơ cấu tổ chức của Ngân hàng Nhà nước Việt Nam được quy định ra sao (theo văn bản hành chính hiện hành)?","Theo Điều 3 Nghị định 102/2022/NĐ-CP thì cơ cấu tổ chức của Ngân hàng Nhà nước Việt Nam gồm 25 đơn vị, trong đó chia thành 02 nhóm chính sau:(1) Các đơn vị hành chính giúp Thống đốc Ngân hàng Nhà nước- Vụ Chính sách tiền tệ.- Vụ Quản lý ngoại hối.- Vụ Thanh toán.- Vụ Tín dụng các ngành kinh tế.- Vụ Dự báo, thống kê.- Vụ Hợp tác quốc tế.- Vụ Ổn định tiền tệ - tài chính.- Vụ Kiểm toán nội bộ.- Vụ Pháp chế.- Vụ Tài chính - Kế toán.- Vụ Tổ chức cán bộ.- Vụ Truyền thông.- Văn phòng.- Cục Công nghệ thông tin.- Cục Phát hành và kho quỹ.- Cục Quản lý dự trữ ngoại hối nhà nước.- Cục Quản trị.- Sở Giao dịch.- Cơ quan Thanh tra, giám sát ngân hàng.- Các chi nhánh tại tỉnh, thành phố trực thuộc trung ương.(2) Các đơn vị sự nghiệp phục vụ chức năng quản lý nhà nước của Ngân hàng Nhà nước- Viện Chiến lược ngân hàng.- Trung tâm Thông tin tín dụng Quốc gia Việt Nam.- Thời báo Ngân hàng.- Tạp chí Ngân hàng.- Học viện Ngân hàng.","Căn cứ theo Điều 3 Nghị định 26/2025/NĐ-CP quy định về cơ cấu tổ chức của Ngân hàng Nhà nước Việt Nam như sau:
+- Vụ Chính sách tiền tệ.
+- Vụ Thanh toán.
+- Vụ Tín dụng các ngành kinh tế.
+- Vụ Dự báo, thống kê - Ổn định tiền tệ, tài chính.
+- Vụ Hợp tác quốc tế.
+- Vụ Pháp chế.
+- Vụ Tài chính - Kế toán.
+- Vụ Tổ chức cán bộ.
+- Văn phòng.
+- Thanh tra Ngân hàng Nhà nước.
+- Sở Giao dịch.
+- Cục Công nghệ thông tin.
+- Cục Phát hành và kho quỹ.
+- Cục Quản lý ngoại hối.
+- Cục Phòng, chống rửa tiền.
+- Cục Quản lý, giám sát tổ chức tín dụng.
+- Cục An toàn hệ thống các tổ chức tín dụng.
+- Ngân hàng Nhà nước chi nhánh tại các Khu vực (Ngân hàng Nhà nước Khu vực).
+- Trung tâm Thông tin tín dụng Quốc gia Việt Nam.
+- Thời báo Ngân hàng.
+
+Lưu ý: Các đơn vị quy định từ 1 đến 18 là tổ chức hành chính giúp Thống đốc Ngân hàng Nhà nước thực hiện chức năng quản lý nhà nước và chức năng Ngân hàng Trung ương; các đơn vị quy định tại 19 và 20 là đơn vị sự nghiệp công lập phục vụ chức năng quản lý nhà nước của Ngân hàng Nhà nước.",46_2010_QH12; 77_VBHN-NHNN; 198_2026_NĐ-CP; 102_2022_NĐ-CP; 26_2025_NĐ-CP,,,,,
+2050,0.536,Nếu ai đó phát hiện tiền nghi là giả nhưng không tiến hành thu giữ theo quy định thì theo Nghị định hiện hành mức phạt hành chính sẽ là bao nhiêu?,"Căn cứ Điều 31 Nghị định 88/2019/NĐ-CP được sửa đổi bởi khoản 20 Điều 1 Nghị định 143/2021/NĐ-CP quy định mức xử phạt hành vi vi phạm quy định về bảo vệ tiền Việt Nam:Điều 31. Vi phạm quy định về bảo vệ tiền Việt Nam1. Phạt cảnh cáo đối với một trong các hành vi vi phạm sau đây:a) Không thông báo kịp thời cho cơ quan có thẩm quyền khi phát hiện tiền giả loại mới;b) Không thông báo kịp thời cho cơ quan có thẩm quyền khi phát hiện có dấu hiệu tàng trữ, lưu hành, vận chuyển tiền giả;c) Bố trí người làm công tác thu giữ tiền giả, tạm thu giữ tiền nghi giả chưa qua tập huấn về kỹ năng nhận biết tiền thật, tiền giả hoặc chưa qua bồi dưỡng nghiệp vụ giám định tiền;d) Không giao nộp tiền giả theo quy định của pháp luật.2. Phạt tiền từ 5.000.000 đồng đến 10.000.000 đồng đối với một trong các hành vi vi phạm sau đây:a) Phát hiện tiền giả nhưng không thu giữ;b) Phát hiện tiền nghi giả nhưng không tạm giữ;c) Không lập biên bản hoặc thu giữ tiền giả, không đóng dấu, bấm lỗ theo quy định của Ngân hàng Nhà nước về xử lý tiền giả, tiền nghi giả khi thu giữ tiền giả hoặc tạm giữ tiền nghi giả....
+
+Căn cứ khoản 3 Điều 4 Nghị định 88/2019/NĐ-CP quy định hình thức xử phạt, mức phạt tiền, thẩm quyền phạt tiền và biện pháp khắc phục hậu quả:Điều 3. Hình thức xử phạt, mức phạt tiền, thẩm quyền phạt tiền và biện pháp khắc phục hậu quả...3. Mức phạt tiền và thẩm quyền phạt tiền:a) Mức phạt tiền tối đa đối với hành vi vi phạm trong lĩnh vực tiền tệ và ngân hàng đối với tổ chức vi phạm là 2.000.000.000 đồng và đối với cá nhân vi phạm là 1.000.000.000 đồng;b) Mức phạt tiền quy định tại Chương II Nghị định này là mức phạt tiền áp dụng đối với cá nhân; mức phạt tiền đối với tổ chức có cùng một hành vi vi phạm hành chính bằng 02 lần mức phạt tiền đối với cá nhân;...
+
+Như vậy, người nào có hành vi phát hiện tiền giả nhưng không thu giữ thì bị phạt tiền từ 5.000.000 đồng đến 10.000.000 đồng và bị tịch thu toàn bộ tang vật, phương tiện thực hiện hành vi vi phạm. Mức phạt trên áp dụng đối với cá nhân. Tổ chức có cùng hành vi vi phạm thì mức phạt tiền gấp 2 lần mức phạt tiền đối với cá nhân.","Căn cứ theo khoản 2 Điều 31 Nghị định 88/2019/NĐ-CP quy định về vi phạm quy định về bảo vệ tiền Việt Nam như sau:
+Điều 31. Vi phạm quy định về bảo vệ tiền Việt Nam
+1. Phạt cảnh cáo đối với một trong các hành vi vi phạm sau đây:
+a) Không thông báo kịp thời cho cơ quan có thẩm quyền khi phát hiện tiền giả loại mới;
+b) Không thông báo kịp thời cho cơ quan có thẩm quyền khi phát hiện có dấu hiệu tàng trữ, lưu hành, vận chuyển tiền giả;
+c) Bố trí cán bộ làm công tác kiểm ngân, thủ quỹ hoặc giao dịch viên chưa qua đào tạo, tập huấn về kỹ năng nhận biết tiền thật, tiền giả;
+d) Không giao nộp tiền giả theo quy định của pháp luật.
+2. Phạt tiền từ 5.000.000 đồng đến 10.000.000 đồng đối với một trong các hành vi vi phạm sau đây:
+a) Phát hiện tiền giả nhưng không thu giữ;
+b) Phát hiện tiền nghi giả nhưng không tạm giữ;
+c) Không lập biên bản hoặc thu giữ tiền giả, không đóng dấu, bấm lỗ theo quy định của Ngân hàng Nhà nước về xử lý tiền giả, tiền nghi giả khi thu giữ tiền giả hoặc tạm giữ tiền nghi giả.
+3. Phạt tiền từ 10.000.000 đồng đến 15.000.000 đồng đối với hành vi phá hoại, hủy hoại tiền Việt Nam trái pháp luật.
+4. Phạt tiền từ 40.000.000 đồng đến 50.000.000 đồng đối với hành vi sao chụp, in ấn, sử dụng bố cục, một phần hoặc toàn bộ hình ảnh, chi tiết, hoa văn của tiền Việt Nam không đúng quy định của pháp luật
+5. Hình thức xử phạt bổ sung:
+Tịch thu toàn bộ tang vật, phương tiện thực hiện hành vi vi phạm tại các khoản 2, 3 và 4 Điều này, giao cơ quan có thẩm quyền xử lý.
+6. Biện pháp khắc phục hậu quả:
+a) Buộc đóng dấu, bấm lỗ tiền giả theo đúng quy định của Ngân hàng Nhà nước về xử lý tiền giả, tiền nghi giả đối với hành vi vi phạm quy định tại điểm c khoản 2 Điều này;
+b) Buộc tiêu hủy toàn bộ tang vật, phương tiện được sử dụng để thực hiện hành vi vi phạm quy định tại khoản 4 Điều này;
+c) Buộc nộp vào ngân sách nhà nước số lợi bất hợp pháp có được do thực hiện hành vi vi phạm quy định tại khoản 4 Điều này.
+
+Như vậy, phát hiện tiền nghi giả nhưng không tạm giữ sẽ bị phạt tiền từ 5.000.000 đồng đến 10.000.000 đồng.",340_2025_NĐ-CP; 88_2019_NĐ-CP; 96_2014_NĐ-CP; 87_2023_NĐ-CP; 24_2025_NĐ-CP,,,,,
+130,0.594,Những nguyên tắc cơ bản nào phải được tuân thủ khi tiến hành điều tra thống kê về tiền tệ và ngân hàng?,"Căn cứ theo Điều 4 Thông tư 26/2018/TT-NHNN có quy định:
+Điều 4. Nguyên tắc của hoạt động điều tra thống kê tiền tệ và ngân hàng
+1. Bảo đảm tính trung thực, khách quan, chính xác, đầy đủ, kịp thời.
+2. Bảo đảm tính độc lập về chuyên môn, nghiệp vụ thống kê.
+3. Bảo đảm tính thống nhất về nghiệp vụ; không tổ chức điều tra thống kê trùng lặp, chồng chéo về nội dung với các cuộc điều tra thống kê khác.
+4. Công khai về phương pháp thực hiện điều tra thống kê và công bố thông tin điều tra thống kê theo quy định của pháp luật.
+5. Có tính so sánh.
+6. Bảo đảm quyền bình đẳng trong việc tiếp cận và sử dụng thông tin điều tra thống kê đã được công bố.
+7. Những dữ liệu, thông tin điều tra thống kê về từng tổ chức, cá nhân phải được sử dụng đúng mục đích và được bảo mật theo quy định của pháp luật.
+
+Như vậy, theo quy định trên thì nguyên tắc của hoạt động điều tra thống kê tiền tệ và ngân hàng bao gồm:
+(1) Bảo đảm tính trung thực, khách quan, chính xác, đầy đủ, kịp thời.
+(2) Bảo đảm tính độc lập về chuyên môn, nghiệp vụ thống kê.
+(3) Bảo đảm tính thống nhất về nghiệp vụ; không tổ chức điều tra thống kê trùng lặp, chồng chéo về nội dung với các cuộc điều tra thống kê khác.
+(4) Công khai về phương pháp thực hiện điều tra thống kê và công bố thông tin điều tra thống kê theo quy định của pháp luật.
+(5) Có tính so sánh.
+(6) Bảo đảm quyền bình đẳng trong việc tiếp cận và sử dụng thông tin điều tra thống kê đã được công bố.
+(7) Những dữ liệu, thông tin điều tra thống kê về từng tổ chức, cá nhân phải được sử dụng đúng mục đích và được bảo mật theo quy định của pháp luật.","Căn cứ theo Điều 5 Thông tư 06/2011/TT-NHNN quy định về nguyên tắc thực hiện điều tra thống kê trong lĩnh vực tiền tệ và ngân hàng như sau:
+- Bảo đảm tính trung thực, khách quan, chính xác, đầy đủ, kịp thời và khoa học trong điều tra thống kê.
+- Bảo đảm tính độc lập về chuyên môn, nghiệp vụ thống kê.
+- Không tổ chức điều tra thống kê trùng lặp, chồng chéo về nội dung với các cuộc điều tra thống kê khác. Không tổ chức điều tra thống kê đối với các thông tin, số liệu đã được thu thập, tổng hợp theo quy định của pháp luật về báo cáo thống kê.
+- Công khai về phương pháp điều tra thống kê và công bố thông tin điều tra thống kê theo quy định của pháp luật.
+- Bảo đảm quyền bình đẳng trong việc tiếp cận và sử dụng thông tin điều tra thống kê đã được công bố công khai.
+- Những thông tin điều tra thống kê về từng tổ chức, cá nhân phải được sử dụng đúng mục đích và được bảo mật theo quy định của pháp luật.",06_2011_TT-NHNN; 26_2018_TT-NHNN; 06_2011_TT-NHNN; 04_2003_QH11; 06_2011_TT-NHNN,,,,,
+1045,0.626,Những trường hợp nào Nhà cung cấp dịch vụ thanh toán tiền sử dụng đường bộ được quyền đóng tài khoản giao thông?,"Tại Điều 14 Nghị định 119/2024/NĐ-CP có quy định về 05 trường hợp nhà cung cấp dịch vụ thanh toán tiền sử dụng đường bộ thực hiện đóng tài khoản giao thông bao gồm:(1) Có đề nghị đóng tài khoản giao thông của chủ tài khoản giao thông hoặc người giám hộ, người đại diện theo pháp luật của chủ tài khoản giao thông và chủ tài khoản giao thông đã thực hiện đầy đủ các nghĩa vụ liên quan đến tài khoản giao thông;(2) Chủ tài khoản giao thông là cá nhân bị chết, bị tuyên bố là đã chết, bị mất tích; Chủ tài khoản giao thông là tổ chức bị chấm dứt hoạt động, phá sản, giải thể theo quy định của pháp luật;(3) Các trường hợp đóng tài khoản giao thông theo thỏa thuận giữa Nhà cung cấp dịch vụ thanh toán tiền sử dụng đường bộ và chủ tài khoản giao thông;(4) Chủ tài khoản giao thông thực hiện một trong các hành vi không được thực hiện quy định tại Điều 5 Nghị định 119/2024/NĐ-CP hoặc vi phạm thỏa thuận mở và sử dụng tài khoản giao thông với Nhà cung cấp dịch vụ thanh toán tiền sử dụng đường bộ;(5) Các trường hợp khác theo quy định của pháp luật.","Căn cứ theo Điều 14 Nghị định 119/2024/NĐ-CP quy định về đóng tài khoản giao thông như sau:
+Điều 14. Đóng tài khoản giao thông
+1. Nhà cung cấp dịch vụ thanh toán tiền sử dụng đường bộ thực hiện đóng tài khoản giao thông trong các trường hợp sau:
+a) Có đề nghị đóng tài khoản giao thông của chủ tài khoản giao thông hoặc người giám hộ, người đại diện theo pháp luật của chủ tài khoản giao thông và chủ tài khoản giao thông đã thực hiện đầy đủ các nghĩa vụ liên quan đến tài khoản giao thông;
+b) Chủ tài khoản giao thông là cá nhân bị chết, bị tuyên bố là đã chết, bị mất tích; Chủ tài khoản giao thông là tổ chức bị chấm dứt hoạt động, phá sản, giải thể theo quy định của pháp luật;
+c) Các trường hợp đóng tài khoản giao thông theo thỏa thuận giữa Nhà cung cấp dịch vụ thanh toán tiền sử dụng đường bộ và chủ tài khoản giao thông;
+d) Chủ tài khoản giao thông thực hiện một trong các hành vi không được thực hiện quy định tại Điều 5 của Nghị định này hoặc vi phạm thỏa thuận mở và sử dụng tài khoản giao thông với Nhà cung cấp dịch vụ thanh toán tiền sử dụng đường bộ;
+đ) Các trường hợp khác theo quy định của pháp luật.
+
+Như vậy, Nhà cung cấp dịch vụ thanh toán tiền sử dụng đường bộ thực hiện đóng tài khoản giao thông trong các trường hợp sau:
+- Có đề nghị đóng tài khoản giao thông của chủ tài khoản giao thông hoặc người giám hộ, người đại diện theo pháp luật của chủ tài khoản giao thông và chủ tài khoản giao thông đã thực hiện đầy đủ các nghĩa vụ liên quan đến tài khoản giao thông;
+- Chủ tài khoản giao thông là cá nhân bị chết, bị tuyên bố là đã chết, bị mất tích; Chủ tài khoản giao thông là tổ chức bị chấm dứt hoạt động, phá sản, giải thể theo quy định của pháp luật;
+- Các trường hợp đóng tài khoản giao thông theo thỏa thuận giữa Nhà cung cấp dịch vụ thanh toán tiền sử dụng đường bộ và chủ tài khoản giao thông;
+- Chủ tài khoản giao thông thực hiện một trong các hành vi không được thực hiện quy định tại Điều 5 Nghị định 119/2024/NĐ-CP hoặc vi phạm thỏa thuận mở và sử dụng tài khoản giao thông với Nhà cung cấp dịch vụ thanh toán tiền sử dụng đường bộ;
+- Các trường hợp khác theo quy định của pháp luật.",119_2024_NĐ-CP; 119_2024_NĐ-CP; 64_2001_NĐ-CP; 119_2024_NĐ-CP; 119_2024_NĐ-CP,,,,,
+2178,0.627,Những quy định cụ thể về quản lý tài sản phần mềm trong hệ thống thông tin ngân hàng được Thông tư 09/2020/TT-NHNN quy định như thế nào?,"Căn cứ quy định Điều 10 Thông tư 09/2020/TT-NHNN quy định về quản lý tài sản phần mềm như sau:
+
+Quản lý tài sản phần mềm
+1. Với mỗi hệ thống thông tin do tổ chức quản lý trực tiếp, tổ chức phải lập danh sách tài sản phần mềm với các thông tin cơ bản gồm: tên tài sản, giá trị, mục đích sử dụng, phạm vi sử dụng, chủ thể quản lý, thông tin về bản quyền, phiên bản, hệ thống thông tin thành phần (nếu có).
+2. Tài sản phần mềm phải được gắn trách nhiệm cho cá nhân hoặc bộ phận quản lý.
+3. Tài sản phần mềm phải được tổ chức định kỳ rà soát và cập nhật các bản vá lỗi về an ninh bảo mật.
+4. Tài sản phần mềm khi lưu trữ trên vật mang tin phải tuân thủ các quy định tại Điều 12 Thông tư này.
+
+Theo đó, việc quản lý tài sản phần mềm hệ thống thông tin trong hoạt động ngân hàng được quy định như sau:
+- Với mỗi hệ thống thông tin do tổ chức quản lý trực tiếp, tổ chức phải lập danh sách tài sản phần mềm với các thông tin cơ bản gồm: tên tài sản, giá trị, mục đích sử dụng, phạm vi sử dụng, chủ thể quản lý, thông tin về bản quyền, phiên bản, hệ thống thông tin thành phần (nếu có).
+- Tài sản phần mềm phải được gắn trách nhiệm cho cá nhân hoặc bộ phận quản lý.
+- Tài sản phần mềm phải được tổ chức định kỳ rà soát và cập nhật các bản vá lỗi về an ninh bảo mật.
+- Tài sản phần mềm khi lưu trữ trên vật mang tin phải tuân thủ các quy định về quản lý sử dụng vật mang tin.","Căn cứ theo Điều 10 Thông tư 09/2020/TT-NHNN quy định về quản lý tài sản phần mềm như sau:
+- Với mỗi hệ thống thông tin do tổ chức quản lý trực tiếp phải lập danh sách tài sản phần mềm với các thông tin cơ bản gồm: tên tài sản, giá trị, mục đích sử dụng, phạm vi sử dụng, chủ thể quản lý, thông tin về bản quyền, phiên bản, hệ thống thông tin thành phần (nếu có).
+- Tài sản phần mềm phải được gắn trách nhiệm cho cá nhân hoặc bộ phận quản lý.
+- Tài sản phần mềm phải được tổ chức định kỳ rà soát và cập nhật các bản vá lỗi về an ninh bảo mật.
+- Tài sản phần mềm khi lưu trữ trên vật mang tin phải tuân thủ các quy định tại Điều 12 Thông tư 09/2020/TT-NHNN.",09_2020_TT-NHNN; 18__2018_TT-NHNN; 31_2015_TT-NHNN; 09_2020_TT-NHNN; 09_2020_TT-NHNN,,,,,
+2244,0.671,"Những tiêu chí cụ thể mà ngân hàng thương mại (và chi nhánh ngân hàng nước ngoài) phải thỏa mãn để được tham gia hệ thống thanh toán quốc tế kể từ 1/7/2024 là gì, theo Nghị định 52/2024/NĐ-CP?","Căn cứ Điều 21 Nghị định 52/2024/NĐ-CP quy định điều kiện tham gia hệ thống thanh toán quốc tế của ngân hàng thương mại, chi nhánh ngân hàng nước ngoài như sau:
+Điều 21. Điều kiện tham gia hệ thống thanh toán quốc tế của ngân hàng thương mại, chi nhánh ngân hàng nước ngoài
+1. Đã được phép thực hiện hoạt động ngoại hối cơ bản trên thị trường trong nước và quốc tế.
+2. Có chính sách và quy trình quản lý rủi ro về rửa tiền, tài trợ khủng bố, tài trợ phổ biến vũ khí hủy diệt hàng loạt đáp ứng yêu cầu của pháp luật về phòng, chống rửa tiền, tài trợ khủng bố, tài trợ phổ biến vũ khí hủy diệt hàng loạt khi tham gia hệ thống thanh toán quốc tế.
+3. Có hệ thống thông tin đáp ứng yêu cầu về quản trị điều hành, an toàn, bảo mật theo quy định pháp luật của Việt Nam; có quy định nội bộ về tiêu chuẩn lựa chọn kết nối các hệ thống thanh toán quốc tế.
+4. Tổ chức vận hành hệ thống thanh toán quốc tế được thành lập và hoạt động hợp pháp ở nước ngoài.
+
+Như vậy, điều kiện tham gia hệ thống thanh toán quốc tế của ngân hàng thương mại từ 1/7/2024 như sau:
+- Đã được phép thực hiện hoạt động ngoại hối cơ bản trên thị trường trong nước và quốc tế.
+- Có chính sách và quy trình quản lý rủi ro về rửa tiền, tài trợ khủng bố, tài trợ phổ biến vũ khí hủy diệt hàng loạt đáp ứng yêu cầu của pháp luật về phòng, chống rửa tiền, tài trợ khủng bố, tài trợ phổ biến vũ khí hủy diệt hàng loạt khi tham gia hệ thống thanh toán quốc tế.
+- Có hệ thống thông tin đáp ứng yêu cầu về quản trị điều hành, an toàn, bảo mật theo quy định pháp luật của Việt Nam; có quy định nội bộ về tiêu chuẩn lựa chọn kết nối các hệ thống thanh toán quốc tế.
+- Tổ chức vận hành hệ thống thanh toán quốc tế được thành lập và hoạt động hợp pháp ở nước ngoài.","Căn cứ theo Điều 21 Nghị định 52/2024/NĐ-CP quy định về điều kiện tham gia hệ thống thanh toán quốc tế của ngân hàng thương mại, chi nhánh ngân hàng nước ngoài như sau:
+- Đã được phép thực hiện hoạt động ngoại hối cơ bản trên thị trường trong nước và quốc tế.
+- Có chính sách và quy trình quản lý rủi ro về rửa tiền, tài trợ khủng bố, tài trợ phổ biến vũ khí hủy diệt hàng loạt đáp ứng yêu cầu của pháp luật về phòng, chống rửa tiền, tài trợ khủng bố, tài trợ phổ biến vũ khí hủy diệt hàng loạt khi tham gia hệ thống thanh toán quốc tế.
+- Có hệ thống thông tin đáp ứng yêu cầu về quản trị điều hành, an toàn, bảo mật theo quy định pháp luật của Việt Nam; có quy định nội bộ về tiêu chuẩn lựa chọn kết nối các hệ thống thanh toán quốc tế.
+- Tổ chức vận hành hệ thống thanh toán quốc tế được thành lập và hoạt động hợp pháp ở nước ngoài.
+
+Như vậy, để được tham gia hệ thống thanh toán quốc tế, ngân hàng thương mại, chi nhánh ngân hàng nước ngoài phải đáp ứng đầy đủ các điều kiện nêu trên.",52_2024_NĐ-CP; 52_2024_NĐ-CP; 32_2024_QH15; 45_VBHN-NHNN; 55_VBHN-NHNN,,,,,
+1985,0.695,"Để đảm nhiệm chức danh Kiểm soát viên cao cấp trong hệ công chức chuyên ngành Ngân hàng, người dự tuyển cần có những văn bằng, chứng chỉ, kỹ năng và điều kiện nào theo quy định hiện hành?","Căn cứ Điều 4 Thông tư 14/2022/TT-NHNN quy định ngạch Kiểm soát viên cao cấp ngân hàng (trích các nội dung liên quan):
+- h) Có kỹ năng sử dụng công nghệ thông tin cơ bản và sử dụng được ngoại ngữ theo yêu cầu của vị trí việc làm;
+- i) Có kinh nghiệm trên các lĩnh vực nghiệp vụ tiền tệ, tín dụng, ngân hàng.
+
+4. Tiêu chuẩn về trình độ đào tạo, bồi dưỡng
+
+a) Có bằng tốt nghiệp đại học trở lên với ngành hoặc chuyên ngành: kinh tế, tài chính, ngân hàng, kế toán, kiểm toán, công nghệ thông tin, xây dựng, luật;
+
+b) Có bằng tốt nghiệp cao cấp lý luận chính trị hoặc bằng cao cấp lý luận chính trị - hành chính hoặc có giấy xác nhận trình độ lý luận chính trị tương đương cao cấp lý luận chính trị của cơ quan có thẩm quyền;
+
+c) Có chứng chỉ bồi dưỡng kiến thức, kỹ năng quản lý nhà nước đối với công chức ngạch chuyên viên cao cấp (hoặc tương đương) hoặc có bằng cao cấp lý luận chính trị - hành chính.
+
+5. Yêu cầu đối với công chức dự thi nâng ngạch lên ngạch Kiểm soát viên cao cấp ngân hàng
+
+a) Hiện đang giữ ngạch Kiểm soát viên chính ngân hàng, có thời gian giữ ngạch Kiểm soát viên chính ngân hàng và tương đương từ đủ 06 năm trở lên. Trường hợp có thời gian tương đương với ngạch Kiểm soát viên chính ngân hàng thì thời gian giữ ngạch Kiểm soát viên chính ngân hàng tối thiểu 01 năm (đủ 12 tháng) tính đến ngày hết thời hạn nộp hồ sơ đăng ký dự thi nâng ngạch;...
+
+Như vậy, theo quy định nêu trên, kiểm soát viên cao cấp ngân hàng phải có các bằng, chứng chỉ và tiêu chuẩn sau:
+- Bằng tốt nghiệp đại học trở lên thuộc một trong các ngành/chuyên ngành: kinh tế, tài chính, ngân hàng, kế toán, kiểm toán, công nghệ thông tin, xây dựng, luật;
+- Bằng tốt nghiệp cao cấp lý luận chính trị hoặc bằng cao cấp lý luận chính trị - hành chính hoặc giấy xác nhận trình độ lý luận chính trị tương đương cao cấp lý luận chính trị;
+- Chứng chỉ bồi dưỡng kiến thức, kỹ năng quản lý nhà nước đối với công chức ngạch chuyên viên cao cấp (hoặc tương đương) hoặc có bằng cao cấp lý luận chính trị - hành chính;
+- Ngoài ra còn yêu cầu kỹ năng CNTT cơ bản, khả năng sử dụng ngoại ngữ theo yêu cầu vị trí và kinh nghiệm nghề nghiệp trong các lĩnh vực nghiệp vụ tiền tệ, tín dụng, ngân hàng. Đồng thời có yêu cầu về thời gian giữ ngạch (thời gian công tác) nếu dự thi nâng ngạch lên vị trí này.","Căn cứ theo Điều 4 Thông tư 14/2022/TT-NHNN quy định về ngạch Kiểm soát viên cao cấp ngân hàng như sau:
+Điều 4. Ngạch Kiểm soát viên cao cấp ngân hàng
+[...] 4. Tiêu chuẩn về trình độ đào tạo, bồi dưỡng
+a) Có bằng tốt nghiệp đại học trở lên với ngành hoặc chuyên ngành: kinh tế, tài chính, ngân hàng, kế toán, kiểm toán, công nghệ thông tin, xây dựng, luật;
+b) Có bằng tốt nghiệp cao cấp lý luận chính trị hoặc bằng cao cấp lý luận chính trị - hành chính hoặc có giấy xác nhận trình độ lý luận chính trị tương đương cao cấp lý luận chính trị của cơ quan có thẩm quyền;
+c) Có chứng chỉ bồi dưỡng kiến thức, kỹ năng quản lý nhà nước đối với công chức ngạch chuyên viên cao cấp (hoặc tương đương) hoặc có bằng cao cấp lý luận chính trị - hành chính.
+[...] 5. Yêu cầu đối với công chức dự thi nâng ngạch lên ngạch Kiểm soát viên cao cấp ngân hàng
+a) Hiện đang giữ ngạch Kiểm soát viên chính ngân hàng, có thời gian giữ ngạch Kiểm soát viên chính ngân hàng và tương đương từ đủ 06 năm trở lên. Trường hợp có thời gian tương đương với ngạch Kiểm soát viên chính ngân hàng thì thời gian giữ ngạch Kiểm soát viên chính ngân hàng tối thiểu 01 năm (đủ 12 tháng) tính đến ngày hết thời hạn nộp hồ sơ đăng ký dự thi nâng ngạch;
+b) Trong thời gian giữ ngạch Kiểm soát viên chính ngân hàng hoặc tương đương đã chủ trì xây dựng, thẩm định ít nhất 02 văn bản quy phạm pháp luật hoặc đề tài, đề án, dự án, chương trình nghiên cứu khoa học cấp nhà nước, cấp bộ, cấp ban, cấp ngành hoặc cấp tỉnh mà cơ quan sử dụng công chức được giao chủ trì nghiên cứu, xây dựng đã được cấp có thẩm quyền ban hành hoặc nghiệm thu. Cụ thể:
+Có quyết định của người có thẩm quyền cử tham gia Ban soạn thảo, Tổ soạn thảo văn bản quy phạm pháp luật hoặc có văn bản giao nhiệm vụ chủ trì xây dựng của người có thẩm quyền đối với trường hợp không bắt buộc phải thành lập Ban soạn thảo, Tổ soạn thảo theo quy định của Luật Ban hành văn bản quy phạm pháp luật.
+
+Như vậy, để đảm nhiệm chức danh Kiểm soát viên cao cấp ngân hàng, người dự tuyển cần đáp ứng các tiêu chuẩn sau:
+- Có bằng tốt nghiệp đại học trở lên với ngành hoặc chuyên ngành: kinh tế, tài chính, ngân hàng, kế toán, kiểm toán, công nghệ thông tin, xây dựng, luật.
+- Có bằng tốt nghiệp cao cấp lý luận chính trị hoặc bằng cao cấp lý luận chính trị - hành chính hoặc có giấy xác nhận trình độ lý luận chính trị tương đương cao cấp lý luận chính trị của cơ quan có thẩm quyền.
+- Có chứng chỉ bồi dưỡng kiến thức, kỹ năng quản lý nhà nước đối với công chức ngạch chuyên viên cao cấp (hoặc tương đương) hoặc có bằng cao cấp lý luận chính trị - hành chính.",12_2019_TT-NHNN; 14_2022_TT-NHNN; 12_2019_TT-NHNN; 14_2022_TT-NHNN; 12_2019_TT-NHNN,,,,,
+1925,0.739,Những hình thức tổ chức khoản vay từ Ngân hàng Chính sách Xã hội áp dụng cho người đã chấp hành xong án tù gồm những cách nào?,"Theo quy định tại Điều 4 Quyết định 22/2023/QĐ-TTg thì phương thức cho vay tại Ngân hàng chính sách xã hội đối với người chấp hành xong án phạt tù như sau:
+- Thực hiện phương thức cho vay thông qua hộ gia đình. Đại diện hộ gia đình của người chấp hành xong án phạt tù là người đứng tên vay vốn và giao dịch với Ngân hàng Chính sách xã hội. Trường hợp trong hộ gia đình không còn thành viên nào từ đủ 18 tuổi trở lên hoặc thành viên còn lại không còn sức lao động, không có đủ năng lực hành vi dân sự đầy đủ theo quy định của pháp luật thì người chấp hành xong án phạt tù trực tiếp đứng tên vay vốn tại Ngân hàng Chính sách xã hội;
+- Ngân hàng Chính sách xã hội nơi cho vay thực hiện cho vay theo phương thức ủy thác cho các tổ chức chính trị - xã hội.","Căn cứ theo Điều 4 Quyết định 22/2023/QĐ-TTg quy định về phương thức cho vay như sau:
+Điều 4. Phương thức cho vay
+1. Đối với người chấp hành xong án phạt tù
+a) Thực hiện phương thức cho vay thông qua hộ gia đình. Đại diện hộ gia đình của người chấp hành xong án phạt tù là người đứng tên vay vốn và giao dịch với Ngân hàng Chính sách xã hội. Trường hợp trong hộ gia đình không còn thành viên nào từ đủ 18 tuổi trở lên hoặc thành viên còn lại không còn sức lao động, không có đủ năng lực hành vi dân sự đầy đủ theo quy định của pháp luật thì người chấp hành xong án phạt tù trực tiếp đứng tên vay vốn tại Ngân hàng Chính sách xã hội;
+b) Ngân hàng Chính sách xã hội nơi cho vay thực hiện cho vay theo phương thức ủy thác cho các tổ chức chính trị - xã hội.
+2. Đối với cơ sở sản xuất kinh doanh
+Ngân hàng Chính sách xã hội nơi cho vay thực hiện cho vay trực tiếp.
+
+Như vậy, có 02 phương thức cho vay đối với người chấp hành xong án phạt tù như sau:
+- Thực hiện phương thức cho vay thông qua hộ gia đình.
+- Ngân hàng Chính sách xã hội thực hiện cho vay theo phương thức ủy thác cho các tổ chức chính trị - xã hội.",22_2023_QĐ-TTg; 16_2003_QĐ-TTg; 22_2023_QĐ-TTg; 06_2026_NĐ-CP; 22_2023_QĐ-TTg,,,,,
+338,0.762,"Khi một tổ chức tín dụng thay đổi hình thức pháp lý, có bị Ngân hàng Nhà nước thu hồi giấy phép hoạt động không theo quy định hiện hành?","Căn cứ theo Điều 36 Luật Các tổ chức tín dụng 2024 quy định về thu hồi Giấy phép như sau:
+Điều 36. Thu hồi Giấy phép
+1. Ngân hàng Nhà nước thu hồi Giấy phép đã cấp trong trường hợp sau đây:
+a) Hồ sơ đề nghị cấp Giấy phép có thông tin gian lận để có đủ điều kiện được cấp Giấy phép;
+b) Tổ chức tín dụng bị chia, bị sáp nhập, hợp nhất, giải thể, phá sản, chuyển đổi hình thức pháp lý;
+c) Tổ chức tín dụng, chi nhánh ngân hàng nước ngoài, văn phòng đại diện nước ngoài hoạt động không đúng nội dung quy định trong Giấy phép;
+d) Tổ chức tín dụng, chi nhánh ngân hàng nước ngoài vi phạm nghiêm trọng quy định của pháp luật về dự trữ bắt buộc, tỷ lệ bảo đảm an toàn hoạt động;
+đ) Tổ chức tín dụng, chi nhánh ngân hàng nước ngoài không thực hiện hoặc thực hiện không đầy đủ quyết định xử lý của Ngân hàng Nhà nước để bảo đảm an toàn trong hoạt động ngân hàng;
+e) Tổ chức tín dụng nước ngoài, tổ chức nước ngoài khác có hoạt động ngân hàng có hiện diện thương mại tại Việt Nam bị giải thể, phá sản hoặc bị cơ quan có thẩm quyền của nước nơi tổ chức đó đặt trụ sở chính thu hồi giấy phép hoặc đình chỉ hoạt động.
+2. Quyết định thu hồi Giấy phép được Ngân hàng Nhà nước công bố trên Cổng thông tin điện tử Ngân hàng Nhà nước.
+3. Tổ chức tín dụng, chi nhánh ngân hàng nước ngoài bị thu hồi Giấy phép phải chấm dứt hoạt động kinh doanh kể từ ngày Quyết định thu hồi Giấy phép của Ngân hàng Nhà nước có hiệu lực.
+4. Thống đốc Ngân hàng Nhà nước quy định hồ sơ, thủ tục thu hồi Giấy phép.
+
+Như vậy, tổ chức tín dụng chuyển đổi hình thức pháp lý sẽ bị thu hồi Giấy phép. Quyết định thu hồi Giấy phép được Ngân hàng Nhà nước công bố trên Cổng thông tin điện tử Ngân hàng Nhà nước.","Căn cứ theo Điều 36 Luật Các tổ chức tín dụng 2024 quy định về thu hồi Giấy phép như sau:
+Điều 36. Thu hồi Giấy phép
+1. Ngân hàng Nhà nước thu hồi Giấy phép đã cấp trong trường hợp sau đây:
+a) Hồ sơ đề nghị cấp Giấy phép có thông tin gian lận để có đủ điều kiện được cấp Giấy phép;
+b) Tổ chức tín dụng bị chia, bị sáp nhập, hợp nhất, giải thể, phá sản, chuyển đổi hình thức pháp lý;
+c) Tổ chức tín dụng, chi nhánh ngân hàng nước ngoài vi phạm nghiêm trọng quy định của pháp luật về dự trữ bắt buộc, tỷ lệ bảo đảm an toàn hoạt động;
+d) Tổ chức tín dụng, chi nhánh ngân hàng nước ngoài không thực hiện hoặc thực hiện không đầy đủ quyết định xử lý của Ngân hàng Nhà nước để bảo đảm an toàn trong hoạt động ngân hàng;
+đ) Tổ chức tín dụng nước ngoài, tổ chức nước ngoài khác có hoạt động ngân hàng có hiện diện thương mại tại Việt Nam bị giải thể, phá sản hoặc bị cơ quan có thẩm quyền của nước nơi tổ chức đó đặt trụ sở chính thu hồi giấy phép hoặc đình chỉ hoạt động.
+
+Như vậy, khi tổ chức tín dụng bị chuyển đổi hình thức pháp lý thì Ngân hàng Nhà nước sẽ thu hồi Giấy phép.",32_2024_QH15; 02_1997_QH10; 47_2010_QH12; 36_2015_TT-NHNN; 32_2024_QH15,,,,,
+2174,0.831,Cho mình hỏi mẫu đơn dùng để đề nghị sửa đổi thông tin ngân hàng áp dụng cho năm 2024 là mẫu nào và được quy định tại đâu?,"Mẫu đơn đề nghị điều chỉnh thông tin ngân hàng mới nhất 2024 đang được áp dụng theo mẫu tại Phụ lục số 03 ban hành kèm theo Thông tư 18/2023/TT-NHNN có hiệu lực từ ngày 01/7/2024.
+Dưới đây là mẫu đơn đề nghị điều chỉnh thông tin ngân hàng mới nhất 2024:
+Tải về mẫu đơn đề nghị điều chỉnh thông tin ngân hàng mới nhất 2024:
+Tại đây
+Mẫu đơn đề nghị điều chỉnh thông tin ngân hàng mới nhất 2024? (Hình từ Internet)","Mẫu đơn đề nghị điều chỉnh thông tin ngân hàng mới nhất năm 2024 được áp dụng theo mẫu tại Phụ lục số 03 ban hành kèm theo Thông tư 17/2015/TT-NHNN được sửa đổi bởi khoản 3 Điều 1 Thông tư 06/2022/TT-NHNN.
+Dưới đây là mẫu đơn đề nghị điều chỉnh thông tin ngân hàng mới nhất năm 2024:Tải về mẫu đơn đề nghị điều chỉnh thông tin ngân hàng mới nhất năm 2024:Tại đây
+Mẫu đơn đề nghị điều chỉnh thông tin ngân hàng mới nhất năm 2024? (Hình từ Internet)",17_2015_TT-NHNN; 73_VBHN-NHNN; 73_VBHN-NHNN; 18_2023_TT-NHNN; 06_2022_TT-NHNN,,,,,
+2209,0.871,"Theo quy định hiện hành, trong những trường hợp nào thì coi là nghĩa vụ thanh toán trên hối phiếu nhận nợ đã được hoàn tất?","Căn cứ Điều 56 Luật Các công cụ chuyển nhượng 2005 quy định:
+
+Điều 56. Hoàn thành thanh toán hối phiếu nhận nợ
+Việc thanh toán hối phiếu nhận nợ được coi là hoàn thành trong các trường hợp sau đây:
+1. Khi người phát hành trở thành người thụ hưởng của hối phiếu nhận nợ vào ngày đến hạn thanh toán hoặc sau ngày đó;
+2. Người phát hành đã thanh toán toàn bộ số tiền ghi trên hối phiếu nhận nợ cho người thụ hưởng;
+3. Người thụ hưởng huỷ bỏ hối phiếu nhận nợ.
+
+Như vậy, theo khoản 1-3 Điều 56, việc thanh toán hối phiếu nhận nợ được coi là hoàn thành khi người phát hành tự trở thành người thụ hưởng vào ngày đến hạn hoặc sau đó; khi người phát hành đã thanh toán đủ toàn bộ số tiền ghi trên hối phiếu; hoặc khi người thụ hưởng hủy bỏ hối phiếu nhận nợ.","Căn cứ theo Điều 56 Luật Các công cụ chuyển nhượng 2005 quy định về hoàn thành thanh toán hối phiếu nhận nợ như sau:
+Điều 56. Hoàn thành thanh toán hối phiếu nhận nợ
+Việc thanh toán hối phiếu nhận nợ được coi là hoàn thành trong các trường hợp sau đây:
+1. Khi người phát hành trở thành người thụ hưởng của hối phiếu nhận nợ vào ngày đến hạn thanh toán hoặc sau ngày đó;
+2. Người phát hành đã thanh toán toàn bộ số tiền ghi trên hối phiếu nhận nợ cho người thụ hưởng;
+3. Người thụ hưởng huỷ bỏ hối phiếu nhận nợ.
+
+Như vậy, việc thanh toán hối phiếu nhận nợ được coi là hoàn thành trong các trường hợp sau đây:
+- Khi người phát hành trở thành người thụ hưởng của hối phiếu nhận nợ vào ngày đến hạn thanh toán hoặc sau ngày đó;
+- Người phát hành đã thanh toán toàn bộ số tiền ghi trên hối phiếu nhận nợ cho người thụ hưởng;
+- Người thụ hưởng huỷ bỏ hối phiếu nhận nợ.",49_2005_QH11; 49_2005_QH11; 32_2001_NĐ-CP; 91_2015_QH13; 49_2005_QH11,,,,,
+147,0.897,Giám đốc NHNN chi nhánh khu vực có quyền phê duyệt việc tổ chức tài chính vi mô thay đổi địa chỉ trụ sở hay không?,"Căn cứ Điều 4 Thông tư 19/2025/TT-NHNN quy định Thẩm quyền chấp thuận về mạng lưới của tổ chức tài chính vi mô như sau:Điều 4. Thẩm quyền chấp thuận về mạng lưới của tổ chức tài chính vi mô1. Thẩm quyền của Thống đốc Ngân hàng Nhà nước Việt Nam:a) Chấp thuận thành lập chi nhánh của tổ chức tài chính vi mô;b) Bắt buộc chấm dứt hoạt động, giải thể chi nhánh của tổ chức tài chính vi mô;c) Chấp thuận các nội dung về mạng lưới hoạt động của tổ chức tài chính vi mô để thực hiện phương án cơ cấu lại tổ chức tài chính vi mô được kiểm soát đặc biệt đã được phê duyệt trên cơ sở trình tự, thủ tục quy định tại Thông tư này.2. Thẩm quyền của Cục trưởng Cục Quản lý, giám sát tổ chức tín dụng:a) Chấp thuận thành lập phòng giao dịch, văn phòng đại diện, đơn vị sự nghiệp của tổ chức tài chính vi mô;b) Bắt buộc chấm dứt hoạt động, giải thể phòng giao dịch, văn phòng đại diện, đơn vị sự nghiệp của tổ chức tài chính vi mô.3. Thẩm quyền của Giám đốc Ngân hàng Nhà nước chi nhánh Khu vực:a) Chấp thuận thay đổi địa điểm đặt trụ sở chi nhánh, phòng giao dịch của tổ chức tài chính vi mô trên địa bàn, bao gồm cả trường hợp thay đổi địa điểm trước khi khai trương hoạt động;b) Chấp thuận việc tự nguyện chấm dứt hoạt động, giải thể chi nhánh, phòng giao dịch của tổ chức tài chính vi mô.Theo đó Giám đốc Ngân hàng Nhà nước chi nhánh Khu vực sẽ có thẩm quyền chấp thuận việc thay đổi địa chỉ đặt trụ sở chính của tổ chức vi mô trên địa bàn.","Căn cứ theo khoản 3 Điều 4 Thông tư 19/2025/TT-NHNN quy định về thẩm quyền chấp thuận về mạng lưới của tổ chức tài chính vi mô như sau:
+Điều 4. Thẩm quyền chấp thuận về mạng lưới của tổ chức tài chính vi mô
+1. Thẩm quyền của Thống đốc Ngân hàng Nhà nước Việt Nam:
+a) Chấp thuận thành lập chi nhánh của tổ chức tài chính vi mô;
+b) Bắt buộc chấm dứt hoạt động, giải thể chi nhánh của tổ chức tài chính vi mô;
+c) Chấp thuận các nội dung về mạng lưới hoạt động của tổ chức tài chính vi mô để thực hiện phương án cơ cấu lại tổ chức tài chính vi mô được kiểm soát đặc biệt đã được phê duyệt trên cơ sở trình tự, thủ tục quy định tại Thông tư này.
+2. Thẩm quyền của Cục trưởng Cục Quản lý, giám sát tổ chức tín dụng:
+a) Chấp thuận thành lập phòng giao dịch, văn phòng đại diện, đơn vị sự nghiệp của tổ chức tài chính vi mô;
+b) Bắt buộc chấm dứt hoạt động, giải thể phòng giao dịch, văn phòng đại diện, đơn vị sự nghiệp của tổ chức tài chính vi mô.
+3. Thẩm quyền của Giám đốc Ngân hàng Nhà nước chi nhánh Khu vực:
+a) Chấp thuận thay đổi địa điểm đặt trụ sở chi nhánh, phòng giao dịch của tổ chức tài chính vi mô trên địa bàn, bao gồm cả trường hợp thay đổi địa điểm trước khi khai trương hoạt động;
+b) Chấp thuận việc tự nguyện chấm dứt hoạt động, giải thể chi nhánh, phòng giao dịch của tổ chức tài chính vi mô.
+
+Như vậy, Giám đốc Ngân hàng Nhà nước chi nhánh Khu vực có thẩm quyền chấp thuận thay đổi địa điểm đặt trụ sở chi nhánh của tổ chức tài chính vi mô trên địa bàn, bao gồm cả trường hợp thay đổi địa điểm trước khi khai trương hoạt động.",13_VBHN-NHNN; 61_VBHN-NHNN; 63_VBHN-NHNN; 19_2025_TT-NHNN; 14_2026_TT-NHNN,,,,,
+2166,0.923,Những điều kiện bắt buộc mà một doanh nghiệp cung cấp dịch vụ bưu chính công ích phải đáp ứng để được phép triển khai dịch vụ thanh toán không thông qua tài khoản khách hàng theo Nghị định 52/2024/NĐ-CP là gì?,"Theo quy định tại Điều 19 Nghị định 52/2024/NĐ-CP thì điều kiện cung ứng dịch vụ thanh toán không qua tài khoản thanh toán của khách hàng của doanh nghiệp cung ứng dịch vụ bưu chính công ích như sau:
+
+Doanh nghiệp cung ứng dịch vụ bưu chính công ích được cung ứng dịch vụ thanh toán không qua tài khoản thanh toán của khách hàng khi đáp ứng đầy đủ và phải đảm bảo duy trì đủ các điều kiện sau đây trong quá trình cung ứng dịch vụ thanh toán không qua tài khoản thanh toán của khách hàng:
+- Có hệ thống thông tin phục vụ cho hoạt động cung ứng dịch vụ thanh toán không qua tài khoản thanh toán của khách hàng đáp ứng yêu cầu đảm bảo an toàn hệ thống thông tin cấp độ 3 theo quy định của pháp luật.
+- Điều kiện về nhân sự:
+  Người đại diện theo pháp luật, Tổng Giám đốc (Giám đốc), Người phụ trách cung ứng dịch vụ thanh toán không qua tài khoản thanh toán của khách hàng của doanh nghiệp cung ứng dịch vụ bưu chính công ích phải có bằng đại học trở lên về một trong các ngành kinh tế, quản trị kinh doanh, luật, công nghệ thông tin.
+  Các cán bộ chủ chốt thực hiện cung ứng dịch vụ thanh toán không qua tài khoản thanh toán của khách hàng (gồm Trưởng phòng (ban) hoặc tương đương và các cán bộ kỹ thuật) có bằng cao đẳng trở lên về một trong các ngành kinh tế, quản trị kinh doanh, luật, công nghệ thông tin hoặc lĩnh vực chuyên môn đảm nhiệm.
+- Có quy trình nghiệp vụ kỹ thuật đối với từng loại dịch vụ; có biện pháp đảm bảo khả năng thanh toán, duy trì số dư tài khoản thanh toán của đơn vị mình tại ngân hàng và tiền mặt lớn hơn số tiền phải trả cho khách hàng tại thời điểm chi trả; quy trình kiểm tra, kiểm soát nội bộ; cơ chế quản lý rủi ro; các nguyên tắc chung và quy định nội bộ về phòng, chống rửa tiền, tài trợ khủng bố và tài trợ phổ biến vũ khí hủy diệt hàng loạt; quy trình và thủ tục giải quyết yêu cầu tra soát, khiếu nại, tranh chấp; quy định quyền và trách nhiệm của các bên có liên quan.
+- Có phương án thu gom, vận chuyển tiền mặt đảm bảo cuối ngày nộp vào tài khoản thanh toán mở tại ngân hàng, đảm bảo an ninh, an toàn đối với việc luân chuyển tiền mặt; trang bị các thiết bị đảm bảo việc giao nhận, bảo quản tiền mặt, quy định hạn mức chuyển tiền, nhận tiền, mức tồn quỹ tại các điểm cung cấp dịch vụ; đảm bảo công tác phòng cháy, chữa cháy theo quy định của pháp luật.","Căn cứ theo Điều 19 Nghị định 52/2024/NĐ-CP quy định về điều kiện cung ứng dịch vụ thanh toán không qua tài khoản thanh toán của khách hàng của doanh nghiệp cung ứng dịch vụ bưu chính công ích như sau:
+- Có hệ thống thông tin phục vụ cho hoạt động cung ứng dịch vụ thanh toán không qua tài khoản thanh toán của khách hàng đáp ứng yêu cầu đảm bảo an toàn hệ thống thông tin cấp độ 3 theo quy định của pháp luật.
+- Điều kiện về nhân sự: Người đại diện theo pháp luật, Tổng Giám đốc (Giám đốc), Người phụ trách cung ứng dịch vụ thanh toán không qua tài khoản thanh toán của khách hàng của doanh nghiệp cung ứng dịch vụ bưu chính công ích phải có bằng đại học trở lên về một trong các ngành kinh tế, quản trị kinh doanh, luật, công nghệ thông tin. Các cán bộ chủ chốt thực hiện cung ứng dịch vụ thanh toán không qua tài khoản thanh toán của khách hàng (gồm Trưởng phòng (ban) hoặc tương đương và các cán bộ kỹ thuật) có bằng cao đẳng trở lên về một trong các ngành kinh tế, quản trị kinh doanh, luật, công nghệ thông tin hoặc lĩnh vực chuyên môn đảm nhiệm.
+- Có quy trình nghiệp vụ kỹ thuật đối với từng loại dịch vụ; có biện pháp đảm bảo khả năng thanh toán, duy trì số dư tài khoản thanh toán của đơn vị mình tại ngân hàng và tiền mặt lớn hơn số tiền phải trả cho khách hàng tại thời điểm chi trả; quy trình kiểm tra, kiểm soát nội bộ; cơ chế quản lý rủi ro; các nguyên tắc chung và quy định nội bộ về phòng, chống rửa tiền, tài trợ khủng bố và tài trợ phổ biến vũ khí hủy diệt hàng loạt; quy trình và thủ tục giải quyết yêu cầu tra soát, khiếu nại, tranh chấp; quy định quyền và trách nhiệm của các bên có liên quan.
+- Có phương án thu gom, vận chuyển tiền mặt đảm bảo cuối ngày nộp vào tài khoản thanh toán mở tại ngân hàng, đảm bảo an ninh, an toàn đối với việc luân chuyển tiền mặt; trang bị các thiết bị đảm bảo việc giao nhận, bảo quản tiền mặt, quy định hạn mức chuyển tiền, nhận tiền, mức tồn quỹ tại các điểm cung cấp dịch vụ; đảm bảo công tác phòng cháy, chữa cháy theo quy định của pháp luật.",52_2024_NĐ-CP; 52_2024_NĐ-CP; 24_2026_NQ-CP; 52_2024_NĐ-CP; 75_VBHN-NHNN,,,,,
+459,0.945,Những tiêu chí và điều kiện cụ thể nào mà tổ chức tín dụng hoặc công ty Fintech phải thỏa để được cấp Giấy chứng nhận tham gia cơ chế thử nghiệm có kiểm soát trong lĩnh vực ngân hàng theo Nghị định 94/2025/NĐ-CP?,"Căn cứ theo Điều 8 Nghị định 94/2025/NĐ-CP quy định điều kiện và tiêu chí tham gia Cơ chế thử nghiệm có kiểm soát trong lĩnh vực ngân hàng như sau:
+- Tổ chức tín dụng không thuộc nhóm tổ chức tín dụng đang được kiểm soát đặc biệt theo Luật Các tổ chức tín dụng 2024, chi nhánh ngân hàng nước ngoài được xem xét cấp Giấy chứng nhận tham gia Cơ chế thử nghiệm khi giải pháp Fintech đáp ứng các tiêu chí như sau:
++ Là giải pháp có nội dung kỹ thuật và nghiệp vụ mà quy định pháp lý hiện hành chưa hướng dẫn cụ thể, rõ ràng cho việc triển khai, áp dụng;
++ Là giải pháp có tính đổi mới sáng tạo, đem lại lợi ích, giá trị gia tăng cho người sử dụng dịch vụ tại Việt Nam, đặc biệt là các giải pháp hỗ trợ và thúc đẩy mục tiêu phổ cập tài chính;
++ Là giải pháp đã thiết kế, xây dựng được khung quản lý rủi ro, hạn chế tác động tiêu cực tới hệ thống ngân hàng và hoạt động ngân hàng - tiền tệ - ngoại hối; đã xây dựng phương án về xử lý, khắc phục các rủi ro xảy ra trong quá trình thử nghiệm; đã xây dựng phương án bảo vệ quyền lợi người tiêu dùng:
++ Là giải pháp đã được tổ chức tham gia Cơ chế thử nghiệm thực hiện các biện pháp rà soát, đánh giá đầy đủ trên các khía cạnh hoạt động và chức năng, công dụng, tỉnh hữu ích;
++ Là giải pháp có tính khả thi để có thể cung ứng ra thị trường sau khi hoàn thành quá trình thử nghiệm.
+- Công ty Fintech được xem xét cấp Giấy chứng nhận tham gia Cơ chế thử nghiệm khi giải pháp Fintech đáp ứng các tiêu chỉ quy định tại khoản 1 Điều 8 Nghị định 94/2025/NĐ-CP và đáp ứng các điều kiện như sau:
++ Là pháp nhân được thành lập và hoạt động hợp pháp trên lãnh thổ Việt Nam; không đang trong quá trình chia, tách, hợp nhất, sáp nhập, chuyển đổi, giải thể, phá sản theo quy định pháp luật;
++ Người đại diện theo pháp luật, Tổng Giám đốc (Giám đốc) phải có bằng đại học trở lên về một trong các ngành kinh tế, quản trị kinh doanh, luật, công nghệ thông tin và có ít nhất 02 năm kinh nghiệm là người quản lý, người điều hành của tổ chức trong lĩnh vực tài chính, ngân hàng và không thuộc những đối tượng bị cấm theo quy định của pháp luật.
+- Tổ chức tham gia Cơ chế thử nghiệm có trách nhiệm đảm bảo duy trì đủ các điều kiện trong quá trình tham gia Cơ chế thử nghiệm.","Căn cứ theo Điều 8 Nghị định 94/2025/NĐ-CP quy định về điều kiện và tiêu chí tham gia Cơ chế thử nghiệm có kiểm soát trong lĩnh vực ngân hàng như sau:
+- Tổ chức tín dụng không thuộc nhóm tổ chức tín dụng đang được kiểm soát đặc biệt được xem xét cấp Giấy chứng nhận tham gia Cơ chế thử nghiệm khi giải pháp Fintech đáp ứng các tiêu chí như sau:
+  + Là giải pháp có nội dung kỹ thuật và nghiệp vụ mà quy định pháp luật hiện hành chưa hướng dẫn cụ thể, rõ ràng cho việc triển khai, áp dụng;
+  + Là giải pháp có tính đổi mới sáng tạo, đem lại lợi ích, giá trị gia tăng cho người sử dụng dịch vụ tại Việt Nam, đặc biệt là các giải pháp hỗ trợ và thúc đẩy mục tiêu phổ cập tài chính;
+  + Là giải pháp đã thiết kế, xây dựng được khung quản lý rủi ro, hạn chế tác động tiêu cực tới hệ thống ngân hàng và hoạt động ngân hàng - tiền tệ - ngoại hối; đã xây dựng phương án về xử lý, khắc phục các rủi ro xảy ra trong quá trình thử nghiệm; đã xây dựng phương án bảo vệ quyền lợi người tiêu dùng;
+  + Là giải pháp đã được tổ chức tham gia Cơ chế thử nghiệm thực hiện các biện pháp rà soát, đánh giá đầy đủ trên các khía cạnh hoạt động và chức năng, công dụng, tính hữu ích;
+  + Là giải pháp có tính khả thi để có thể cung ứng ra thị trường sau khi hoàn thành quá trình thử nghiệm.
+- Công ty Fintech được xem xét cấp Giấy chứng nhận tham gia Cơ chế thử nghiệm khi giải pháp Fintech đáp ứng các tiêu chí quy định tại khoản 1 Điều 8 Nghị định 94/2025/NĐ-CP và đáp ứng các điều kiện như sau:
+  + Là pháp nhân được thành lập và hoạt động hợp pháp trên lãnh thổ Việt Nam; không đang trong quá trình chia, tách, hợp nhất, sáp nhập, chuyển đổi, giải thể, phá sản theo quy định pháp luật;
+  + Người đại diện theo pháp luật, Tổng Giám đốc (Giám đốc) phải có bằng đại học trở lên về một trong các ngành kinh tế, quản trị kinh doanh, luật, công nghệ thông tin và có ít nhất 02 năm kinh nghiệm là người quản lý, người điều hành của tổ chức trong lĩnh vực tài chính, ngân hàng và không thuộc những đối tượng bị cấm theo quy định của pháp luật.",94_2025_NĐ-CP; 94_2025_NĐ-CP; 94_2025_NĐ-CP; 94_2025_NĐ-CP; 94_2025_NĐ-CP,,,,,
+2728,0.994,"Từ 01/07/2024, tổ chức tín dụng phải tuân thủ quy định gì về bảo mật thông tin khách hàng và bí mật kinh doanh theo Luật các tổ chức tín dụng 2024?","Theo Điều 13 Luật Các tổ chức tín dụng 2024 quy định về bảo mật thông tin như sau:- Người quản lý, người điều hành, nhân viên của tổ chức tín dụng, chi nhánh ngân hàng nước ngoài không được tiết lộ thông tin khách hàng, bí mật kinh doanh của tổ chức tín dụng, chi nhánh ngân hàng nước ngoài.- Tổ chức tín dụng, chi nhánh ngân hàng nước ngoài phải bảo đảm bí mật thông tin khách hàng của tổ chức tín dụng, chi nhánh ngân hàng nước ngoài theo quy định của Chính phủ.- Tổ chức tín dụng, chi nhánh ngân hàng nước ngoài không được cung cấp thông tin khách hàng của tổ chức tín dụng, chi nhánh ngân hàng nước ngoài cho tổ chức, cá nhân khác, trừ trường hợp có yêu cầu của cơ quan nhà nước có thẩm quyền theo quy định của luật hoặc được sự chấp thuận của khách hàng.","Căn cứ theo Điều 13 Luật Các tổ chức tín dụng 2024 quy định về bảo mật thông tin như sau:
+- Người quản lý, người điều hành, nhân viên của tổ chức tín dụng, chi nhánh ngân hàng nước ngoài không được tiết lộ thông tin khách hàng, bí mật kinh doanh của tổ chức tín dụng, chi nhánh ngân hàng nước ngoài.
+- Tổ chức tín dụng, chi nhánh ngân hàng nước ngoài phải bảo đảm bí mật thông tin khách hàng của tổ chức tín dụng, chi nhánh ngân hàng nước ngoài theo quy định của Chính phủ.
+- Tổ chức tín dụng, chi nhánh ngân hàng nước ngoài không được cung cấp thông tin khách hàng của tổ chức tín dụng, chi nhánh ngân hàng nước ngoài cho tổ chức, cá nhân khác, trừ trường hợp có yêu cầu của cơ quan nhà nước có thẩm quyền theo quy định của luật hoặc được sự chấp thuận của khách hàng.",32_2024_QH15; 47_2010_QH12; 117_2018_NĐ-CP; 02_1997_QH10; doc__53468,,,,,

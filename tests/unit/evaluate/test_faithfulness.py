@@ -39,3 +39,12 @@ def test_pick_by_quantile_orders_from_easy_to_hard():
 
 def test_latex_escape():
     assert latex_escape("5% & 100_000 #1 {x}") == r"5\% \& 100\_000 \#1 \{x\}"
+
+
+def test_sample_rows_is_seeded_and_stratified_by_score():
+    from evaluate.faithfulness import sample_rows
+
+    rows = [{"id": i, "rouge": i} for i in range(100)]
+    a, b = sample_rows(rows, 10, seed=7), sample_rows(rows, 10, seed=7)
+    assert a == b and len(a) == 10
+    assert sorted({r["rouge"] // 10 for r in a}) == list(range(10))          # one question from each score decile
