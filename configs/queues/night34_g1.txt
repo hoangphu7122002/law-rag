@@ -1,5 +1,5 @@
 # GPU1: does the RAW (not SFT'd) Qwen3.5-2B call tools when forced? If yes, S1 can start from the raw 2B instead of v0.
 serve Qwen/Qwen3.5-2B --gpu 1 --share 0.45 --tools
-configs/exp/A7_react.yaml --set generate.model=Qwen/Qwen3.5-2B --set generate.params_b=2.0 --set backend.base_url=http://localhost:8001/v1 --set split=dev_clean --set generate.tool_prompt=force --set generate.agent_initial_k=0
+configs/exp/A7_react.yaml --set generate.model=Qwen/Qwen3.5-2B --set generate.params_b=2.0 --set backend.base_url=http://localhost:8001/v1 --set split=dev_clean --set generate.tool_prompt=force --set generate.agent_initial_k=0 --set generate.min_tool_calls=1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react.*-g1"
 do tmux kill-session -t lawrag-llm-g1
