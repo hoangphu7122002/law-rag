@@ -17,6 +17,7 @@ models = [
     "llama-index-embeddings-huggingface", "llama-index-vector-stores-faiss", "faiss-cpu",
     "llama-index-postprocessor-sbert-rerank", "sentence-transformers", "torch>=2.7",
 ]
+serve = ["fastapi", "uvicorn", "llama-index-vector-stores-faiss", "faiss-cpu"]   # QA container: models run as separate endpoints, no torch here
 train = ["trl", "peft", "datasets"]          # LoRA SFT / RAFT / DPO / GRPO (runs on the GPU box)
 dev = ["pytest", "ruff"]
 

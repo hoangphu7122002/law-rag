@@ -67,3 +67,13 @@ def test_pick_avoid_excludes_pool_items_sharing_a_pair():
 def test_pick_avoid_empty_keeps_all():
     s = store(*POOL)
     assert len(s.pick("hợp đồng lao động", 4, avoid=frozenset())) == 4
+
+
+def test_shot_store_round_trips_through_json(tmp_path):
+    s = store(*POOL)
+    path = tmp_path / "shots.json"
+    s.save(path)
+    again = ShotStore.load(path)                       # no corpus / dataset needed: a container ships only this file
+    q = "hợp đồng lao động thời hạn bao lâu"
+    assert again.pick(q, 2) == s.pick(q, 2)
+    assert len(again.pool) == len(POOL)

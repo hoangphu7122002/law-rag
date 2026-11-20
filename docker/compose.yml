@@ -1,0 +1,52 @@
+# law-rag QA stack: three vLLM inference endpoints + the QA API.
+#   docker compose -f docker/compose.yml up -d        (from the repo root; see docs/ops/docker.md)
+# Needs on the host (paths relative to the repo root): data/models/dpo_a2 (the LLM weights), data/index/dieu-2000-clean__4ac2a75c (index), data/serve/shots.json,
+# and a Hugging Face cache with AITeamVN/Vietnamese_Embedding + Vietnamese_Reranker (downloaded on first start if online).
+# GPU: every endpoint shares one card (fractions as in configs/backends/l40s.yaml); set GPU to the CDI/device index.
+x-vllm: &vllm
+  image: ${VLLM_IMAGE:-vllm/vllm-openai:v0.30.0}
+  restart: unless-stopped
+  environment: &vllm-env
+    HF_HOME: /hf
+    HF_HUB_OFFLINE: ${HF_HUB_OFFLINE:-0}
+  volumes: &vllm-vol
+    - ${HF_CACHE:-${HOME}/.cache/huggingface}:/hf
+  deploy: &gpu
+    resources:
+      reservations:
+        devices: [{driver: nvidia, device_ids: ["${GPU:-0}"], capabilities: [gpu]}]
+  ipc: host
+
+services:
+  llm:
+    <<: *vllm
+    volumes:
+      - ${HF_CACHE:-${HOME}/.cache/huggingface}:/hf
+      - ../data/models/dpo_a2:/models/dpo_a2:ro
+    command: >
+      --model /models/dpo_a2 --served-model-name law-rag-dpo-a2 --host 0.0.0.0 --port 8000
+      --dtype bfloat16 --max-model-len 32768 --gpu-memory-utilization ${LLM_SHARE:-0.45}
+      --enable-prefix-caching --max-num-seqs 64 --seed 0
+  embed:
+    <<: *vllm
+    command: >
+      AITeamVN/Vietnamese_Embedding --runner pooling --host 0.0.0.0 --port 8100
+      --dtype bfloat16 --gpu-memory-utilization ${EMBED_SHARE:-0.15} --max-num-batched-tokens 32768
+  rerank:
+    <<: *vllm
+    command: >
+      AITeamVN/Vietnamese_Reranker --runner pooling --host 0.0.0.0 --port 8200
+      --dtype bfloat16 --gpu-memory-utilization ${RERANK_SHARE:-0.15} --max-num-batched-tokens 32768
+  api:
+    build: {context: .., dockerfile: docker/Dockerfile.api}
+    image: law-rag-api:latest
+    restart: unless-stopped
+    depends_on: [llm, embed, rerank]
+    ports: ["${API_PORT:-8080}:8080"]
+    environment:
+      LLM_URL: http://llm:8000/v1
+      EMBED_URL: http://embed:8100/v1
+      RERANK_URL: http://rerank:8200
+    volumes:
+      - ../data/index/dieu-2000-clean__4ac2a75c:/app/data/index/dieu-2000-clean__4ac2a75c:ro
+      - ../data/serve/shots.json:/app/data/serve/shots.json:ro

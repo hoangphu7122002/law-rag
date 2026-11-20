@@ -1,0 +1,18 @@
+# S1: the deployment config. Iterative DPO (2 rounds from v3b, step 29) served greedy, no MBR: 1 generation per question.
+# test rougeL .6433 (200 q), dev300 .6637. Retrieval identical to the experiments (index key must stay 4ac2a75c).
+note: "S1 serve: dpo_a2 greedy"
+backend: docker
+sources: [corpus, vbpl_cited, web]
+chunk: {kind: dieu, size: 2000, overlap: 100, clean: true, dedup: true}
+embed: {model: AITeamVN/Vietnamese_Embedding, normalize: true, max_len: 512}
+retrieve: {kind: dense, metric: ip, k: 5, candidates: 50}
+rerank: {model: AITeamVN/Vietnamese_Reranker, max_len: 1024}
+generate:
+  model: law-rag-dpo-a2        # --served-model-name of the llm container (weights: data/models/dpo_a2)
+  params_b: 2.27
+  prompt: vi_rag
+  max_tokens: 1024
+  thinking: false
+  temperature: 0.0
+  top_p: 0.95
+  shots: 2

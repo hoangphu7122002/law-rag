@@ -61,6 +61,7 @@ src/        CODE — on PYTHONPATH; class map in docs/reference/structure.md
 ├─ train/     SFT / reranker data + LoRA scripts · grpo.py (run in the box's training envs)
 ├─ pipeline.py RAGPipeline · Experiment        config.py  Config + load()
 ├─ records.py  Question · Passage · Prediction  runs.py    Run · Ledger
+├─ serve/      QAService · REST api (POST /ask, GET /health) · wiring — the QA container (docker/, docs/ops/docker.md)
 ├─ ops/        RemoteBox (ssh + rsync + tmux: push, setup, serve vLLM, run, status, stop, pull) · modal_app.py
 └─ cli.py      one subcommand per make target
 tests/      CHECKS — unit/ (no data, no models) · smoke/ (whole pipeline, BM25 + fake LLM)

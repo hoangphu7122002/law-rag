@@ -1,0 +1,8 @@
+# Inside docker compose (docker/compose.yml): each model is its own vLLM endpoint, the QA service only calls them.
+# URLs are overridden by env LLM_URL / EMBED_URL / RERANK_URL, so the same image can use shared endpoints elsewhere.
+name: docker
+base_url: http://llm:8000/v1
+embed_url: http://embed:8100/v1
+rerank_url: http://rerank:8200
+api_key: EMPTY
+device: cpu

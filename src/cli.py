@@ -41,6 +41,8 @@ def main() -> None:
     d.add_argument("--shots", default="0", help="comma list of shot counts drawn per row, e.g. 0,1,2,3")
     d.add_argument("--refuse", type=float, default=0.0, help="p of an extra no-answer row (unrelated context -> refusal)")
     d.add_argument("--set", action="append", default=[], metavar="KEY=VALUE")
+    es = sub.add_parser("export-shots", help="few-shot pool (decontaminated train) -> JSON, so the QA container needs no dataset")
+    es.add_argument("--out", default="data/serve/shots.json")
     rr = sub.add_parser("rerank-data", help="reranker groups (gold Điều positives, dense hard negatives, Zalo) -> data/train/<name>")
     rr.add_argument("exp")
     rr.add_argument("--name", required=True)
@@ -110,6 +112,13 @@ def main() -> None:
         kr = tuple(int(x) for x in args.k_range.split(",")) if args.k_range else None
         SFTData(load(args.exp, args.set), args.name, tuple(args.splits.split(",")), kr, args.oracle,
                 shots=tuple(int(x) for x in args.shots.split(",")), refuse=args.refuse).build()
+    elif args.cmd == "export-shots":
+        from generate.shots import ShotStore
+
+        Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+        store = ShotStore()
+        store.save(args.out)
+        print(f"{len(store.pool)} shots -> {args.out}")
     elif args.cmd == "rerank-data":
         from config import load
         from train.rerank_data import RerankData

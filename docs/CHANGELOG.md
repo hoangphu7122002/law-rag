@@ -404,3 +404,9 @@ Test split (200 questions, 0 errors, 0 empty), retrieval as in the dev runs (den
 | dpo_a2 + MBR8 (accuracy mode) | .9176 | .6805 | .7275 | .5873 | **.6521** |
 - dpo_a2 greedy is +.026 rougeL over v3b greedy and v0 greedy on test with one generation per question; both seeds agree (.6433 / .6377). MBR8 on top adds +.009 (.6521).
 - Latency in these runs (concurrency 16) is not a single-request latency (p50 ~9 s, p95 ~18 s); single request, generation only, L40S: p50 2.7 s, p95 6.3 s (dev, concurrency 1).
+
+## Step 31 — QA container with inference endpoints (2026-11-20 night)
+- New `src/serve/` (TDD, 12 tests): `QAService` (dense retrieve → rerank → greedy generate, per-stage timings), REST `POST /ask` / `GET /health` (422 on empty question, 503 when an endpoint is down), `probe()` of each endpoint's `/health`, env → config overrides (`LLM_URL`, `EMBED_URL`, `RERANK_URL`), `python -m serve`. `retrieve.retrieval.to_passages` shared with the batch pipeline; `ShotStore.save/load` + `cli export-shots` (the container ships a 3 MB JSON instead of the dataset).
+- Config `configs/exp/S1_serve.yaml` (dpo_a2 greedy, no MBR, 2 shots; index key unchanged 4ac2a75c), `configs/backends/docker.yaml`, `docker/Dockerfile.api` (python slim, deps from pyproject `serve` extra, no torch, 0.7 GB), `docker/compose.yml` (vLLM v0.30.0 llm + embed + rerank endpoints + api), `.dockerignore`, `docs/ops/docker.md`.
+- Verified on the L40S box (GPU 1): all four containers healthy, `/ask` answers in the course style with 5 sources; 25 dev questions one at a time: rougeL .6735, **p50 2.61 s, p95 6.61 s** end to end (retrieve .08 s, rerank .21 s, generate 2.85 s); 30 questions at concurrency 4: rougeL .7030, p50 3.51 s, p95 9.65 s, 0 errors. RAM: api 12.4 GB, llm 4.7, embed 6.0, rerank 5.9.
+- Stack left running on the box (project `lawrag-qa`, port 8080).

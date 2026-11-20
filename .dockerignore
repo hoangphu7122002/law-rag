@@ -1,0 +1,14 @@
+# The API image carries code + configs only; data (index, models, shots) is mounted as volumes.
+data
+.venv
+.git
+.claude
+.focus
+docs
+tests
+notebooks
+report
+slides
+**/__pycache__
+.pytest_cache
+.ruff_cache

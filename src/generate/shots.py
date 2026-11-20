@@ -4,7 +4,9 @@
 The pool is the decontaminated train split (AGENTS.md rule 3), so a shot can never be a test pair; the same store is used
 for inference and for building SFT rows, so the two formats cannot drift.
 """
+import json
 import re
+from pathlib import Path
 
 from corpus.decontam import Decontam
 from corpus.qa import QASet
@@ -33,3 +35,15 @@ class ShotStore:
         scored = sorted(((len(w & x) / max(1, len(w | x)), t, a) for t, a, x, pr in self.pool
                          if t != question and not (avoid and pr & avoid)), reverse=True)
         return [(t, a) for _, t, a in scored[:n]]
+
+    def save(self, path) -> None:
+        """Write the pool to JSON so a service can ship it without the dataset (gold pairs are kept: `avoid` still works)."""
+        rows = [{"q": t, "a": a, "pairs": sorted(map(list, pr))} for t, a, _, pr in self.pool]
+        Path(path).write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
+
+    @classmethod
+    def load(cls, path) -> "ShotStore":
+        store = cls.__new__(cls)   # skip the dataset / decontamination build
+        store.pool = [(r["q"], r["a"], words(r["q"]), frozenset(map(tuple, r["pairs"])))
+                      for r in json.loads(Path(path).read_text(encoding="utf-8"))]
+        return store

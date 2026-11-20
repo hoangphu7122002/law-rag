@@ -19,6 +19,15 @@ from retrieve.factory import RetrieverFactory
 CACHE = Path("data/cache/retrieval")
 
 
+def to_passages(hits) -> list[Passage]:
+    """Retrieved nodes -> Passage records for the prompt (shared by batch runs and the QA service)."""
+    for h in hits:  # rerankers write retrieval_score into metadata; keep it out of the LLM text
+        if "retrieval_score" in h.node.metadata and "retrieval_score" not in h.node.excluded_llm_metadata_keys:
+            h.node.excluded_llm_metadata_keys = [*h.node.excluded_llm_metadata_keys, "retrieval_score"]
+    return [Passage(pid=h.node.node_id, doc=h.node.metadata.get("doc", ""), text=h.node.get_content(metadata_mode=MetadataMode.LLM),
+                    score=float(h.score or 0.0)) for h in hits]
+
+
 class Retrieval:
     def __init__(self, cfg: Config):
         self.cfg = cfg
@@ -58,12 +67,7 @@ class Retrieval:
         hits = retriever.retrieve(q.text)
         if reranker is not None:
             hits = reranker.postprocess_nodes(hits, query_bundle=QueryBundle(q.text))
-        hits = hits[: self.cfg.retrieve.k]
-        for h in hits:  # rerankers write retrieval_score into metadata; keep it out of the LLM text
-            if "retrieval_score" in h.node.metadata and "retrieval_score" not in h.node.excluded_llm_metadata_keys:
-                h.node.excluded_llm_metadata_keys = [*h.node.excluded_llm_metadata_keys, "retrieval_score"]
-        return [Passage(pid=h.node.node_id, doc=h.node.metadata.get("doc", ""), text=h.node.get_content(metadata_mode=MetadataMode.LLM),
-                        score=float(h.score or 0.0)) for h in hits]
+        return to_passages(hits[: self.cfg.retrieve.k])
 
     def _read(self) -> dict[int, list[Passage]]:
         if not self.path.exists():
