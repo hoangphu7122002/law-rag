@@ -1,0 +1,7 @@
+# GPU0: raw 9B ReAct (force prompt, no initial passages) using the SHARED tools endpoint (:8300, one index copy). Waits for GPU1's 2B run (own index) to finish first so RAM is not doubled.
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react.*-g1"
+tools A7_react.yaml
+serve Qwen/Qwen3.5-9B --gpu 0 --share 0.6 --tools
+configs/exp/A7_react.yaml --set generate.model=Qwen/Qwen3.5-9B --set generate.params_b=9.0 --set generate.teacher=true --set backend.base_url=http://localhost:8000/v1 --set split=dev_clean --set generate.tool_prompt=force --set generate.agent_initial_k=0 --set generate.tools_url=http://localhost:8300
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A7_react.*-g0"
+do tmux kill-session -t lawrag-llm-g0
