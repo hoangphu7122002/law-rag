@@ -93,7 +93,7 @@ class Generate(Strict):
     agent: bool = False            # ReAct loop with tools (generate/react.py) instead of one call
     max_turns: int = 4             # agent: model calls per question (the last one has no tools)
     agent_tools: list[str] = ["search_law", "get_article"]   # agent: which tools are offered (ablation arms; "kg_related" needs data/kg/kg.sqlite)
-    tool_prompt: Literal["full", "compact"] = "full"   # agent: "compact" drops the per-tool prose list (the chat template already renders the JSON schemas)
+    tool_prompt: Literal["full", "compact", "force"] = "full"   # agent: "compact" drops the per-tool prose list (the chat template already renders the JSON schemas)
     agent_seed: int = 0            # agent: 0 = the original per-question sampling seed; other values give independent trajectories for the same question
     web: WebCfg = WebCfg()
     agent_initial_k: int = -1      # agent: passages from the cached retrieval put in the first prompt (-1 = all k, 0 = none)

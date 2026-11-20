@@ -42,6 +42,10 @@ def system_tools(tools: list[str], style: str = "full") -> str:
     per-tool list (a duplicate) and keeps what only the prose says: when to call, the answer template, and when to use the web."""
     use = ("Chỉ gọi công cụ khi ngữ cảnh hiện có chưa đủ. Khi đã đủ thông tin, trả lời trực tiếp, không gọi công cụ nữa, "
            "theo mẫu \"Căn cứ Điều X ... quy định ...\".")
+    if style == "force":   # no "only when the context is not enough" rule: the model must search first, so trajectories contain tool calls to learn from
+        return ("Trước khi trả lời, hãy gọi search_law để tìm căn cứ pháp lý (dùng get_article nếu cần đọc toàn văn một Điều). "
+                "Chỉ trả lời sau khi đã có kết quả từ công cụ, theo mẫu \"Căn cứ Điều X ... quy định ...\"."
+                + (" Chỉ dùng web_search khi các công cụ trong kho văn bản không có thông tin." if "web_search" in tools else ""))
     if style == "compact":
         return use + (" Chỉ dùng web_search khi các công cụ trong kho văn bản không có thông tin." if "web_search" in tools else "")
     return "Bạn có thể dùng công cụ để tìm thêm thông tin nếu ngữ cảnh chưa đủ:\n" + "\n".join(TOOL_HELP[t] for t in tools) + "\n" + use

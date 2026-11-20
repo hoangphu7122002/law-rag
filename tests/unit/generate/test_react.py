@@ -246,3 +246,10 @@ def test_agent_seed_zero_keeps_the_old_per_question_seed():
 def test_agent_seed_changes_the_per_question_seed_deterministically():
     assert seed_of(1) == seed_of(1)
     assert seed_of(1) != seed_of(2) and seed_of(1) != seed_of(0)
+
+
+def test_force_prompt_requires_calling_the_tools_before_answering_and_has_no_only_when_insufficient_rule():
+    from generate.react import system_tools
+    force = system_tools(["search_law", "get_article"], "force")
+    assert "search_law" in force and "Căn cứ Điều X" in force
+    assert "Chỉ gọi công cụ khi" not in force and "chưa đủ" not in force
