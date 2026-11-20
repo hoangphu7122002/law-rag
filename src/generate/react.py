@@ -168,6 +168,7 @@ class ReactGenerator(Generator):
         salt = f"{question}#{self.cfg.agent_seed}" if self.cfg.agent_seed else question   # seed 0 = the original value
         seed = zlib.crc32(salt.encode()) & 0x7FFFFFFF
         seen: set[str] = set()
+        n_calls = 0
         gate, repaired, context = Gate(self.cfg.check), False, list(init)   # context = what the model has seen (passages + tool results)
         for turn in range(self.cfg.max_turns):
             last = turn == self.cfg.max_turns - 1
@@ -182,6 +183,10 @@ class ReactGenerator(Generator):
             calls = [] if last else (m.tool_calls or [])
             if not calls:
                 text = self.clean(m.content or "")
+                if n_calls < self.cfg.min_tool_calls and turn < self.cfg.max_turns - 1:
+                    msgs += [{"role": "assistant", "content": m.content or ""},
+                             {"role": "user", "content": "Bạn chưa gọi công cụ nào. Hãy gọi search_law để tìm căn cứ pháp lý trước, rồi mới trả lời."}]
+                    continue
                 if gate.names and not repaired and not gate.passes(text, context) and turn < self.cfg.max_turns - 1:
                     repaired = True   # optional gate: one nudge, then the next answer is final
                     bad = sorted({n for n in DIEU.findall(text) if not Gate(["grounded_citation"]).passes(f"Điều {n}", context)})
@@ -193,6 +198,7 @@ class ReactGenerator(Generator):
                 return text
             msgs.append({"role": "assistant", "content": m.content or "",
                          "tool_calls": [{"id": c.id, "type": "function", "function": {"name": c.function.name, "arguments": c.function.arguments}} for c in calls]})
+            n_calls += len(calls)
             for c in calls:
                 key = c.function.name + c.function.arguments
                 out = ("Bạn đã gọi đúng công cụ này với cùng tham số rồi; hãy dùng kết quả trước đó hoặc trả lời." if key in seen

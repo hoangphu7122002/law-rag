@@ -253,3 +253,21 @@ def test_force_prompt_requires_calling_the_tools_before_answering_and_has_no_onl
     force = system_tools(["search_law", "get_article"], "force")
     assert "search_law" in force and "Căn cứ Điều X" in force
     assert "Chỉ gọi công cụ khi" not in force and "chưa đủ" not in force
+
+
+def test_min_tool_calls_nudges_a_model_that_answers_without_calling_a_tool():
+    cfg = Generate(model="m", params_b=2.0, prompt="vi_rag", max_turns=4, agent=True, min_tool_calls=1)
+    g = ReactGenerator(cfg, Backend(name="x", base_url="http://x/v1"), FakeTools())
+    g._oai = FakeOAI([NS(content="Trả lời vội.", tool_calls=None),
+                      NS(content="", tool_calls=[call("search_law", '{"query": "q"}')]),
+                      NS(content="Căn cứ Điều 5.", tool_calls=None)])
+    assert run(g) == "Căn cứ Điều 5."
+    assert g.tools.calls == [("search", "q")]
+    nudges = [m for m in g._oai.seen[-1]["messages"] if m["role"] == "user" and "chưa gọi công cụ" in m["content"]]
+    assert len(nudges) == 1 and "search_law" in nudges[0]["content"]             # the reminder is in the conversation
+    assert g.traces["câu hỏi?"][-2]["role"] == "tool"                          # the rushed first answer is not the final answer
+
+
+def test_min_tool_calls_zero_keeps_the_old_behaviour():
+    g = gen([NS(content="Căn cứ Điều 5.", tool_calls=None)])
+    assert run(g) == "Căn cứ Điều 5." and len(g._oai.seen) == 1
