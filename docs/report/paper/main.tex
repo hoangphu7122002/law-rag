@@ -1,0 +1,404 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\setmonofont[Scale=0.88]{Menlo}
+\usepackage[margin=2.3cm]{geometry}
+\usepackage{booktabs,multirow,graphicx,caption,amsmath,amssymb,enumitem,xcolor,float,array,url}
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,shapes.geometric,fit,backgrounds}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+\pgfplotsset{compat=1.17}
+\captionsetup{font=small,labelfont=bf,skip=4pt}
+\setlist{itemsep=1pt,topsep=3pt}
+\renewcommand{\arraystretch}{1.08}
+\newcommand{\rl}{ROUGE-L}
+\newcommand{\dieu}{\textit{Điều}}
+\newcommand{\ci}[2]{{\scriptsize[#1,\,#2]}}
+\newcommand{\best}[1]{\textbf{#1}}
+
+\title{\textbf{Improving Retrieval-Augmented Question Answering over Vietnamese Legal Documents\\with a Sub-4B Language Model}\\[2pt]
+\large Corpus-aware retrieval, supervised and preference fine-tuning, and a deployable inference stack}
+\author{[Author names and student IDs]\\ Ho Chi Minh City University of Technology (HCMUT)\\ Large Language Models course --- RAG assignment}
+\date{November 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We study retrieval-augmented question answering (RAG) over Vietnamese legal texts, where the answering language model must have fewer than four billion parameters and the reference answers follow a rigid template (``\textit{Căn cứ tại khoản $k$ Điều $n$ \ldots\ quy định \ldots}'') followed by a near-verbatim quotation of the cited article. Starting from the course baseline (naive recursive chunking, a Vietnamese SBERT embedder, FAISS, and Qwen1.5-1.8B; test \rl{} $0.171$), we improve each stage of the pipeline and report every change against a paired-bootstrap criterion. The largest gains come from (i)~an index that actually contains the cited laws (law-hit rate $0.00\!\to\!0.62$), (ii)~supervised fine-tuning of Qwen3.5-2B on decontaminated training pairs with few-shot demonstrations and refusal rows, and (iii)~two rounds of on-policy preference optimisation (DPO) on the model's own best-versus-worst samples, which lets greedy decoding match $8$-sample minimum-Bayes-risk (MBR) decoding. On the held-out test split (200 questions) the final single-generation system reaches \rl{} $0.643$ (cosine $0.916$, token overlap $0.734$, BLEU-1 $0.582$), a $3.8\times$ improvement over the baseline, and $0.652$ with MBR-8. We further document what did \emph{not} help (embedder and reranker fine-tuning, legal-domain base models, tool-using agents, FP8 quantisation, cascaded decoding), quantify the remaining headroom with an oracle analysis, and package the system as a container with three inference endpoints (median end-to-end latency $2.6$\,s, p95 $6.6$\,s on one L40S).
+\end{abstract}
+
+%------------------------------------------------------------------------------
+\section{Introduction}
+Legal question answering is a demanding RAG setting: the corpus is large and heavily cross-referenced, answers must cite the right article, and a small model that is deployable on a single GPU must reproduce the register of statutory text. The assignment fixes the evaluation (five lexical/semantic similarity metrics against reference answers), restricts the answering model to under $4$B parameters, and provides a deliberately naive baseline. We treat it as an empirical-systems problem: decompose the pipeline into retrieval, generation, decoding and post-training, run controlled ablations in each, and keep only changes that survive a significance test on a development split.
+
+\paragraph{Contributions.}
+\begin{enumerate}[leftmargin=*]
+\item A corpus-aware retrieval stack (one chunk per \dieu, cleaning and de-duplication, an index extended with the laws that the QA set cites, dense top-50 followed by a cross-encoder reranker) that raises the fraction of questions whose cited law is retrievable from $0$ to $0.62$ and, with an untuned Vietnamese 3B generator, test \rl{} from $0.171$ to $0.443$ (Section~\ref{sec:retrieval}).
+\item A supervised recipe for a 2.3B model (decontaminated pairs, few-shot demonstrations drawn from nearest training questions, gold-passage injection, refusal rows) worth $+0.20$ \rl{} over the raw model and $+0.03$ over plain SFT on dev (Section~\ref{sec:generator}).
+\item On-policy, iterated DPO on best-versus-worst self-samples scored by the same lexical reward as RL: two rounds give $+0.031$ dev \rl{} \ci{+0.014}{+0.049} over the SFT model under greedy decoding, replicated with a second seed, while a third round degrades (Section~\ref{sec:posttrain}).
+\item A systematic negative-results record and an oracle analysis showing where the remaining error lies (answer wording, not retrieval) (Sections~\ref{sec:negative} and~\ref{sec:analysis}).
+\item A reproducible, containerised QA service with separate LLM, embedding and reranking endpoints, a refusal guard for off-topic questions, and measured latency (Section~\ref{sec:deploy}).
+\end{enumerate}
+
+%------------------------------------------------------------------------------
+\section{Task, Data and Evaluation Protocol}\label{sec:data}
+
+\subsection{Corpus}
+The course corpus consists of $16{,}441$ plain-text legal documents ($428$\,MB; $63.1$M words; median $2{,}224$ words per document). Local regulations dominate (Địa phương $64.8\%$, ministries $23.3\%$, Government $7.3\%$, National Assembly $0.4\%$), and decisions (\textit{Quyết định}) are $54.8\%$ of all documents; $12{,}272$ documents contain at least one \dieu{} ($84{,}222$ articles in total). Years range from 1929 to 2025 (median 2015). Documents carry relation blocks (``based on'', ``replaced by'', \ldots) giving $190{,}981$ edges.
+
+\subsection{Question--answer set and splits}
+The QA set has $2{,}745$ question/reference pairs (question median $137$ characters; reference median $1{,}426$ characters, maximum $9{,}858$). References follow a template and quote the cited article almost verbatim, so lexical metrics reward citing and quoting the right article. A fixed seeded split gives $2{,}245$ training, $300$ development and $200$ test pairs.
+
+\paragraph{Corpus--question mismatch.}
+Only $8$ law identifiers ($51$ QA rows) match a file of the course corpus; $772$ rows have no extractable law identifier and the most frequent cited laws are 2024--2025 banking circulars absent from the corpus. Consequently the baseline retrieves the cited law for essentially no question (\textit{law-hit} $0$). We therefore extend the retrieval store with (i)~central-government documents issued since 2000 from a public Vietnamese legal-document dataset and (ii)~every document cited by a QA answer that is missing from both (crawled from a public legal portal). The final store holds $46{,}498$ documents ($724{,}215$ chunks) after exact and near-duplicate removal ($186$ documents dropped).
+
+\paragraph{Decontamination.}
+Nothing a model is trained on may contain knowledge tied to the test split. We drop training/development pairs that cite the same (law, \dieu) as a test answer ($16\%$ of train) or share a non-boilerplate 13-gram with a test answer ($20\%$ of train); after filtering, $1{,}452$ training and $188$ development pairs remain for fine-tuning. The retrieval store may contain full laws but never test question/answer pairs.
+
+\paragraph{Development subsets.}
+Because $45\%$ of development questions share a \dieu{} with retained training pairs (test: $0\%$) and $72\%$ share a 13-gram (test: $32\%$), plain dev is optimistic for fine-tuned models. We report \texttt{dev} ($300$), \texttt{dev\_clean} ($166$; no shared \dieu) and \texttt{dev\_strict} ($74$; additionally no shared non-boilerplate 13-gram), the latter being the closest to the test condition.
+
+\subsection{Metrics and significance}
+We report the five course metrics (cosine similarity of Vietnamese SBERT embeddings, Jaccard, token overlap, unigram BLEU with brevity penalty, and \rl{} F1 \cite{rouge}), computed with a line-for-line port of the baseline code on lower-cased, punctuation-stripped text; \rl{} is the primary metric. Differences between systems are assessed with a paired bootstrap \cite{bootstrap} over questions ($95\%$ intervals). A change is \emph{accepted} only if the lower bound is positive on \texttt{dev}, and it must not be negative on \texttt{dev\_clean}/\texttt{dev\_strict}. Run-to-run noise is non-negligible: greedy decoding with vLLM varies by about $\pm0.003$ \rl{} between identical runs and $8$-sample MBR by about $\pm0.006$.
+
+\paragraph{Protocol.}
+All model and hyper-parameter selection used the development split. The final configuration was fixed on dev before being scored on the $200$-question test split; earlier configurations were also scored on test during development (Table~\ref{tab:testold}), which we report for completeness.
+
+%------------------------------------------------------------------------------
+\section{Method}\label{sec:method}
+\begin{figure}[t]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[node distance=6mm and 4mm, every node/.style={font=\footnotesize},
+ box/.style={draw,rounded corners=2pt,minimum height=8mm,align=center,fill=blue!6},
+ model/.style={draw,rounded corners=2pt,minimum height=8mm,align=center,fill=orange!12},
+ arr/.style={-{Stealth[length=2mm]},thick}]
+ \node[box] (q) {Question};
+ \node[model,right=of q] (emb) {Embedder\\{\scriptsize endpoint}};
+ \node[box,right=of emb] (faiss) {FAISS dense\\top-50};
+ \node[model,right=of faiss] (rr) {Reranker\\{\scriptsize endpoint}};
+ \node[box,right=of rr] (top) {top-5 \dieu};
+ \node[box,fill=gray!15,below=9mm of top] (guard) {Refusal guard\\(best rerank score $\geq\tau$)};
+ \node[box,left=of guard] (prompt) {Prompt:\\2 shots + 5 \dieu\ + question};
+ \node[model,left=of prompt] (llm) {LLM (DPO)\\{\scriptsize endpoint, greedy}};
+ \node[box,left=of llm] (ans) {Answer\\+ sources};
+ \draw[arr] (q)--(emb); \draw[arr] (emb)--(faiss); \draw[arr] (faiss)--(rr); \draw[arr] (rr)--(top);
+ \draw[arr] (top)--(guard); \draw[arr] (guard)--(prompt); \draw[arr] (prompt)--(llm); \draw[arr] (llm)--(ans);
+ \draw[arr,dashed] (guard.south) -- ++(0,-5mm) -| node[pos=0.25,below]{score $<\tau$: fixed refusal, no LLM call} (ans.south);
+\end{tikzpicture}}
+\caption{The deployed pipeline. Embedder, reranker and LLM are independent inference endpoints; the QA service holds only the index and the few-shot pool.}\label{fig:pipeline}
+\end{figure}
+
+\subsection{Retrieval}
+Documents are cleaned (headers, signatures and tails removed), de-duplicated, and split with one chunk per \dieu{} (long articles are split at $2{,}000$ characters with $100$ overlap). Chunks are embedded with the AITeamVN Vietnamese Embedding model (568M parameters, $512$ tokens) into an inner-product FAISS index \cite{faiss}; the top $50$ are re-scored by the AITeamVN Vietnamese Reranker cross-encoder (max length $1{,}024$) and the top $k{=}5$ are passed to the generator. Both models are served by vLLM \cite{vllm} pooling servers.
+
+\subsection{Generator and supervised fine-tuning}
+The answering model is Qwen3.5-2B ($2.27$B parameters; thinking mode disabled). The prompt contains the retrieved \dieu{} passages, optionally two demonstrations (the nearest decontaminated training questions by token Jaccard, with their reference answers), and the question. Supervised fine-tuning uses LoRA \cite{lora} ($r{=}32$, all linear layers) on the decontaminated pairs rendered with exactly the inference prompt, with loss on the answer only. The final recipe (\emph{v3b}) combines: (a)~random $k\in[3,10]$ passages per example; (b)~\emph{gold injection}: with probability $0.7$ the gold \dieu{} is inserted when retrieval missed it (RAFT-style \cite{raft}); (c)~$0$--$3$ demonstrations per example; (d)~with probability $0.2$ an additional row whose context was retrieved for an unrelated question, with a refusal as target. Training runs $3$ epochs (effective batch $16$, max length $12{,}288$).
+
+\subsection{Decoding}
+\textbf{Greedy} decoding (temperature $0$, top-$p$ $0.95$, $\le 1{,}024$ new tokens) needs one generation per question. \textbf{MBR} decoding \cite{mbr} samples $n{-}1$ candidates at temperature $0.7$ in addition to the greedy one and returns the candidate with the highest mean \rl{} to the others,
+\begin{equation}
+\hat y=\arg\max_{y\in\mathcal C}\sum_{y'\in\mathcal C\setminus\{y\}}\operatorname{ROUGE\text{-}L}(y,y'),
+\end{equation}
+trading $n\times$ generation cost for consensus quality.
+
+\subsection{Post-training with the evaluation metric as reward}
+\paragraph{GRPO.} We run Group-Relative Policy Optimisation \cite{grpo} (8 completions per prompt, LoRA $r{=}32$, no KL term unless stated) with a verifiable reward computed against the reference,
+\begin{equation}
+R=0.6\,\mathrm{RL}+0.2\,\mathrm{TO}+0.2\,\mathrm{cite}-p_{\mathrm{copy}}-p_{\mathrm{len}},
+\end{equation}
+where $\mathrm{cite}$ is the fraction of reference \dieu{} numbers present in the answer, $p_{\mathrm{copy}}$ penalises copying $>90\%$ of the prompt's 8-grams, and $p_{\mathrm{len}}$ is a two-sided band around the reference length; a cosine variant replaces part of the lexical weight by sentence-embedding cosine.
+\paragraph{On-policy DPO.} For each training prompt we draw $8$ samples (greedy $+7$ at $T{=}0.7$) from the current model, score them with the reward above, and form one preference pair (best, worst) when the reward gap is $\ge0.1$ and the reference is not a refusal. Direct Preference Optimisation \cite{dpo} (LoRA $r{=}32$, $\beta{=}0.1$, learning rate $2\!\times\!10^{-5}$, one epoch, effective batch $16$, reference = adapter disabled) is trained on these pairs. \emph{Iterating} (sampling again from the improved model) gives round~2.
+\paragraph{Weight-space merging.} We also test task arithmetic \cite{taskarith}, $\theta=\theta_{\mathrm{SFT}}+\alpha(\theta_{\mathrm{RL}}-\theta_{\mathrm{base}})$.
+
+\subsection{Serving}
+The QA service (Section~\ref{sec:deploy}) calls three vLLM endpoints (LLM, embedder, reranker), returns the answer, its reranked sources and per-stage timings, and \emph{refuses} when the best reranker score is below $\tau{=}0.001$ (no corpus support), avoiding invented answers to off-topic questions.
+
+%------------------------------------------------------------------------------
+\section{Results}\label{sec:results}
+
+\subsection{Main results on the test split}
+\begin{table}[H]
+\centering
+\caption{Test split ($n{=}200$, no errors). The first row is the course baseline (answer-only decoding). Cosine/Jaccard/token overlap/BLEU-1 are not available for every historical run (``--'').}\label{tab:main}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+System & Cos. & Jacc. & Tok. & BLEU-1 & \rl{}\\
+\midrule
+Course baseline (SBERT + Qwen1.5-1.8B) & .602 & .164 & .191 & .138 & .171\\
++ better embedder/reranker, Vi-Qwen2-3B-RAG & .671 & .226 & .211 & .126 & .171\\
++ index with cited laws (M2) & .812 & .500 & .555 & .412 & .443\\
+SFT Qwen3.5-2B (v0), greedy & .905 & .658 & .754 & .563 & .618\\
+SFT v0 + MBR-8 & -- & -- & -- & -- & .645\\
+\midrule
+\best{Final: SFT + 2 DPO rounds, greedy} & \best{.916} & \best{.673} & \best{.734} & \best{.582} & \best{.643}\\
+\quad second seed, greedy & .915 & .665 & .707 & .578 & .638\\
+\quad + MBR-8 (accuracy mode) & .918 & .681 & .728 & .587 & \best{.652}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[ybar,width=0.95\linewidth,height=5.6cm,bar width=16pt,ymin=0,ymax=0.75,
+ symbolic x coords={Baseline,+Index,+SFT,+MBR8 (SFT),Final greedy,Final+MBR8},xtick=data,
+ x tick label style={font=\scriptsize,rotate=20,anchor=east},ylabel={Test \rl{}},
+ nodes near coords,nodes near coords style={font=\scriptsize},every node near coord/.append style={/pgf/number format/fixed,/pgf/number format/precision=3},
+ ymajorgrids,grid style={dotted}]
+\addplot[fill=blue!45] coordinates {(Baseline,0.171)(+Index,0.443)(+SFT,0.618)(+MBR8 (SFT),0.645)(Final greedy,0.643)(Final+MBR8,0.652)};
+\end{axis}
+\end{tikzpicture}
+\caption{Test \rl{} along the development of the system.}\label{fig:ladder}
+\end{figure}
+
+\subsection{Retrieval study}\label{sec:retrieval}
+\paragraph{Corpus coverage is the dominant factor.}
+Table~\ref{tab:corpus} varies the retrieval store with the generator fixed (Vi-Qwen2-3B-RAG, no fine-tuning). Cleaning and per-\dieu{} chunking change nothing (A2a/A2b) because the cited laws are simply absent; adding documents that are cited by the QA set moves law-hit from $\approx0.02$ to $0.55$--$0.62$ and \rl{} from $0.17$ to $0.44$.
+\begin{table}[H]
+\centering
+\caption{Effect of the retrieval store (dev $n{=}300$; test in parentheses). Law-hit = fraction of questions whose cited law is among the retrieved passages.}\label{tab:corpus}
+\begin{tabular}{@{}llccc@{}}
+\toprule
+Id & Store & Law-hit & \rl{} dev & \rl{} test\\
+\midrule
+A2a & course corpus, cleaned, recursive chunks & .013 & .170 & (.176)\\
+A2b & course corpus, one chunk per \dieu & .017 & .171 & (.176)\\
+A2c & + central-government laws since 2010 & .590 & .415 & (.437)\\
+A2d & + all cited laws (portal crawl), $\ge$2000 & .577 & .421 & (.444)\\
+A2e & + near-duplicate removal & \best{.633} & \best{.423} & (.443)\\
+\bottomrule
+\end{tabular}
+\end{table}
+\begin{table}[H]
+\centering
+\caption{Retrieval quality of the stack (dense top-50, then reranker top-5). \dieu{}@$k$ = gold article in the top $k$.}\label{tab:retr}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Store / split & Doc@1 & Doc@5 & \dieu{}@1 & \dieu{}@5 & Doc MRR\\
+\midrule
+A2c, dev / test & .609/.643 & .879/.871 & .576/.616 & .879/.848 & .722/.733\\
+A2d, dev / test & .644/.648 & .932/.922 & .591/.610 & .905/.898 & .765/.755\\
+\bottomrule
+\end{tabular}
+\end{table}
+On test, \dieu{}@5/10/20 is $.898/.944/.966$, so enlarging $k$ buys little recall and, for the fine-tuned generator, \emph{k}=10 was not better than $k{=}5$ (dev \rl{} $.612$ vs $.633$ for v3b).
+
+\paragraph{Trained retrieval components did not help generation.}
+Fine-tuning the reranker on $4{,}015$ groups raised pipeline \dieu{}@1 from $.587$ to $.712$ on dev but \emph{not} generation quality ($.6325\to.6253$). Fifteen embedder fine-tuning variants (LoRA/full, several learning rates) gave at best $+0.023$ \dieu{}@1 \ci{+0.004}{+0.045} without reaching the acceptance rule. Among zero-shot alternatives, AITeamVN's embedder (\dieu{}@1 $.534$, MRR $.674$ on its own top-50 pool) beat bge-m3 ($.523$) and Qwen3-Embedding-4B/8B ($.51$, 9--12$\times$ slower). Embedding the chapter/scope line into chunks and a kNN prior over training questions also showed no significant gain.
+
+\paragraph{Retrieval is not the bottleneck for the fine-tuned model.}
+Injecting the gold \dieu{} at rank~1 (oracle) improves dev \rl{} by only $+0.004$ \ci{-0.003}{+0.012} for the SFT model, so remaining error is attributed to generation.
+
+\subsection{Generator study}\label{sec:generator}
+\begin{table}[H]
+\centering
+\caption{Raw (not fine-tuned) generators, dev $n{=}300$, same retrieval store (A2e), each with its default prompt.}\label{tab:raw}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Model (parameters) & \rl{} & Cosine\\
+\midrule
+Qwen3.5-2B (2.27B) & .401 & .787\\
+Qwen3-1.7B (2.03B) & .398 & .786\\
+Qwen2.5-3B (3.09B) & .393 & .820\\
+Vi-Qwen2-3B-RAG (3.09B) & .423 & .803\\
+Qwen2.5-3B-legal-vn (3.09B) & .455 & --\\
+Qwen3.5-9B teacher, thinking on (not allowed in the final system) & .429 & .802\\
+\bottomrule
+\end{tabular}
+\end{table}
+Raw models land at $0.39$--$0.46$ \rl{} regardless of size or Vietnamese specialisation; they do not reproduce the reference register. Supervised fine-tuning is the decisive step.
+
+\begin{table}[H]
+\centering
+\caption{Supervised fine-tuning variants (dev $n{=}300$, greedy, $k{=}5$ unless stated).}\label{tab:sft}
+\begin{tabular}{@{}lcl@{}}
+\toprule
+Variant & \rl{} & Note\\
+\midrule
+Vi-Qwen2-3B, SFT & .599 & +.176 over raw\\
+Qwen3.5-2B, SFT v0 (5 ep., no shots) & .603 & +.202 over raw Qwen3.5-2B\\
+v2 (dynamic $k$, gold injection) & .594 & no gain alone\\
+v3b + fine-tuned reranker & .625 & negative (retrieval gain does not transfer)\\
+hp (higher LoRA rank, lr $2\!\times\!10^{-4}$) & .599 & negative\\
+v3 (+ demonstrations, 2 shots) & .627 & \\
+\best{v3b (+ refusal rows), 2 shots} & \best{.633} & \best{+.030 over v0}\\
+v3b, 0 shots / $k{=}10$ & .594 / .612 & demonstrations matter\\
+\bottomrule
+\end{tabular}
+\end{table}
+The two-shot demonstrations supply the answer register and are worth $+0.039$ over zero-shot at inference. On the subsets closer to the test condition the v3b-minus-v0 difference is $+0.052$ \ci{+0.024}{+0.079} (dev\_clean) and $+0.032$ \ci{-0.008}{+0.072} (dev\_strict), and $-0.010$ on test (n.s.), i.e.\ the dev gain of the recipe partly reflects train/dev answer overlap; we keep it because the cost is nil and DPO and MBR gains are measured on top of it.
+
+\paragraph{Legal-domain base models.}
+Continuing pretraining on legal text reportedly adds only $0.4$--$0.7$ \rl{} on generation after identical fine-tuning \cite{vilegallm}. In our own test, Qwen2.5-3B-legal-vn (best raw score, $.455$) reached \emph{lower} scores than Qwen3.5-2B after the same recipe: SFT greedy $.615$ and MBR-8 $.636$ (vs $.633$ and $.658$), and $.625$/$.644$ after DPO; the gap to the Qwen3.5-2B model is significant on dev\_clean ($-0.044$ for SFT, $-0.035$ after DPO, greedy). Raw rank did not predict post-SFT rank.
+
+\subsection{Decoding and post-training}\label{sec:posttrain}
+\begin{table}[H]
+\centering
+\caption{MBR-$n$ with the SFT model (v3b, 2 shots, dev\_clean, $n{=}166$). Mean single sample $.604$; best-of-$n$ uses the reference and is an \emph{oracle}.}\label{tab:mbrn}
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+$n$ (candidates) & 1 & 2 & 3 & 4 & 6 & 8\\
+\midrule
+MBR \rl{} & .630 & .630 & .632 & .642 & .645 & .646\\
+Oracle best-of-$n$ & .630 & .660 & -- & .696 & -- & .726\\
+\bottomrule
+\end{tabular}
+\end{table}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=0.75\linewidth,height=5.2cm,xlabel={Candidates $n$},ylabel={\rl{} (dev\_clean)},legend style={at={(0.5,-0.32)},anchor=north,legend columns=2},ymajorgrids,grid style={dotted},xtick={1,2,3,4,6,8},ymin=0.6,ymax=0.74]
+\addplot[mark=o,thick,blue] coordinates {(1,0.6295)(2,0.6295)(3,0.6322)(4,0.6423)(6,0.6450)(8,0.6464)};
+\addplot[mark=square,thick,red,dashed] coordinates {(1,0.6295)(2,0.6604)(4,0.6959)(8,0.7264)};
+\legend{MBR (deployable),Oracle best-of-$n$}
+\end{axis}
+\end{tikzpicture}
+\caption{MBR recovers only $17\%$ of the gap between greedy ($.630$) and the oracle ($.726$); MBR-4 keeps $\approx\!76\%$ of the MBR-8 gain.}\label{fig:mbrn}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Recipe ladder on dev ($n{=}300$, 2 shots, \rl{}). Intervals are paired-bootstrap differences against the row marked $\dagger$ (\ci{lo}{hi}).}\label{tab:ladder}
+\begin{tabular}{@{}lccl@{}}
+\toprule
+System & Greedy & MBR-8 & Difference vs.\ C1 greedy$\dagger$ / C1 MBR-8\\
+\midrule
+SFT v0 (no shots) & .603 & .637 & MBR $+.034$ \ci{+.020}{+.048}\\
+\textbf{C1}: SFT v3b$^\dagger$ & .633 & .658 & MBR $+.025$\\
+GRPO, cosine reward (c3f, from v0) & .634 & .645 & greedy $+.032$ over v0 \ci{+.019}{+.045}\\
+GRPO from v3b & .627 & .651 & $<$C1\\
+Task arithmetic v3b + (c3f$-$v0) & .652 & .667 & +.019 \ci{+.006}{+.034}; MBR $+.009$ (n.s.)\\
+DPO round 1 ($\mathrm{dpo}_a$) & .654 & .659 & +.019 \ci{+.001}{+.038}\\
+DPO round 1, lr $5\!\times\!10^{-5}$ + SFT term & .642 & .659 & worse than $\mathrm{dpo}_a$\\
+\best{DPO round 2 ($\mathrm{dpo}_{a2}$)} & \best{.664} & \best{.672} & \best{+.031 \ci{+.014}{+.049}}; MBR $+.015$ \ci{-.001}{+.030}\\
+\quad second seed ($\mathrm{dpo}_{a2}'$) & .662 & .665 & +.030 \ci{+.011}{+.050}\\
+\quad MBR with 4 candidates & -- & .667 & \\
+DPO round 3 ($\mathrm{dpo}_{a3}$) & .635 & .642 & $-.029$ \ci{-.045}{-.012} vs round 2\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=0.8\linewidth,height=5.2cm,xlabel={DPO round (0 = SFT)},ylabel={Dev \rl{}},legend style={at={(0.5,-0.32)},anchor=north,legend columns=2},ymajorgrids,grid style={dotted},xtick={0,1,2,3},ymin=0.62,ymax=0.68]
+\addplot[mark=o,thick,blue] coordinates {(0,0.6325)(1,0.6543)(2,0.6637)(3,0.6348)};
+\addplot[mark=square,thick,red,dashed] coordinates {(0,0.6575)(1,0.6592)(2,0.6721)(3,0.6419)};
+\legend{Greedy,MBR-8}
+\end{axis}
+\end{tikzpicture}
+\caption{Iterated DPO on self-samples: gains in rounds 1--2, collapse in round 3 (answers grow to $2{,}000$ characters against a reference mean of $1{,}583$, i.e.\ reward exploitation).}\label{fig:dpo}
+\end{figure}
+
+\paragraph{Findings.} (i)~MBR is the most reliable single technique on the SFT model ($+0.034$ dev \ci{+0.020}{+0.048}; $+0.028$ test, $.645$ vs $.618$, \ci{+0.011}{+0.044}), but costs $n\times$ generation. (ii)~GRPO moves greedy dev \rl{} by $+0.01$ to $+0.03$ depending on the reward (final variants span $.612$--$.634$), and RL from the v3b checkpoint does not beat plain v3b + MBR. (iii)~Merging the RL delta into v3b is marginal and sits at the MBR noise level. (iv)~DPO on \emph{own} samples with the evaluation reward is the best trade-off: round~2 under \emph{greedy} decoding ($.664$) exceeds C1 with MBR-8 ($.658$) at one eighth of the generation cost, MBR adds only $+0.003$ to $+0.008$ on top, and round~3 over-optimises. The round-2 gain replicates across two seeds ($.6637$ vs $.6623$ dev; $.6433$ vs $.6377$ test), which mitigates the risk that round~2 is a lucky checkpoint selected on dev.
+
+\subsection{Negative and null results}\label{sec:negative}
+\begin{table}[H]
+\centering
+\caption{Ideas that were tested and not retained (dev unless stated).}\label{tab:neg}
+\begin{tabular}{@{}p{4.1cm}p{5.6cm}p{5.1cm}@{}}
+\toprule
+Idea & Result & Reason (evidence)\\
+\midrule
+ReAct agent \cite{react} with 4 tools (search, article lookup, graph, web) & dev\_clean $.537$ (trained 2B), $.574$ with question-seeded search; RAG+SFT $.633$/$.634$; $-0.060$ \ci{-0.097}{-0.026} & Own queries find the gold article in $66$--$72\%$ of questions (\rl{} $.65$ vs $.32$ when missed); retrieval is not the bottleneck\\
+Thinking mode & SFT $.590$ vs $.603$; ReAct $.513$ vs $.574$ & Fine-tuned in non-thinking mode\\
+FP8 weights (vLLM) & $.646$ vs $.654$ ($-.009$ \ci{-.020}{+.002}) for $21\%$ lower latency & Quality loss not worth it\\
+Cascade: MBR only if uncertain & 30\% MBR: $.644$ at $3.1$ generations (MBR-8 $.658$ at $8$) & Reranker margin weakly predicts MBR gain ($+.036/.021/.019$ by tercile)\\
+Forced \textit{Căn cứ \ldots} opening & dropped before running & Oracle article injection gives only $+.004$\\
+Distillation from a 9B teacher & raw teacher $.41$--$.43$ $<$ SFT 2B & Teacher does not follow the reference register\\
+Legal-domain base models & see Section~\ref{sec:generator} & Knowledge comes from retrieval\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%------------------------------------------------------------------------------
+\section{Analysis}\label{sec:analysis}
+\paragraph{Where the error is.}
+For the SFT model (v0) on dev, questions where the gold \dieu{} is retrieved \emph{and} cited ($n{=}205$) score \rl{} $.702$; those where it is retrieved but another article is cited ($n{=}28$) score $.397$; retrieval misses ($n{=}25$) score $.295$. Over $281$ dev questions whose reference cites an article, the v3b model cites the same article in $68.3\%$ of cases and the round-1 DPO model in $70.5\%$, with \rl{} $.73$--$.76$ when the citation matches and $.43$--$.46$ when it does not. Perfect retrieval is worth at most $\approx0.06$ \rl{} on dev, and the oracle experiment shows $+0.004$ for the SFT model, so the dominant remaining term is the wording and length of the answer: predicted answers have a median of $315$ words against $294$ for the reference, and truncating to the reference length would add $+0.028$.
+
+\paragraph{Headroom.}
+Choosing, per question, the best of $8$ samples with knowledge of the reference reaches $.726$ (dev\_clean), $0.08$ above MBR; no deployable selector is known to reach this. The literature we surveyed reports no verified Vietnamese legal QA result with \rl{} of $0.8$--$0.9$ against independent references; the closest are $\approx0.66$ for style-matched fine-tuning, so a score near $0.65$ with a 2B model is competitive.
+
+\paragraph{Why DPO on self-samples works here.}
+The reward is the evaluation metric, the pairs are on-policy (no distribution shift between sampled and trained model), and the gap threshold removes noise pairs; reaching the best sample of $8$ in a single pass is the same objective MBR pursues at inference time. The failure of round~3 shows the policy then exploits the lexical reward through length.
+
+%------------------------------------------------------------------------------
+\section{Deployment and Demonstration}\label{sec:deploy}
+The final configuration is packaged as a docker-compose stack: three vLLM v0.30.0 endpoints (the DPO model in bf16, the embedder, the reranker; GPU memory fractions $.45/.15/.15$ of one L40S) and an API image ($0.7$\,GB, no model weights) holding the $12.4$\,GB index in RAM and the few-shot pool as a $3$\,MB JSON file. The service exposes \texttt{POST /ask} and \texttt{GET /health}, returns the answer, the five reranked sources and per-stage timings, and is configured by environment variables so that the same image can call shared endpoints.
+\begin{table}[H]
+\centering
+\caption{Measured behaviour through the HTTP API (dev questions, greedy, $k{=}5$, 2 shots).}\label{tab:lat}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Setting & $n$ & \rl{} & Mean & p50 & p95\\
+\midrule
+1 request at a time & 25 & .674 & 3.15\,s & 2.61\,s & 6.61\,s\\
+4 concurrent requests & 30 & .703 & 4.36\,s & 3.51\,s & 9.65\,s\\
+\bottomrule
+\end{tabular}
+\end{table}
+Single-request stage means are retrieve $0.08$\,s, rerank $0.21$\,s and generate $2.85$\,s ($91\%$), so decode dominates. In-process batch latency (concurrency 16) is $\mathrm{p50}\approx9$\,s and is not a user-facing figure. The \rl{} values in Table~\ref{tab:lat} are parity checks on few questions only.
+
+\paragraph{Demonstration.}
+Ten questions were sent to the live service (transcript in \texttt{docs/report/demo.md}): six development questions with references (\rl{} $.558,.617,.753,.601,.675,.821$; mean $.671$), three free questions (traffic fines, personal income tax deductions, capital adequacy ratio), and one off-topic question (``weather in Hanoi''). For the traffic question the system answers in the reference register (``\textit{Căn cứ theo khoản 1 Điều 6 Nghị định 100/2019/NĐ-CP được sửa đổi bởi \ldots}'') and quotes the retrieved article; we did not verify its legal validity (the retrieved text may predate later amendments), which illustrates that the metric rewards similarity to references, not legal correctness. The first run of the off-topic question exposed a failure (an invented, repeating weather bulletin while every reranker score was $0.000$), which motivated the refusal guard: with $\tau{=}0.001$ the service now answers with the fixed refusal sentence in $0.3$\,s without calling the LLM, and only $4$ of $300$ dev questions fall below $\tau$.
+
+%------------------------------------------------------------------------------
+\section{Limitations and Threats to Validity}
+\begin{itemize}[leftmargin=*]
+\item \textbf{Selection on dev.} Up to about ten variants were compared in several stages on a $300$-question dev set; intervals are paired but not corrected for multiple comparisons, and the \texttt{dev\_clean} (166) and \texttt{dev\_strict} (74) subsets are small. Round~2 DPO is replicated by a second seed on both dev and test, other gains are single-run.
+\item \textbf{Test-set history.} The $200$-question test set was also scored for earlier configurations (Table~\ref{tab:testold}); the final configuration was fixed on dev beforehand. Test \rl{} differences below $\approx0.02$ are within bootstrap noise.
+\item \textbf{Reference-style metric.} All metrics are lexical or embedding similarity to references written in a fixed template; they do not measure legal correctness, and models fine-tuned on the same template are favoured. Train and test answers share $13$-grams in $32\%$ of test questions.
+\item \textbf{Retrieval store.} The index was extended with laws cited by the QA set (permitted by the protocol: the store may hold laws but no test QA pairs); law-hit is $0.62$ on test; for the remaining questions (including those without an extractable law identifier) the answer must rely on related passages.
+\item \textbf{Non-determinism.} Greedy decoding varies by $\pm0.003$ \rl{} across identical vLLM runs; MBR by $\pm0.006$.
+\item \textbf{Legal validity.} Answers are generated from retrieved texts that may be outdated or superseded and are not legal advice; correctness was not assessed by legal experts.
+\item \textbf{Scope of deployment test.} Latency was measured on one shared GPU; no multi-user load test has been run.
+\end{itemize}
+
+\section{Conclusion}
+A $2.3$B model with a well-covered index, a supervised recipe that teaches the answer register, and two rounds of on-policy DPO on its own best-versus-worst samples reaches test \rl{} $0.643$ with a single generation per question ($0.652$ with MBR-8), up from $0.171$ for the course baseline. The decisive factors are, in order, \emph{retrieval coverage}, \emph{supervised register learning}, and \emph{metric-aligned preference optimisation}; additional retrieval training, domain-specific base models, agents and quantisation did not improve results. Future work: a deployable candidate selector approaching the best-of-$n$ oracle, length-controlled preference rewards to prevent round-3 collapse, streaming for time-to-first-token SLOs, and a multi-user capacity study.
+
+\section*{Reproducibility}
+Code, configurations, the container stack and a step-by-step manual are in the repository (\texttt{README.md}, \texttt{docs/ops/docker.md}); every number above corresponds to a run directory with its configuration and predictions, and the experiment log is in \texttt{docs/CHANGELOG.md}.
+
+\appendix
+\section{Earlier test-split evaluations}\label{app:test}
+\begin{table}[H]
+\centering
+\caption{Test \rl{} ($n{=}200$) of configurations evaluated before the final one (2-shot unless noted; all $k{=}5$ unless noted).}\label{tab:testold}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Configuration & \rl{} & Cosine\\
+\midrule
+v0 greedy / $k{=}10$ & .6175 / .6203 & .905 / .907\\
+v2 greedy / $k{=}10$ & .6076 / .6160 & .905 / .912\\
+v3, 0 shots / 2 shots & .6212 / .6086 & .910 / .911\\
+v3b, 0 / 2 / 3 shots & .6069 / .6073 / .6100 & .904 / .905 / .907\\
+v3b, 2 shots + reranker fine-tune & .6101 & .905\\
+hp & .6126 & .906\\
+v0 + MBR-8 & .6451 & --\\
+\bottomrule
+\end{tabular}
+\end{table}
+All variants fall in $.607$--$.621$ (greedy), within the $\pm0.02$ bootstrap noise of one another, which is why test was not used for selection.
+
+\section{Data and corpus details}
+Reference answers fail the grounded-citation check in $17\%$ of dev questions. Public auxiliary datasets (legal QA, a retrieval benchmark and a Zalo legal set) were screened for overlap with the QA set before any training use (exact matches $0$; near-duplicates $\le 52$ rows). Reranker training groups: $4{,}015$ (course $1{,}137$, Zalo $2{,}878$).
+
+\begin{thebibliography}{99}\small
+\bibitem{vilegallm} T.-P.\,Nguyen, Q.-N.\,Nguyen, M.-T.\,Nguyen. ViLegalLM: Vietnamese pretrained language models for legal text. \textit{Findings of ACL}, 2026.
+\bibitem{lora} E.\,J.\,Hu et al. LoRA: Low-rank adaptation of large language models. \textit{ICLR}, 2022.
+\bibitem{dpo} R.\,Rafailov et al. Direct preference optimization: your language model is secretly a reward model. \textit{NeurIPS}, 2023.
+\bibitem{grpo} Z.\,Shao et al. DeepSeekMath: pushing the limits of mathematical reasoning in open language models. arXiv:2402.03300, 2024.
+\bibitem{mbr} S.\,Kumar and W.\,Byrne. Minimum Bayes-risk decoding for statistical machine translation. \textit{HLT-NAACL}, 2004.
+\bibitem{raft} T.\,Zhang et al. RAFT: adapting language model to domain specific RAG. arXiv:2403.10131, 2024.
+\bibitem{vllm} W.\,Kwon et al. Efficient memory management for large language model serving with PagedAttention. \textit{SOSP}, 2023.
+\bibitem{rouge} C.-Y.\,Lin. ROUGE: a package for automatic evaluation of summaries. \textit{ACL Workshop on Text Summarization}, 2004.
+\bibitem{bootstrap} P.\,Koehn. Statistical significance tests for machine translation evaluation. \textit{EMNLP}, 2004.
+\bibitem{react} S.\,Yao et al. ReAct: synergizing reasoning and acting in language models. \textit{ICLR}, 2023.
+\bibitem{taskarith} G.\,Ilharco et al. Editing models with task arithmetic. \textit{ICLR}, 2023.
+\bibitem{faiss} J.\,Johnson, M.\,Douze, H.\,J\'egou. Billion-scale similarity search with GPUs. \textit{IEEE Trans.\ Big Data}, 2019.
+\end{thebibliography}
+\end{document}
