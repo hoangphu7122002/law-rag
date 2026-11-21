@@ -1,0 +1,17 @@
+# SFT B and C (2 seeds each; this lane = seed 1, bc70_g1 = seed 2). B = v3b recipe + shuffle 50 % + inject ALL missing gold; C = B + 15 % rows with gold dropped (retrieval miss, reference kept). Dev300 greedy, 2 shots. Models kept until the comparison is done.
+sh sftdata-q35B cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli sft-data configs/exp/A3_Q3.yaml --name q35_B --k-range 3,10 --oracle 0.7 --all-gold --shuffle 0.5 --shots 0,1,2,3 --refuse 0.2 > data/runs/logs/sftdata-q35B.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-sftdata-q35B"
+sh sftdata-q35C cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli sft-data configs/exp/A3_Q3.yaml --name q35_C --k-range 3,10 --oracle 0.7 --all-gold --shuffle 0.5 --drop-gold 0.15 --shots 0,1,2,3 --refuse 0.2 > data/runs/logs/sftdata-q35C.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-sftdata-q35C"
+sh train-q35B_s1 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/q35_B --base Qwen/Qwen3.5-2B --out data/models/q35_B_s1 --epochs 3 --max-length 12288 --batch 1 --accum 16 --seed 1 > data/runs/logs/train-q35B_s1.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-train-q35B_s1"
+serve /home/app/phunguyen/law_rag/data/models/q35_B_s1 --gpu 0 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_B_s1 --set backend.base_url=http://localhost:8000/v1 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
+do tmux kill-session -t lawrag-llm-g0
+sh train-q35C_s1 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/q35_C --base Qwen/Qwen3.5-2B --out data/models/q35_C_s1 --epochs 3 --max-length 12288 --batch 1 --accum 16 --seed 1 > data/runs/logs/train-q35C_s1.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-train-q35C_s1"
+serve /home/app/phunguyen/law_rag/data/models/q35_C_s1 --gpu 0 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_C_s1 --set backend.base_url=http://localhost:8000/v1 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
+do tmux kill-session -t lawrag-llm-g0
