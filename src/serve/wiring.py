@@ -38,3 +38,10 @@ def build_service(cfg, shots_path: str | Path, min_score: float = 0.0):
     if cfg.generate.shots:
         generator._shots = ShotStore.load(shots_path)
     return QAService(factory.retriever(), factory.reranker(), generator, k=cfg.retrieve.k, min_score=min_score)
+
+
+def limiter_from_env(env):
+    """MAX_CONCURRENT / MAX_QUEUE; unset or empty (docker compose passes "") = unlimited."""
+    from serve.limiter import Limiter
+
+    return Limiter(int(env.get("MAX_CONCURRENT") or 0) or None, int(env["MAX_QUEUE"]) if env.get("MAX_QUEUE") else None)

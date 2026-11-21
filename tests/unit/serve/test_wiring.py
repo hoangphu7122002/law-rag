@@ -27,3 +27,13 @@ def test_probe_treats_a_connection_error_as_down():
         raise ConnectionError("refused")
 
     assert probe({"llm": "http://llm:8000/v1"}, get=get) == {"llm": False}
+
+
+def test_limiter_from_env_treats_unset_and_empty_as_unlimited():
+    from serve.wiring import limiter_from_env
+
+    for env in ({}, {"MAX_CONCURRENT": "", "MAX_QUEUE": ""}):
+        lim = limiter_from_env(env)
+        assert lim.max_concurrent is None and lim.max_queue is None
+    lim = limiter_from_env({"MAX_CONCURRENT": "8", "MAX_QUEUE": "16"})
+    assert (lim.max_concurrent, lim.max_queue) == (8, 16)

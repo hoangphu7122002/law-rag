@@ -3,8 +3,7 @@ import os
 
 from config import load
 from serve.api import create_app
-from serve.limiter import Limiter
-from serve.wiring import build_service, overrides_from_env, probe
+from serve.wiring import build_service, limiter_from_env, overrides_from_env, probe
 
 
 def main() -> None:
@@ -14,7 +13,7 @@ def main() -> None:
     cfg = load(env.get("LAWRAG_EXP", "configs/exp/S1_serve.yaml"), overrides_from_env(env))
     service = build_service(cfg, env.get("SHOTS_PATH", "/app/shots.json"), float(env.get("MIN_RERANK_SCORE", "0.001")))
     urls = {"llm": cfg.backend.base_url, "embed": cfg.backend.embed_url, "rerank": cfg.backend.rerank_url}
-    limiter = Limiter(int(env.get("MAX_CONCURRENT", "0")) or None, int(env["MAX_QUEUE"]) if env.get("MAX_QUEUE") else None)
+    limiter = limiter_from_env(env)
     uvicorn.run(create_app(service, health=lambda: probe(urls), limiter=limiter), host="0.0.0.0", port=int(env.get("PORT", "8080")))
 
 
