@@ -61,7 +61,10 @@ def split_articles(text: str) -> list[tuple[str, str]]:
     return out
 
 
-def build_pool(dirs, excluded: set, per_law: int = 5, seed: int = 0) -> list[Article]:
+def build_pool(dirs, excluded: set, per_law: int = 5, seed: int = 0, focus: set | None = None, per_law_focus: int = 15,
+               other_frac: float = 1.0) -> list[Article]:
+    """focus = laws of the target domain (the gold laws of the TRAIN questions): up to per_law_focus articles each; every other law keeps
+    per_law articles but only a fraction other_frac of them is used (the corpus holds many laws no question is about)."""
     by_law: dict[str, dict[str, Article]] = {}
     for d in dirs:
         d = Path(d)
@@ -79,7 +82,10 @@ def build_pool(dirs, excluded: set, per_law: int = 5, seed: int = 0) -> list[Art
     for law in sorted(by_law):
         arts = sorted(by_law[law].values(), key=lambda a: a.dieu)
         rng.shuffle(arts)
-        pool += arts[:per_law]
+        if focus and law in focus:
+            pool += arts[:per_law_focus]
+        elif rng.random() < other_frac:
+            pool += arts[:per_law]
     return pool
 
 

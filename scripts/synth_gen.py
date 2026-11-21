@@ -34,13 +34,24 @@ def main() -> None:
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--vibe", default=str(Path("~/.claude/skills/vibe/vibe_call.py").expanduser()))
     ap.add_argument("--model", default="deepseekflash")
+    ap.add_argument("--focus-train-gold", action="store_true", help="emphasise the gold laws of the TRAIN questions (target domain)")
+    ap.add_argument("--per-law-focus", type=int, default=15)
+    ap.add_argument("--other-frac", type=float, default=0.3, help="with --focus-train-gold: share of the other laws that stay in the pool")
     a = ap.parse_args()
 
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     rejects, done_f, pdir = out.with_suffix(".rejects.jsonl"), out.with_suffix(".done"), out.with_suffix(".prompts")
     excluded, eval_q, blocked = sg.load_eval_filters(a.processed)
-    pool = sg.build_pool([Path(a.processed) / d for d in a.dirs], excluded, a.per_law, a.seed)
+    focus = None
+    if a.focus_train_gold:   # laws cited by TRAIN references only (dev / test are never used for sampling)
+        import pandas as pd
+
+        sp = json.loads((Path(a.processed) / "split.json").read_text())
+        g = pd.read_parquet(Path(a.processed) / "gold.parquet")
+        focus = {k for ds in g[g.qid.isin(set(sp["train"]))].docs for k in ds}
+    pool = sg.build_pool([Path(a.processed) / d for d in a.dirs], excluded, a.per_law, a.seed, focus, a.per_law_focus,
+                         a.other_frac if focus else 1.0)
     batches = sg.plan(pool, a.n_items, parse_mix(a.mix), a.seed, a.per_call)[: a.limit]
     done = sg.read_done(done_f)
     todo = [b for b in batches if b.id not in done]

@@ -161,3 +161,29 @@ def test_resume_done_ids(tmp_path):
 
 def test_pacer_delay():
     assert sg.min_interval(20) == pytest.approx(3.0)
+
+
+def test_pool_focus_laws_get_more_articles_and_other_laws_are_thinned(tmp_path):
+    d = tmp_path / "corpus"
+    d.mkdir()
+    body = "Nội dung hợp lệ về mức phạt. " * 12
+    txt = "\n\n".join(f"Điều {i}. T{i}\n{body}" for i in range(1, 9))
+    for name in ("10_2020_TT-FOCUS", "11_2020_TT-A", "12_2020_TT-B", "13_2020_TT-C", "14_2020_TT-D", "15_2020_TT-E"):
+        (d / f"{name}.txt").write_text(txt)
+    pool = sg.build_pool([d], set(), per_law=2, seed=1, focus={"10/2020/TT-FOCUS"}, per_law_focus=6, other_frac=0.4)
+    by = {}
+    for a in pool:
+        by.setdefault(a.law, 0)
+        by[a.law] += 1
+    assert by["10/2020/TT-FOCUS"] == 6
+    others = [k for k in by if k != "10/2020/TT-FOCUS"]
+    assert 0 < len(others) < 5 and all(by[k] == 2 for k in others)
+    assert pool == sg.build_pool([d], set(), per_law=2, seed=1, focus={"10/2020/TT-FOCUS"}, per_law_focus=6, other_frac=0.4)
+
+
+def test_pool_without_focus_is_unchanged(tmp_path):
+    d = tmp_path / "corpus"
+    d.mkdir()
+    body = "Nội dung hợp lệ về mức phạt. " * 12
+    (d / "10_2020_TT-X.txt").write_text("\n\n".join(f"Điều {i}. T\n{body}" for i in range(1, 6)))
+    assert len(sg.build_pool([d], set(), per_law=3, seed=1)) == 3
