@@ -49,3 +49,18 @@ Stage means (1 at a time): retrieve .084 s · rerank .214 s · generate 2.85 s. 
 - First start loads the index into RAM (minutes); the api healthcheck waits 180 s before counting failures.
 - The box is shared: use only `lawrag-qa-*` containers and the image `law-rag-api`; other projects' containers are not ours.
 - Greedy decoding with vLLM is not bit-deterministic (±.003 rougeL between identical runs).
+
+## Streaming, metrics, admission control (Step 35)
+- `POST /ask/stream` (server-sent events: `sources`, `token`*, `done` with `timings.ttft_s`); `POST /v1/chat/completions` (OpenAI-compatible, `stream` true or false;
+  the last user message is the question, `sources` and `timings` are extra fields; point any chat UI at `http://<host>:8080/v1`); `GET /v1/models`.
+- `GET /metrics` (Prometheus text): `lawrag_requests_total{route,status}`, `lawrag_latency_seconds`, `lawrag_ttft_seconds`, `lawrag_in_flight`, `lawrag_queued`, `lawrag_refusals_total`.
+- `MAX_CONCURRENT` / `MAX_QUEUE` (env, empty = unlimited): beyond the running slots requests wait in a bounded queue, then get 429 + `Retry-After`.
+- Retrieval runs on a bounded thread pool (8) and the image sets `OPENBLAS_NUM_THREADS=1`: without this the API aborted under concurrent load (OpenBLAS "too many memory regions").
+
+## GPU layouts (two cards) and load tests
+| layout | how | max users at p95 < 10 s |
+|---|---|---|
+| A  one card, everything shared | `GPU=0 docker compose -p lawrag-a -f docker/compose.yml up -d` | 6-7 |
+| B  one stack per card + nginx (default for two cards) | `GPU=0 API_PORT=8081 ... -p lawrag-b0`, `GPU=1 API_PORT=8082 ... -p lawrag-b1`, then `docker compose -p lawrag-lb -f docker/compose.lb.yml up -d` (:8080) | 15-18 |
+| C  LLM alone on card 0, embed + rerank on card 1 | `LLM_GPU=0 AUX_GPU=1 LLM_SHARE=0.88 EMBED_SHARE=0.3 RERANK_SHARE=0.3 docker compose -p lawrag-c ...` | 18 |
+`scripts/serve_bench.sh A|B|C` brings a layout up, runs `scripts/load_test.py` (modes: sweep, max (largest users under the SLO), burst (open-loop phases), spike (N at once)) and tears it down; results in `data/runs/load.jsonl` with p95 and p99, GPU utilisation and temperature (a run stops at 85 C). `scripts/vllm_flag_sweep.sh` varies `MAX_SEQS`, `MAX_BATCHED`, `PREFIX_CACHING`, `LLM_EXTRA`: none of them beats the defaults (prefix caching is worth about 9 % at 32 users).

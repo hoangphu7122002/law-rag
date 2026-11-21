@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (MiKTeX 22.1) (preloaded format=xelatex 2026.10.7)  21 NOV 2026 11:08
+This is XeTeX, Version 3.141592653-2.6-0.999993 (MiKTeX 22.1) (preloaded format=xelatex 2026.10.7)  21 NOV 2026 11:50
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1246,29 +1246,31 @@ ode=log unsupported (yet).
 
 [13]
 
-[14] (appendix_examples.tex
+[14]
 
-[15]
+[15] (appendix_examples.tex
 
 [16]
 
 [17]
 
-[18])
+[18]
 
-[19]
+[19])
 
 [20]
-Underfull \hbox (badness 2689) in paragraph at lines 582--583
+Underfull \hbox (badness 2689) in paragraph at lines 601--602
 []\TU/TimesNewRoman(0)/m/n/10 DeepSeek-AI. DeepSeek-R1: incentivizing reasoning
  capability in LLMs via reinforcement learning.
  []
 
 LaTeX Font Info:    Font shape `TU/Menlo(0)/m/n' will be
-(Font)              scaled to size 8.80005pt on input line 591.
+(Font)              scaled to size 8.80005pt on input line 610.
 
 
-[21] (main.aux)
+[21]
+
+[22] (main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-03-20>
@@ -1277,12 +1279,12 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: D02C192DF4539A4A720080BC04798A77;4808.
  ) 
 Here is how much of TeX's memory you used:
- 36520 strings out of 402809
- 884283 string characters out of 5440814
- 1467230 words of memory out of 5000000
- 64877 multiletter control sequences out of 15000+600000
+ 36521 strings out of 402809
+ 884294 string characters out of 5440814
+ 1467419 words of memory out of 5000000
+ 64878 multiletter control sequences out of 15000+600000
  637862 words of font info for 122 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  99i,18n,108p,1650b,2517s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main.pdf (21 pages).
+Output written on main.pdf (22 pages).

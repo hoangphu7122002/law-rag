@@ -153,6 +153,11 @@
 \newlabel{fig:capacity}{{5}{13}{Throughput and $p_{95}$ latency versus concurrent users; the dotted line is the $10$\,s target}{figure.caption.42}{}}
 \@writefile{toc}{\contentsline {paragraph}{Maximum concurrency.}{13}{section*.43}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Bursts.}{13}{section*.44}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Engine settings.}{14}{section*.45}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces vLLM settings on one card (A), requests/s and $p_{95}$ latency (s) at $16$ and $32$ concurrent users. $^\dagger $64 sequences, 16k batched tokens, prefix caching on.}}{14}{table.caption.46}\protected@file@percent }
+\newlabel{tab:flags}{{15}{14}{vLLM settings on one card (A), requests/s and $p_{95}$ latency (s) at $16$ and $32$ concurrent users. $^\dagger $64 sequences, 16k batched tokens, prefix caching on}{table.caption.46}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Limitations and Threats to Validity}{14}{section.8}\protected@file@percent }
+\newlabel{sec:limits}{{8}{14}{Limitations and Threats to Validity}{section.8}{}}
 \citation{selfrag}
 \citation{crag}
 \citation{selfcorrect}
@@ -162,31 +167,28 @@
 \citation{contextual}
 \citation{latechunk}
 \citation{densex}
-\@writefile{toc}{\contentsline {section}{\numberline {8}Limitations and Threats to Validity}{14}{section.8}\protected@file@percent }
-\newlabel{sec:limits}{{8}{14}{Limitations and Threats to Validity}{section.8}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {9}Future Work}{14}{section.9}\protected@file@percent }
-\newlabel{sec:future}{{9}{14}{Future Work}{section.9}{}}
-\@writefile{toc}{\contentsline {paragraph}{Checker with feedback to retrieval, reranking and generation.}{14}{section*.45}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Chunking beyond one chunk per article.}{15}{section*.46}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {9}Future Work}{15}{section.9}\protected@file@percent }
+\newlabel{sec:future}{{9}{15}{Future Work}{section.9}{}}
+\@writefile{toc}{\contentsline {paragraph}{Checker with feedback to retrieval, reranking and generation.}{15}{section*.47}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Chunking beyond one chunk per article.}{15}{section*.48}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {10}Conclusion}{15}{section.10}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {A}Earlier test-split evaluations}{15}{section.A}\protected@file@percent }
-\newlabel{app:test}{{A}{15}{Earlier test-split evaluations}{section.A}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces Test ROUGE-L{} ($n{=}200$) of configurations evaluated before the final one (2-shot unless noted; all $k{=}5$ unless noted).}}{15}{table.caption.48}\protected@file@percent }
-\newlabel{tab:testold}{{15}{15}{Test \rl {} ($n{=}200$) of configurations evaluated before the final one (2-shot unless noted; all $k{=}5$ unless noted)}{table.caption.48}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {A}Earlier test-split evaluations}{16}{section.A}\protected@file@percent }
+\newlabel{app:test}{{A}{16}{Earlier test-split evaluations}{section.A}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {16}{\ignorespaces Test ROUGE-L{} ($n{=}200$) of configurations evaluated before the final one (2-shot unless noted; all $k{=}5$ unless noted).}}{16}{table.caption.50}\protected@file@percent }
+\newlabel{tab:testold}{{16}{16}{Test \rl {} ($n{=}200$) of configurations evaluated before the final one (2-shot unless noted; all $k{=}5$ unless noted)}{table.caption.50}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {B}Worked examples, from easy to hard}{16}{section.B}\protected@file@percent }
 \newlabel{app:examples}{{B}{16}{Worked examples, from easy to hard}{section.B}{}}
-\@writefile{toc}{\contentsline {paragraph}{Example 1 (qid 460) --- ROUGE-L{} 0.996.}{16}{section*.49}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 2 (qid 459) --- ROUGE-L{} 0.945.}{16}{section*.50}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 3 (qid 1865) --- ROUGE-L{} 0.899.}{16}{section*.51}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 4 (qid 1136) --- ROUGE-L{} 0.820.}{17}{section*.52}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 5 (qid 2213) --- ROUGE-L{} 0.751.}{17}{section*.53}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 6 (qid 1941) --- ROUGE-L{} 0.677.}{17}{section*.54}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 7 (qid 2178) --- ROUGE-L{} 0.627.}{18}{section*.55}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 8 (qid 2366) --- ROUGE-L{} 0.582.}{18}{section*.56}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 9 (qid 2339) --- ROUGE-L{} 0.501.}{18}{section*.57}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 10 (qid 2412) --- ROUGE-L{} 0.408.}{19}{section*.58}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 11 (qid 2085) --- ROUGE-L{} 0.288.}{19}{section*.59}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 12 (qid 572) --- ROUGE-L{} 0.063.}{19}{section*.60}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 1 (qid 460) --- ROUGE-L{} 0.996.}{16}{section*.51}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 2 (qid 459) --- ROUGE-L{} 0.945.}{16}{section*.52}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 3 (qid 1865) --- ROUGE-L{} 0.899.}{17}{section*.53}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 4 (qid 1136) --- ROUGE-L{} 0.820.}{17}{section*.54}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 5 (qid 2213) --- ROUGE-L{} 0.751.}{17}{section*.55}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 6 (qid 1941) --- ROUGE-L{} 0.677.}{18}{section*.56}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 7 (qid 2178) --- ROUGE-L{} 0.627.}{18}{section*.57}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 8 (qid 2366) --- ROUGE-L{} 0.582.}{18}{section*.58}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 9 (qid 2339) --- ROUGE-L{} 0.501.}{19}{section*.59}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 10 (qid 2412) --- ROUGE-L{} 0.408.}{19}{section*.60}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 11 (qid 2085) --- ROUGE-L{} 0.288.}{19}{section*.61}\protected@file@percent }
 \bibcite{vilegallm}{1}
 \bibcite{lora}{2}
 \bibcite{dpo}{3}
@@ -201,6 +203,8 @@
 \bibcite{faiss}{12}
 \bibcite{lewis2020rag}{13}
 \bibcite{rag_survey}{14}
+\@writefile{toc}{\contentsline {paragraph}{Example 12 (qid 572) --- ROUGE-L{} 0.063.}{20}{section*.62}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {C}Data and corpus details}{20}{section.C}\protected@file@percent }
 \bibcite{dpr}{15}
 \bibcite{sbert}{16}
 \bibcite{bgem3}{17}
@@ -212,7 +216,6 @@
 \bibcite{qwen25}{23}
 \bibcite{phobert}{24}
 \bibcite{legalbench}{25}
-\@writefile{toc}{\contentsline {section}{\numberline {C}Data and corpus details}{20}{section.C}\protected@file@percent }
 \bibcite{lexglue}{26}
 \bibcite{instructgpt}{27}
 \bibcite{ppo}{28}
@@ -235,4 +238,4 @@
 \bibcite{contextual}{45}
 \bibcite{latechunk}{46}
 \bibcite{densex}{47}
-\gdef \@abspage@last{21}
+\gdef \@abspage@last{22}

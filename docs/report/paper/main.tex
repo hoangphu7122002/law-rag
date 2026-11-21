@@ -495,7 +495,26 @@ users & req/s & $p_{95}$ & $p_{99}$ & req/s & $p_{95}$ & $p_{99}$ & req/s & $p_{
 \end{figure}
 \paragraph{Maximum concurrency.} The largest number of users that keeps $p_{95}<10$\,s, no error and no rejection (found by doubling then bisecting) is $6$--$7$ for one card (two settings of the LLM memory share gave $7$ and $6$), $15$ and $18$ for B (two independent measurements) and $18$ for C, i.e.\ about $2.5$ to $3\times$ the single card. B and C are indistinguishable in capacity; C keeps the second card at only $25$--$50\%$ utilisation. We keep B as the default because the replicas fail independently (the balancer routes around a dead stack) and C as the choice when the second card is shared with other work.
 \paragraph{Bursts.} In an open-loop run (Poisson arrivals at $0.5$\,req/s, then $4$\,req/s for $15$\,s, then $0.5$\,req/s) every layout served all requests without errors; the $p_{95}$ during the burst was $12.2$\,s on one card against $9.0$\,s (B) and $9.2$\,s (C), and the post-burst $p_{95}$ returned to $0.86$--$0.92$ of the pre-burst value. Releasing $64$ requests at the same instant took $22.1$\,s to drain on one card, $15.4$\,s (B) and $16.4$\,s (C), with $p_{99}$ of $22.1$, $15.4$ and $16.4$\,s. Each level contains only $8$ to $220$ requests, so $p_{99}$ is close to the maximum and noisy; measurements repeated for B agree within about $0.3$\,s at $p_{95}$ except near the threshold, where the maximum concurrency varied between $15$ and $18$.
-% FLAGSECTION
+\paragraph{Engine settings.} On the single-card layout we varied the vLLM settings one at a time (Table~\ref{tab:flags}; $30$\,s per level, no errors in any run). The number of concurrently decoded sequences ($32$--$256$) and the per-step token budget ($8$k--$32$k) change nothing within run-to-run noise: the card is saturated by decoding, not by scheduling. FP8 key--value cache gives the same throughput at lower utilisation (the model's context is short, so the memory saved is not needed). Disabling prefix caching lowers throughput at $32$ users by about $9\%$ ($2.70$ against $2.98$\,req/s) and lengthens the tail, because every request shares the instruction and the two demonstrations as a common prefix; it is kept on, and the defaults of the deployed stack are therefore unchanged.
+\begin{table}[H]
+\centering
+\caption{vLLM settings on one card (A), requests/s and $p_{95}$ latency (s) at $16$ and $32$ concurrent users. $^\dagger$64 sequences, 16k batched tokens, prefix caching on.}\label{tab:flags}
+\small\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+ & \multicolumn{2}{c}{16 users} & \multicolumn{2}{c}{32 users}\\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Setting & req/s & $p_{95}$ & req/s & $p_{95}$\\
+\midrule
+default$^\dagger$ & 2.20 & 16.3 & 2.98 & 19.7\\
+32 / 128 / 256 sequences & 2.24 / 2.22 / 2.24 & 15.4 / 16.0 / 16.1 & 2.98 / 3.03 / 3.02 & 18.9 / 19.0 / 18.8\\
+8k / 32k batched tokens & 2.20 / 2.21 & 16.3 / 16.2 & 3.00 / 3.02 & 19.3 / 19.2\\
+no prefix caching & 2.26 & 14.6 & 2.70 & 21.1\\
+FP8 KV cache & 2.14 & 16.2 & 2.99 & 20.6\\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \section{Limitations and Threats to Validity}\label{sec:limits}
 \begin{itemize}[leftmargin=*]
 \item \textbf{Selection on dev.} Up to about ten variants were compared in several stages on a $300$-question dev set; intervals are paired but not corrected for multiple comparisons, and the \texttt{dev\_clean} (166) and \texttt{dev\_strict} (74) subsets are small. Round~2 DPO is replicated by a second DPO seed on both dev and test, other gains are single-run. The SFT stage itself is seed-sensitive: a second SFT seed (v3b) reached only $.603$ greedy / $.641$ MBR-8 on dev against $.633$ / $.658$ for the reported seed, so the absolute level of the pipeline depends on the SFT run; DPO on top of the second SFT seed was not run.

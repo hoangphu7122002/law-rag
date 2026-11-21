@@ -427,3 +427,9 @@ Test split (200 questions, 0 errors, 0 empty), retrieval as in the dev runs (den
 - SFT seed check (v3b recipe, seed 777): dev greedy .603 / MBR-8 .6405 vs .6325 / .6575 for the reported seed; SFT stage is seed-sensitive (DPO on top of seed 2 not run). Added to Limitations.
 - Retrieval-only ablation (dev/test, k=10): dense, dense+rerank 20/50/100, BM25, BM25+rerank, hybrid RRF, hybrid+rerank; dense+rerank is best, BM25 far worse, hybrid ≤ dense. Table in report §4.2.
 - Bug fix: `QueryFusionRetriever` defaulted to an OpenAI LLM (hybrid runs died silently with "No API key"); now `llm=MockLLM()`, test `tests/unit/retrieve/test_hybrid_factory.py` (261 tests).
+
+## Step 35 — streaming API, load tests, GPU layouts, vLLM flags (2026-11-21)
+- API: `/ask/stream` (SSE with ttft), OpenAI-compatible `/v1/chat/completions` (stream), `/metrics`, `Limiter` (running slots + bounded queue, 429), bounded retrieval thread pool; Generator.stream, QAService.stream (TDD, 300 tests).
+- Bug found by the first concurrent load test: the API aborted ("BLAS: too many memory regions"); fixed (thread pool + OPENBLAS_NUM_THREADS=1). Bench scripts fail fast on broken levels, report GPU util/temperature, stop at 85 C.
+- Layouts (SLO p95 < 10 s): one card 6-7 users, two stacks + nginx (B) 15-18, split LLM / aux (C) 18; throughput at 64 users 3.5 / 5.8 / 5.6 req/s; burst, spike, p99 in the report (Sec. 'Capacity under concurrent load'). vLLM flags (max-num-seqs, batched tokens, FP8 KV, prefix caching): defaults kept.
+- Extra: cited-but-missing laws fetched (9 laws / 24 pages, not yet indexed; 52 still missing, mostly internal bank documents), chunk.split options (sentence / khoan / semantic) with TDD, low-score analysis (scripts/low_score_analysis.py), disk cleanup (81 GB), Future Work section.
