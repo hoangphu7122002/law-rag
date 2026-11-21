@@ -10,8 +10,7 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, field_validator, model_validator
-
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 CONFIGS = Path("configs")
 
 
@@ -57,10 +56,15 @@ class Rerank(Strict):
     batch: int = 32
 
 
+# Q&A / advice / news pages share hosts with the original legal documents; block them by URL path (regex, case-insensitive)
+DEFAULT_DENY_PATHS = [r"hoi-dap", r"tin-tuc", r"tin-van-ban-moi", r"bai-viet-lien-quan", r"/bai-viet", r"linh-vuc-khac", r"tu-van", r"thoi-su", r"hoi-dap-phap-luat"]
+
+
 class WebCfg(Strict):
     """Web search tool settings (generate/web.py); the tool is on only when "web_search" is in generate.agent_tools."""
     provider: Literal["tinyfish"] = "tinyfish"
     domains: list[str] = []                    # allow-list of hosts (subdomains included); empty = no filter
+    deny_paths: list[str] = Field(default_factory=lambda: list(DEFAULT_DENY_PATHS))   # regexes on URL path+query: Q&A/news pages are blocked
     max_results: int = 5
     calls_per_minute: int = 30                 # TinyFish HOBBY (Search free, 30/min); Builder = 150/min but $0.005 per query (2026-11-19 billing page)
     calls_per_hour: int = 500
@@ -96,6 +100,7 @@ class Generate(Strict):
     max_turns: int = 4             # agent: model calls per question (the last one has no tools)
     agent_tools: list[str] = ["search_law", "get_article"]   # agent: which tools are offered (ablation arms; "kg_related" needs data/kg/kg.sqlite)
     tool_prompt: Literal["full", "compact", "force"] = "full"   # agent: "compact" drops the per-tool prose list (the chat template already renders the JSON schemas)
+    agent_profile: bool = False    # agent: retrieval profile + sufficiency signals appended to the system message (generate/rprofile.py)
     min_tool_calls: int = 0        # agent: if the model answers before making this many tool calls, remind it to call the tools first (datamate-style corrective observation)
     search_with_question: bool = False   # agent: every search_law call also retrieves with the original question and mixes the hits (the model's own paraphrased query alone found the gold Điều in only 66 % of cases)
     tools_url: str = ""            # agent: URL of the shared tools endpoint (generate/tools_service.py); "" = build the index inside this run
@@ -172,7 +177,7 @@ class Config(Strict):
         return _hash(self.index_key(), self.embed, self.retrieve.model_dump(exclude={"oracle"}), self.rerank, self.split, self.limit)
 
     def run_key(self) -> str:
-        new = {"top_p", "top_k", "min_p", "presence_penalty", "repetition_penalty", "thinking", "think_tokens", "mbr", "check", "teacher", "shots", "agent", "max_turns", "agent_initial_k", "agent_tools", "tool_prompt", "agent_seed", "min_tool_calls", "tools_url", "search_with_question", "web"}
+        new = {"top_p", "top_k", "min_p", "presence_penalty", "repetition_penalty", "thinking", "think_tokens", "mbr", "check", "teacher", "shots", "agent", "max_turns", "agent_initial_k", "agent_tools", "tool_prompt", "agent_seed", "min_tool_calls", "tools_url", "search_with_question", "web", "agent_profile"}
         g = self.generate.model_dump(exclude={k for k in new if getattr(self.generate, k) == Generate.model_fields[k].default} | {"tools_url"})
         return _hash(self.retrieval_key(), g, *(["oracle"] if self.retrieve.oracle else []))  # unset new fields left out: old run keys unchanged
 

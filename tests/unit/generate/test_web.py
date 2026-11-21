@@ -203,3 +203,41 @@ def test_web_key_file_setting_reaches_the_provider(tmp_path, monkeypatch):
     f.write_text("sk-cfg")
     g = Generate(model="m", params_b=2.0, agent=True, web={"key_file": str(f), "cache": str(tmp_path / "w.sqlite")})
     assert LawTools(g, blocked_texts=[]).web.provider.key_file == str(f)
+
+
+HOSTS = ["vbpl.vn", "luatvietnam.vn", "chinhphu.vn", "thuvienphapluat.vn"]
+KEEP = [
+    "https://vbpl.vn/TW/Lists/vbpq/Attachments/178599/Phụ lục đính kèm TT10-2025.docx",
+    "https://luatvietnam.vn/tai-chinh/du-thao-thong-tu-sua-doi-thong-tu-39-2016-tt-nhnn-ve-hoat-dong-cho-vay-cua-to-chuc-tin-dung-427854-d10.html",
+    "https://chinhphu.vn/du-thao-vbqppl/du-thao-thong-tu-sua-doi-bo-sung-mot-so-dieu-cua-thong-tu-so-39-2016-tt-nhnn-ngay-30-thang-12-na-6345",
+    "https://thuvienphapluat.vn/van-ban/Tien-te-Ngan-hang/Luat-Cac-to-chuc-tin-dung-sua-doi-648594.aspx",
+]
+DROP = [
+    "https://thuvienphapluat.vn/hoi-dap-phap-luat/lich-nghi-tet-am-lich-2025-ninja-van-138042933.html",
+    "https://luatvietnam.vn/bai-viet-lien-quan/6150-tb-bldtbxh-377370.html",
+    "https://luatvietnam.vn/linh-vuc-khac/du-thao-thong-tu-sua-doi-thong-tu-39-2016-tt-nhnn-ve-hoat-dong-cho-vay-cua-to-chuc-tin-dung-noi-dung-dang-chu-y-883-107584-article.html",
+    "https://luatvietnam.vn/tin-van-ban-moi/tu-15-10-2025-nhnn-co-quyen-quyet-dinh-cho-vay-dac-biet-voi-lai-suat-0-nam-186-102980-article.html",
+]
+
+
+def test_advice_and_news_paths_are_denied_but_legal_document_pages_stay(tmp_path):
+    w = WebSearch(FakeProvider([R(u) for u in KEEP + DROP]), cache=tmp_path / "w.sqlite", domains=HOSTS, max_results=20)
+    assert [r["url"] for r in w.search("q")] == KEEP
+    assert not any(WebSearch(FakeProvider(), domains=HOSTS).allowed(u) for u in DROP)
+
+
+def test_custom_deny_paths_replace_the_defaults(tmp_path):
+    w = WebSearch(FakeProvider(), domains=HOSTS, deny_paths=[r"/van-ban/"])
+    assert not w.allowed(KEEP[3]) and w.allowed(DROP[0])
+
+
+def test_results_mentioning_a_year_after_2025_are_flagged_not_dropped(tmp_path):
+    p = FakeProvider([R("https://vbpl.vn/a/2026/x"), R("https://vbpl.vn/b", title="VBHN 2026 hợp nhất"), R("https://vbpl.vn/c", title="TT 2025")])
+    out = WebSearch(p, domains=HOSTS).search("q")
+    assert [r.get("post_2025", False) for r in out] == [True, True, False]
+
+
+def test_web_config_has_deny_paths_defaulting_to_the_module_constant():
+    from config import WebCfg
+    from generate.web import DEFAULT_DENY_PATHS
+    assert WebCfg().deny_paths == DEFAULT_DENY_PATHS

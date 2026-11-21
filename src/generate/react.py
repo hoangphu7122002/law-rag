@@ -98,7 +98,7 @@ class LawTools:
                 from corpus.qa import QASet
 
                 blocked = [q.answer for q in QASet().load("test")]
-            self._web = WebSearch(self._provider or TinyFish(key_file=w.key_file), cache=w.cache, domains=w.domains, max_results=w.max_results, blocked_texts=blocked,
+            self._web = WebSearch(self._provider or TinyFish(key_file=w.key_file), cache=w.cache, domains=w.domains, deny_paths=w.deny_paths, max_results=w.max_results, blocked_texts=blocked,
                                   calls_per_minute=w.calls_per_minute, calls_per_hour=w.calls_per_hour,
                                   cost_per_query=w.cost_per_query, max_cost_usd=w.max_cost_usd)
         return self._web
@@ -127,12 +127,16 @@ class LawTools:
         return [Passage(pid=h.node.node_id, doc=h.node.metadata.get("doc", ""), text=h.node.get_content(metadata_mode=MetadataMode.LLM),
                         score=float(h.score or 0.0)) for h in hits[: self.cfg.retrieve.k]]
 
-    def related(self, law: str, hops: int) -> list[dict] | None:
+    @property
+    def kg(self):
         from kg import KG
 
         if getattr(self, "_kg", None) is None:
             self._kg = KG("data/kg/kg.sqlite")
-        return self._kg.related(law_key(str(law)), hops)
+        return self._kg
+
+    def related(self, law: str, hops: int) -> list[dict] | None:
+        return self.kg.related(law_key(str(law)), hops)
 
     def article(self, law: str, dieu: int) -> str:
         with self._lock:
@@ -170,10 +174,18 @@ class ReactGenerator(Generator):
         msgs = self.prompt.messages(question, init, self.shots(question))
         if not init:   # no passages given: the RAG user text ("refuse if the context has no answer") would make the model refuse an empty context instead of searching
             msgs = [m if m["role"] != "user" else {"role": "user", "content": f"### Câu hỏi :\n{question}\n\n### Trả lời :"} for m in msgs]
-        if msgs[0]["role"] == "system":
-            msgs[0] = {**msgs[0], "content": msgs[0]["content"] + "\n\n" + system_tools(self.cfg.agent_tools, self.cfg.tool_prompt)}
-        else:
-            msgs.insert(0, {"role": "system", "content": system_tools(self.cfg.agent_tools, self.cfg.tool_prompt)})
+        extra = system_tools(self.cfg.agent_tools, self.cfg.tool_prompt) if self.cfg.agent_tools else ""
+        if self.cfg.agent_profile:   # question + retrieval profile, neutral facts (generate/qprofile.py, rprofile.py)
+            from generate.qprofile import question_profile
+            from generate.rprofile import retrieval_profile
+
+            text, _ = retrieval_profile(question_profile(question), init, getattr(self.tools, "kg", None))
+            extra = (extra + "\n\n" if extra else "") + text
+        if extra:
+            if msgs[0]["role"] == "system":
+                msgs[0] = {**msgs[0], "content": msgs[0]["content"] + "\n\n" + extra}
+            else:
+                msgs.insert(0, {"role": "system", "content": extra})
         salt = f"{question}#{self.cfg.agent_seed}" if self.cfg.agent_seed else question   # seed 0 = the original value
         seed = zlib.crc32(salt.encode()) & 0x7FFFFFFF
         seen: set[str] = set()
@@ -187,7 +199,7 @@ class ReactGenerator(Generator):
             extra = kw.pop("extra_body", {})
             r = await self.oai.chat.completions.create(
                 model=self.cfg.model, messages=msgs, max_tokens=self.cfg.max_tokens, seed=seed, extra_body=extra,
-                **({} if last else {"tools": self.tool_specs()}), **{k: v for k, v in kw.items()})
+                **({} if last or not self.cfg.agent_tools else {"tools": self.tool_specs()}), **{k: v for k, v in kw.items()})
             m = r.choices[0].message
             calls = [] if last else (m.tool_calls or [])
             if not calls:

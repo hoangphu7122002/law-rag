@@ -319,3 +319,26 @@ def test_search_with_question_mixes_the_questions_own_hits_into_every_search_res
     tool_msg = [m for m in g._oai.seen[-1]["messages"] if m["role"] == "tool"][0]["content"]
     assert "câu hỏi gốc? text 0" in tool_msg and "truy vấn riêng text 0" in tool_msg    # both sources present
     assert tool_msg.count("[") == 5                                                    # still k results
+
+
+def test_profile_goes_into_the_system_message_when_enabled():
+    cfg = Generate(model="m", params_b=2.0, prompt="vi_rag", agent=True, agent_profile=True)
+    g = ReactGenerator(cfg, Backend(name="x", base_url="http://x/v1"), FakeTools())
+    g._oai = FakeOAI([NS(content="Căn cứ Điều 5.", tool_calls=None)])
+    asyncio.run(g.answer("Điều 5 Thông tư 23/2014/TT-NHNN quy định gì?", [Passage("p0", "23_2014_TT-NHNN", "Quy định\nĐiều 4. Tiêu đề\nnội dung", 1.0)]))
+    system = g._oai.seen[0]["messages"][0]["content"]
+    assert "[HỒ SƠ TRUY XUẤT]" in system and "Điều 5 của 23/2014/TT-NHNN chưa có" in system
+
+
+def test_profile_is_off_by_default():
+    g = gen([NS(content="Căn cứ Điều 5.", tool_calls=None)])
+    run(g)
+    assert "HỒ SƠ" not in str(g._oai.seen[0]["messages"])
+
+
+def test_agent_with_no_tools_sends_no_tools_parameter():
+    cfg = Generate(model="m", params_b=2.0, prompt="vi_rag", agent=True, agent_tools=[])
+    g = ReactGenerator(cfg, Backend(name="x", base_url="http://x/v1"), FakeTools())
+    g._oai = FakeOAI([NS(content="Căn cứ Điều 5.", tool_calls=None)])
+    assert run(g) == "Căn cứ Điều 5."
+    assert "tools" not in g._oai.seen[0]

@@ -5,6 +5,7 @@ Design (docs/notes/15-web-search.md): a provider (TinyFish Search API) behind a 
 """
 import json
 import os
+import re
 import time
 import sqlite3
 import threading
@@ -14,15 +15,19 @@ import urllib.parse
 import urllib.request
 from urllib.parse import urlparse
 
+from config import DEFAULT_DENY_PATHS   # re-exported: the default deny-list lives next to WebCfg
 from corpus.decontam import grams
+
+_LATE_YEAR = re.compile(r"(?<!\d)(20(?:2[6-9]|[3-9]\d))(?!\d)")   # a year >= 2026
 
 
 class WebSearch:
-    def __init__(self, provider, cache: str | Path = ":memory:", domains: list[str] | None = None, max_results: int = 5,
+    def __init__(self, provider, cache: str | Path = ":memory:", domains: list[str] | None = None, max_results: int = 5, deny_paths: list[str] | None = None,
                  blocked_texts: list[str] | None = None, calls_per_minute: int = 30, calls_per_hour: int = 500, cost_per_query: float = 0.0, max_cost_usd: float | None = None, clock=time.monotonic, sleep=time.sleep):
         self.gap, self.clock, self.sleep, self._last = 60.0 / calls_per_minute, clock, sleep, None   # TinyFish pay-as-you-go: 30 searches / min,
         self.per_hour, self._hour = calls_per_hour, []                                            # 500 / hour (both free)
         self.provider, self.domains, self.max_results = provider, [d.lower() for d in domains or []], max_results
+        self.deny = [re.compile(p, re.I) for p in (DEFAULT_DENY_PATHS if deny_paths is None else deny_paths)]
         self.blocked = set().union(*(grams(t) for t in blocked_texts or []))   # 13-grams of texts that must never come back (test answers)
         if str(cache) != ":memory:":
             Path(cache).parent.mkdir(parents=True, exist_ok=True)
@@ -45,7 +50,11 @@ class WebSearch:
             self.db.execute("INSERT OR REPLACE INTO q VALUES(?,?)", (query, json.dumps(raw, ensure_ascii=False)))
             self.db.execute("INSERT INTO spend VALUES(1)")
             self.db.commit()
-        return [r for r in raw if self.allowed(r.get("url", "")) and not self.leaks(r)][: self.max_results]   # the cache keeps the raw answer; filters are applied on read
+        out = [dict(r) for r in raw if self.allowed(r.get("url", "")) and not self.leaks(r)][: self.max_results]
+        for r in out:
+            if _LATE_YEAR.search(f"{r.get('url', '')} {r.get('title', '')}"):
+                r["post_2025"] = True   # web returns the newest consolidated versions; references were written in 2025
+        return out   # the cache keeps the raw answer; filters are applied on read
 
     def spent(self) -> float:
         """USD spent so far over every run that shares this cache (one row per paid call)."""
@@ -67,10 +76,11 @@ class WebSearch:
         return bool(self.blocked) and bool(grams(f"{r.get('title', '')} {r.get('snippet', '')}") & self.blocked)
 
     def allowed(self, url: str) -> bool:
-        if not self.domains:
-            return True
-        host = urlparse(url).hostname or ""
-        return any(host == d or host.endswith("." + d) for d in self.domains)
+        u = urlparse(url)
+        if self.domains and not any((u.hostname or "") == d or (u.hostname or "").endswith("." + d) for d in self.domains):
+            return False
+        target = urllib.parse.unquote(u.path + ("?" + u.query if u.query else ""))
+        return not any(p.search(target) for p in self.deny)
 
 
 class TinyFish:
