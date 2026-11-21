@@ -110,3 +110,13 @@ def test_the_most_common_client_error_is_reported():
     s = summarize_load([{"status": -1, "error": "ConnectError"}, {"status": -1, "error": "ConnectError"}, {"status": -1, "error": "ReadTimeout"}], 1.0, 8)
     assert s["top_error"] == "ConnectError"
     assert summarize_load([{"ttft": 1, "total": 2}], 1.0, 1)["top_error"] is None
+
+
+def test_temperature_is_tracked_per_gpu_and_a_hot_gpu_stops_the_run():
+    from load_test import level_problem, max_by_gpu, parse_smi_temp
+
+    assert parse_smi_temp("0, 58\n1, 71\n") == {0: 58.0, 1: 71.0}
+    assert max_by_gpu([{0: 58.0, 1: 71.0}, {0: 60.0, 1: 69.0}], "temp") == {"gpu0_temp": 60.0, "gpu1_temp": 71.0}
+    hot = {"ok": 10, "errors": 0, "rejected_429": 0, "gpu0_util": 90.0, "gpu0_temp": 86.0, "gpu1_temp": 60.0}
+    assert "too hot" in level_problem(hot)
+    assert level_problem(hot | {"gpu0_temp": 70.0}) is None

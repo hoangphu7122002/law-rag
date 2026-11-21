@@ -105,6 +105,18 @@ def parse_smi(text: str) -> dict[int, float]:
     return out
 
 
+def parse_smi_temp(text: str) -> dict[int, float]:
+    """`nvidia-smi --query-gpu=index,temperature.gpu --format=csv,noheader,nounits` -> {gpu: °C}"""
+    return parse_smi(text)
+
+
+def max_by_gpu(samples: list[dict[int, float]], name: str) -> dict[str, float]:
+    return {f"gpu{g}_{name}": max(s[g] for s in samples if g in s) for g in sorted(samples[0])} if samples else {}
+
+
+MAX_TEMP_C = 85.0   # L40S throttles around 90 °C; stop the run before that
+
+
 def mean_by_gpu(samples: list[dict[int, float]]) -> dict[str, float]:
     if not samples:
         return {}
@@ -146,13 +158,16 @@ def level_problem(row: dict):
     """A level that did not really exercise the stack: nothing succeeded, or every GPU stayed idle while requests ran."""
     if row["ok"] == 0:
         return f"no request succeeded ({row['errors']} errors, mostly {row.get('top_error')}; {row['rejected_429']} rejected)"
+    hot = {k: v for k, v in row.items() if k.endswith("_temp") and v >= MAX_TEMP_C}
+    if hot:
+        return f"GPU too hot: {hot} (limit {MAX_TEMP_C} °C): stop and let it cool"
     utils = [v for k, v in row.items() if k.endswith("_util")]
     if utils and max(utils) < 5:
         return f"all GPUs idle (max mean util {max(utils)} %) although {row['ok']} requests completed: requests are not reaching the LLM"
     return None
 
 
-async def sample_gpus(samples: list, stop: asyncio.Event) -> None:
+async def sample_gpus(samples: list, stop: asyncio.Event, temps: list | None = None) -> None:
     import subprocess
 
     while not stop.is_set():
@@ -161,6 +176,10 @@ async def sample_gpus(samples: list, stop: asyncio.Event) -> None:
                                capture_output=True, text=True, timeout=5)
             if r.returncode == 0:
                 samples.append(parse_smi(r.stdout))
+            t = subprocess.run(["nvidia-smi", "--query-gpu=index,temperature.gpu", "--format=csv,noheader,nounits"],
+                               capture_output=True, text=True, timeout=5)
+            if temps is not None and t.returncode == 0:
+                temps.append(parse_smi_temp(t.stdout))
         except Exception:  # noqa: BLE001 — no nvidia-smi on this host: utilisation is simply not reported
             return
         await asyncio.sleep(1.0)
@@ -194,8 +213,9 @@ async def run_level(url: str, questions: list[str], users: int, seconds: float) 
 
     recs: list[dict] = []
     samples: list[dict[int, float]] = []
+    temps: list[dict[int, float]] = []
     stop_ev = asyncio.Event()
-    sampler = asyncio.create_task(sample_gpus(samples, stop_ev))
+    sampler = asyncio.create_task(sample_gpus(samples, stop_ev, temps))
     stop = time.perf_counter() + seconds
     counter = iter(range(10**9))
     async with httpx.AsyncClient(limits=httpx.Limits(max_connections=users + 4)) as client:
@@ -208,7 +228,7 @@ async def run_level(url: str, questions: list[str], users: int, seconds: float) 
         wall = time.perf_counter() - t0
     stop_ev.set()
     await sampler
-    return summarize_load(recs, wall, users) | mean_by_gpu(samples)
+    return summarize_load(recs, wall, users) | mean_by_gpu(samples) | max_by_gpu(temps, "temp")
 
 
 def main() -> None:
