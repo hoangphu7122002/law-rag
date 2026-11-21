@@ -73,6 +73,39 @@ def score_rankings(tasks: dict, ranks: dict[int, list[int]]) -> dict:
     return {"baseline": _metrics(base, tasks), "llm": _metrics(llm, tasks)}
 
 
+def reorder(passages: list, order: list[int], k: int) -> list:
+    """Candidates named by the helper (1-based) first, in its order; the others keep their original order; cut to k."""
+    chosen = [i for i in dict.fromkeys(order) if 1 <= i <= len(passages)]
+    rest = [i for i in range(1, len(passages) + 1) if i not in set(chosen)]
+    return [passages[i - 1] for i in chosen + rest][:k]
+
+
+def build_cache(tasks_path: Path, reply_dirs: list[str], sets: list[str], k: int) -> None:
+    """Write a retrieval cache whose passage order is the helper's (dev only), under the key of the config with `sets` (use limit=300:
+    dev has 300 questions, so the run is unchanged but the key is new and no existing cache is touched)."""
+    from config import load
+    from retrieve.retrieval import CACHE
+
+    tasks = {int(q): t for q, t in json.loads(tasks_path.read_text(encoding="utf-8")).items()}
+    ranks = {}
+    for d in reply_dirs:
+        for f in sorted(Path(d).glob("p*.txt")):
+            ranks.update(parse_answer(f.read_text(encoding="utf-8"), tasks))
+    src = load("configs/exp/A5_v3b.yaml", ["split=dev", "retrieve.k=10"])
+    out = CACHE / f"{load('configs/exp/A5_v3b.yaml', ['split=dev', 'retrieve.k=5', *sets]).retrieval_key()}.jsonl"
+    n = 0
+    with open(out, "w", encoding="utf-8") as fh:
+        for line in (CACHE / f"{src.retrieval_key()}.jsonl").read_text(encoding="utf-8").splitlines():
+            r = json.loads(line)
+            if r["qid"] in tasks or r["qid"] in ranks:
+                r["passages"] = reorder(r["passages"], ranks.get(r["qid"], []), k)
+            else:
+                r["passages"] = r["passages"][:k]
+            fh.write(json.dumps(r, ensure_ascii=False) + "\n")
+            n += 1
+    print(n, "questions ->", out)
+
+
 def export(out: Path, k: int = 10) -> None:
     from config import load
     from corpus import QASet
@@ -108,12 +141,20 @@ def main() -> None:
     p.add_argument("tasks")
     p.add_argument("--dir", required=True)
     p.add_argument("--batch", type=int, default=6)
+    c = sub.add_parser("build-cache", help="box: retrieval cache in the helper's order (dev) for a generation run")
+    c.add_argument("tasks")
+    c.add_argument("--replies", nargs="+", required=True)
+    c.add_argument("--set", action="append", default=[], dest="sets")
+    c.add_argument("--k", type=int, default=5)
     s = sub.add_parser("score")
     s.add_argument("tasks")
     s.add_argument("replies", nargs="+")
     a = ap.parse_args()
     if a.cmd == "export":
         export(Path(a.out))
+        return
+    if a.cmd == "build-cache":
+        build_cache(Path(a.tasks), a.replies, a.sets, a.k)
         return
     tasks = {int(k): v for k, v in json.loads(Path(a.tasks).read_text(encoding="utf-8")).items()}
     if a.cmd == "prompts":

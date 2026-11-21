@@ -27,3 +27,12 @@ def test_scoring_compares_with_the_original_order():
     assert out["baseline"]["art@5"] == 1.0 and out["llm"]["art@5"] == 1.0
     out2 = score_rankings(TASKS, {})                                           # no answer: keep the original order
     assert out2["llm"] == out2["baseline"]
+
+
+def test_reorder_puts_the_chosen_candidates_first_and_keeps_the_rest_in_order():
+    from llm_rerank import reorder
+
+    ps = ["a", "b", "c", "d", "e", "f"]
+    assert reorder(ps, [3, 1], k=4) == ["c", "a", "b", "d"]          # 1-based candidate numbers
+    assert reorder(ps, [], k=3) == ["a", "b", "c"]                      # no answer: original order
+    assert reorder(ps, [9, 2], k=2) == ["b", "a"]                       # an unknown number is ignored
