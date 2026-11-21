@@ -66,3 +66,8 @@ Principle: B and C need no teacher data, so they train while the teacher data is
 | 14:30-15:00 | test eval once (greedy, MBR8) | idle -> spare: extra seed for the closest pair | CHANGELOG, compute-log, PDF |
 
 Gaps are filled with the third seed of any pair whose paired difference is within the noise band (.005-.015).
+
+## Track 4 - the ReAct agent as its own flow (user wants an agent, 2026-11-22)
+One agent implementation, three uses: (1) data generator (9B + DeepSeek correction, above); (2) a standalone agentic system evaluated on dev300 / test with a big model (DeepSeek-V4 flash or GLM) and with the 9B, reported as an agentic line next to the 2B one-shot (the graded system keeps the < 4B limit); (3) demo / UI option (API already has /v1/chat/completions stream).
+Agent loop: profile block -> initial top-5 context -> tools search_law / get_article / kg_related (neutral) -> answer in the reference template -> evidence gate (one nudge) -> verifier on citations (quoted text must appear in a retrieved or fetched Dieu). Backend-agnostic (OpenAI-compatible: local vLLM 9B, or the Vibe/Mistral route for DeepSeek). Dev numbers of the DeepSeek agent also tell the ceiling of the teacher data (answer vs reference ROUGE-L) without a separate pilot.
+Prior numbers: raw 9B teacher on dev .47-.49 (not above SFT 2B), trained 2B ReAct .537 / .574; the agent line is expected to need the profile + initial context to compete.
