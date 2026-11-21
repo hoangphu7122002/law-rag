@@ -1,0 +1,9 @@
+# Pass 2: 9B with tools forced (min_tool_calls 1) on dev then train, profile + top-5 in the first prompt, shared tools endpoint :8300. Graded afterwards; failing questions go to DeepSeek repair.
+tools P1_9b.yaml
+serve Qwen/Qwen3.5-9B --gpu 1 --share 0.5 --tools
+configs/exp/P1_9b.yaml --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.agent_tools=[search_law,get_article,kg_related] --set generate.tool_prompt=compact --set generate.max_turns=5 --set generate.min_tool_calls=1 --set generate.search_with_question=true --set generate.tools_url=http://localhost:8300 --set split=dev
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-P1_9b.*-g1"
+configs/exp/P1_9b.yaml --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.agent_tools=[search_law,get_article,kg_related] --set generate.tool_prompt=compact --set generate.max_turns=5 --set generate.min_tool_calls=1 --set generate.search_with_question=true --set generate.tools_url=http://localhost:8300 --set split=train
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-P1_9b.*-g1"
+do tmux kill-session -t lawrag-llm-g1
+do tmux kill-session -t lawrag-tools
