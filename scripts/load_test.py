@@ -30,7 +30,8 @@ def summarize_load(recs: list[dict], wall: float, users: int) -> dict:
             "rejected_429": sum(1 for r in recs if r.get("status") == 429),
             "top_error": (lambda e: max(set(e), key=e.count) if e else None)([r["error"] for r in recs if "error" in r]),
             "rps": round(len(ok) / wall, 3) if wall > 0 else 0.0,
-            "ttft_p50": pct(ttft, 0.5), "ttft_p95": pct(ttft, 0.95), "total_p50": pct(total, 0.5), "total_p95": pct(total, 0.95),
+            "ttft_p50": pct(ttft, 0.5), "ttft_p95": pct(ttft, 0.95), "ttft_p99": pct(ttft, 0.99),
+            "total_p50": pct(total, 0.5), "total_p95": pct(total, 0.95), "total_p99": pct(total, 0.99),
             "total_mean": round(st.mean(total), 3) if total else None}
 
 

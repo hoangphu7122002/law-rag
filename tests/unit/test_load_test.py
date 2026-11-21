@@ -120,3 +120,10 @@ def test_temperature_is_tracked_per_gpu_and_a_hot_gpu_stops_the_run():
     hot = {"ok": 10, "errors": 0, "rejected_429": 0, "gpu0_util": 90.0, "gpu0_temp": 86.0, "gpu1_temp": 60.0}
     assert "too hot" in level_problem(hot)
     assert level_problem(hot | {"gpu0_temp": 70.0}) is None
+
+
+def test_p99_is_reported_next_to_p95():
+    recs = [{"ttft": i / 100, "total": float(i)} for i in range(1, 101)]
+    s = summarize_load(recs, wall=10.0, users=4)
+    assert s["total_p95"] == 96.0 and s["total_p99"] == 100.0
+    assert s["ttft_p99"] == 1.0
