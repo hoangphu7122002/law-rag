@@ -1,0 +1,5 @@
+# 9B tool probe on the idle GPU1 (beside embed/rerank), dev: does the base 9B call tools when given profile + top-5?
+serve Qwen/Qwen3.5-9B --gpu 1 --share 0.5 --tools
+configs/exp/P1_9b.yaml --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set split=dev --set generate.agent_tools=[search_law,get_article,kg_related] --set generate.tool_prompt=compact --set generate.max_turns=4
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-P1_9b.*-g1"
+do tmux kill-session -t lawrag-llm-g1
