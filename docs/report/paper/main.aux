@@ -100,16 +100,16 @@
 \@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Retrieval quality of the stack (dense top-50, then reranker top-5). \textit  {Điều}{}@$k$ = gold article in the top $k$.}}{6}{table.caption.20}\protected@file@percent }
 \newlabel{tab:retr}{{4}{6}{Retrieval quality of the stack (dense top-50, then reranker top-5). \dieu {}@$k$ = gold article in the top $k$}{table.caption.20}{}}
 \@writefile{toc}{\contentsline {paragraph}{Trained retrieval components did not help generation.}{6}{section*.21}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Retrieval variants (retrieval only, top-10 returned; dev / test; documents $n{=}281/193$, articles $n{=}264/177$ with a recoverable gold). ``+rr$N$'' = reranker over $N$ candidates; hybrid = reciprocal-rank fusion of dense and BM25.}}{7}{table.caption.22}\protected@file@percent }
-\newlabel{tab:retrabl}{{5}{7}{Retrieval variants (retrieval only, top-10 returned; dev / test; documents $n{=}281/193$, articles $n{=}264/177$ with a recoverable gold). ``+rr$N$'' = reranker over $N$ candidates; hybrid = reciprocal-rank fusion of dense and BM25}{table.caption.22}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Retrieval variants (retrieval only, top-10 returned; dev / test; documents $n{=}281/193$, articles $n{=}264/177$ with a recoverable gold). ``+rr$N$'' = reranker over $N$ candidates; the fine-tuned reranker was trained on $4{,}015$ groups (gold \textit  {Điều}{} positives, dense hard negatives) and raises \textit  {Điều}{}@1 but not generation (Table~\ref {tab:abl}); hybrid = reciprocal-rank fusion of dense and BM25.}}{7}{table.caption.22}\protected@file@percent }
+\newlabel{tab:retrabl}{{5}{7}{Retrieval variants (retrieval only, top-10 returned; dev / test; documents $n{=}281/193$, articles $n{=}264/177$ with a recoverable gold). ``+rr$N$'' = reranker over $N$ candidates; the fine-tuned reranker was trained on $4{,}015$ groups (gold \dieu {} positives, dense hard negatives) and raises \dieu {}@1 but not generation (Table~\ref {tab:abl}); hybrid = reciprocal-rank fusion of dense and BM25}{table.caption.22}{}}
 \@writefile{toc}{\contentsline {paragraph}{Retrieval is not the bottleneck for the fine-tuned model.}{7}{section*.23}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Generator study}{7}{subsection.5.3}\protected@file@percent }
 \newlabel{sec:generator}{{5.3}{7}{Generator study}{subsection.5.3}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Raw (not fine-tuned) generators, dev $n{=}300$, same retrieval store (A2e), each with its default prompt.}}{7}{table.caption.24}\protected@file@percent }
 \newlabel{tab:raw}{{6}{7}{Raw (not fine-tuned) generators, dev $n{=}300$, same retrieval store (A2e), each with its default prompt}{table.caption.24}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Supervised fine-tuning variants (dev $n{=}300$, greedy, $k{=}5$ unless stated).}}{7}{table.caption.25}\protected@file@percent }
-\newlabel{tab:sft}{{7}{7}{Supervised fine-tuning variants (dev $n{=}300$, greedy, $k{=}5$ unless stated)}{table.caption.25}{}}
 \citation{vilegallm}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Supervised fine-tuning variants (dev $n{=}300$, greedy, $k{=}5$ unless stated).}}{8}{table.caption.25}\protected@file@percent }
+\newlabel{tab:sft}{{7}{8}{Supervised fine-tuning variants (dev $n{=}300$, greedy, $k{=}5$ unless stated)}{table.caption.25}{}}
 \@writefile{toc}{\contentsline {paragraph}{Legal-domain base models.}{8}{section*.26}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Decoding and post-training}{8}{subsection.5.4}\protected@file@percent }
 \newlabel{sec:posttrain}{{5.4}{8}{Decoding and post-training}{subsection.5.4}{}}

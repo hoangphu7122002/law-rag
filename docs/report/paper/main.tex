@@ -227,7 +227,7 @@ Fine-tuning the reranker on $4{,}015$ groups raised pipeline \dieu{}@1 from $.58
 
 \begin{table}[H]
 \centering
-\caption{Retrieval variants (retrieval only, top-10 returned; dev / test; documents $n{=}281/193$, articles $n{=}264/177$ with a recoverable gold). ``+rr$N$'' = reranker over $N$ candidates; hybrid = reciprocal-rank fusion of dense and BM25.}\label{tab:retrabl}
+\caption{Retrieval variants (retrieval only, top-10 returned; dev / test; documents $n{=}281/193$, articles $n{=}264/177$ with a recoverable gold). ``+rr$N$'' = reranker over $N$ candidates; the fine-tuned reranker was trained on $4{,}015$ groups (gold \dieu{} positives, dense hard negatives) and raises \dieu{}@1 but not generation (Table~\ref{tab:abl}); hybrid = reciprocal-rank fusion of dense and BM25.}\label{tab:retrabl}
 \begin{tabular}{@{}lccccc@{}}
 \toprule
 Retriever & Doc@1 & Doc@5 & \dieu{}@1 & \dieu{}@5 & Doc MRR\\
@@ -240,6 +240,7 @@ BM25 & .434/.389 & .648/.648 & .250/.288 & .496/.509 & .525/.488\\
 BM25 + rr & .587/.586 & .833/.788 & .515/.542 & .754/.712 & .693/.672\\
 Hybrid (RRF) & .541/.539 & .851/.824 & .432/.452 & .761/.751 & .674/.661\\
 Hybrid + rr & .637/.643 & .936/.912 & .580/.610 & .905/.893 & .768/.753\\
+Dense + fine-tuned rr50 (dev only) & -- & -- & .712 & -- & --\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -364,6 +365,7 @@ Reranker & none (dense top-5) & .641 & $-.022$ \ci{-.039}{-.006}$^\ast$\\
  & 20 candidates & .663 & $-.001$ \ci{-.012}{+.010}\\
  & 50 candidates (final) & .664 & --\\
  & 100 candidates & .651 & $-.013$ \ci{-.023}{-.003}$^\ast$\\
+ & fine-tuned reranker (rr\_v0), on SFT v3b & .625 & $-.007$ vs.\ same model with the stock reranker (.633)\\
 Passages $k$ & 3 & .657 & $-.007$ \ci{-.018}{+.004}\\
  & 5 (final) & .664 & --\\
  & 8 & .666 & $+.002$ \ci{-.010}{+.016} (n.s.)\\
