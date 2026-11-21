@@ -41,9 +41,11 @@ def main() -> None:
     gold = GoldSet().load()
     caches = {n: CACHE / f"{load('configs/exp/A5_v3b.yaml', base + extra).retrieval_key()}.jsonl" for n, extra in (("control", []), ("variant", a.variant))}
     hits = {n: per_question_hits(p, gold, a.k, a.level) for n, p in caches.items()}
+    common = sorted(set(hits["control"]) & set(hits["variant"]))    # a cache can hold other splits too (the shared retrieval cache): compare on the common questions only
+    hits = {n: {q: h[q] for q in common} for n, h in hits.items()}
     res = PairedBootstrap().compare(hits["control"], hits["variant"])
-    print(json.dumps({"split": a.split, "level": a.level, "k": a.k, "control": round(sum(hits["control"].values()) / len(hits["control"]), 4),
-                      "variant": round(sum(hits["variant"].values()) / len(hits["variant"]), 4), **{k: round(v, 4) if isinstance(v, float) else v for k, v in res.items()}}))
+    print(json.dumps({"split": a.split, "level": a.level, "k": a.k, "control": round(sum(hits["control"].values()) / len(common), 4),
+                      "variant": round(sum(hits["variant"].values()) / len(common), 4), **{k: round(v, 4) if isinstance(v, float) else v for k, v in res.items()}}))
 
 
 if __name__ == "__main__":
