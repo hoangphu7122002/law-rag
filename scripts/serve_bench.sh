@@ -13,7 +13,7 @@ need() { # need <gpu> <MiB>: refuse when another job holds the memory
   [ $((total - used)) -ge "$2" ] || { echo "GPU $1 has only $((total-used)) MiB free, need $2"; exit 3; }
 }
 wait_health() { for _ in $(seq 120); do curl -sf "http://localhost:$1/health" >/dev/null && return 0; sleep 5; done; echo "no health on $1"; exit 4; }
-down() { for p in lawrag-a lawrag-b0 lawrag-b1 lawrag-c lawrag-lb; do docker compose -p $p -f $C -f /dev/null down >/dev/null 2>&1 || true; done; docker compose -p lawrag-lb -f docker/compose.lb.yml down >/dev/null 2>&1 || true; }
+down() { for p in lawrag-a lawrag-b0 lawrag-b1 lawrag-c lawrag-lb; do docker compose -p $p down >/dev/null 2>&1 || true; done; }
 trap down EXIT
 down
 case $L in
