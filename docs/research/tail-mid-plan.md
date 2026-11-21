@@ -25,3 +25,12 @@ Context: dev300 mean .664. High (>=.8) 34 %, middle 48 % (54 % of the loss), tai
 
 ## Not planned
 Gateway/scaler, validity filtering in the scored pipeline, newer-law preference (refuted), hybrid retrieval (on par after rerank).
+
+## Run order for 2026-11-23 (planned with the user, nothing started)
+1. Read the result of the full-corpus index (full68 queue): Dieu@5 dev/test vs control 4ac2a75c.
+2. Step-0 diagnostics (no GPU): ROUGE by gold count and by tail/mid/high before vs after DPO; 21 wrong-law cases vs KG families/dates.
+3. Licence check of GLM / DeepSeek output for training; budget cap (--max-price) agreed with the user.
+4. Pilot 50 train questions: 9B ReAct (GPU0) Dieu@5 vs pipeline, share needing correction, ROUGE after correction, cost per question.
+5. If the pilot passes: full run on train 2245 + dev 300 in small batches (pacing), tagged by split, test never sent; verification = ROUGE-L vs reference + gold Dieu cited, template opener.
+6. SFT 2B one-shot (student format B) with the data tricks; 3 seeds per config; dev eval with train-only models.
+Open: budget cap, which 9B checkpoint, student format A vs B (default B).
