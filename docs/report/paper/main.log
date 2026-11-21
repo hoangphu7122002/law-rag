@@ -1171,11 +1171,6 @@ coord trafo unsupported.
 [7]
 
 [8]
-Overfull \hbox (75.0735pt too wide) in paragraph at lines 360--384
- [][] 
- []
-
-
 
 [9]
 Underfull \hbox (badness 10000) in paragraph at lines 395--395
@@ -1265,7 +1260,7 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 Here is how much of TeX's memory you used:
  36239 strings out of 402809
  875437 string characters out of 5440814
- 1427917 words of memory out of 5000000
+ 1428029 words of memory out of 5000000
  64602 multiletter control sequences out of 15000+600000
  637862 words of font info for 122 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191

@@ -356,7 +356,7 @@ DPO round 3 ($\mathrm{dpo}_{a3}$) & .635 & .642 & $-.029$ \ci{-.045}{-.012} vs r
 Starting from the final system (DPO round~2, greedy, $k{=}5$, $2$ shots, reranker over $50$ dense candidates; dev \rl{} $.6637$), each inference-side factor was varied alone and each round-1 DPO design choice was varied against the reference round-1 model ($\mathrm{dpo}_a$, $.6543$). The acceptance rule was fixed beforehand: a change is adopted only if the lower bound of the paired $95\%$ interval on dev ($n{=}300$) is above zero and it is not worse on \texttt{dev\_clean} and \texttt{dev\_strict}; ties keep the cheaper setting.
 \begin{table}[H]
 \centering
-\caption{One-factor ablations on dev ($n{=}300$, greedy, final model unless stated). Difference is against the final system ($.6637$) with a paired-bootstrap interval; $\ast$ = interval excludes zero (worse).}\label{tab:abl}
+\caption{One-factor ablations on dev ($n{=}300$, greedy, final model unless stated). Difference is against the final system ($.6637$) with a paired-bootstrap interval; $\ast$ = interval excludes zero (worse). $^\dagger$Fine-tuned reranker (rr\_v0) evaluated on the SFT v3b model, compared with the stock reranker on that model.}\label{tab:abl}
 \begin{tabular}{@{}llcl@{}}
 \toprule
 Factor & Setting & \rl{} & Difference\\
@@ -365,7 +365,7 @@ Reranker & none (dense top-5) & .641 & $-.022$ \ci{-.039}{-.006}$^\ast$\\
  & 20 candidates & .663 & $-.001$ \ci{-.012}{+.010}\\
  & 50 candidates (final) & .664 & --\\
  & 100 candidates & .651 & $-.013$ \ci{-.023}{-.003}$^\ast$\\
- & fine-tuned reranker (rr\_v0), on SFT v3b & .625 & $-.007$ vs.\ same model with the stock reranker (.633)\\
+ & fine-tuned rr (SFT v3b)$^\dagger$ & .625 & $-.007$ vs.\ stock rr (.633)\\
 Passages $k$ & 3 & .657 & $-.007$ \ci{-.018}{+.004}\\
  & 5 (final) & .664 & --\\
  & 8 & .666 & $+.002$ \ci{-.010}{+.016} (n.s.)\\
