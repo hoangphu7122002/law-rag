@@ -1,11 +1,11 @@
-# Teacher data pass 1 (no tools): Qwen3.5-9B answers train + dev from the pipeline top-5 (2 shots, vi_rag prompt): greedy, then T 0.7. GPU0; retrieval via embed :8101 / rerank :8201 on GPU1. Graded later (ROUGE-L >= .6 and cites gold Dieu).
+# Teacher data pass 1 (no tools, retrieval profile): Qwen3.5-9B answers dev then train from profile + pipeline top-5 (2 shots): greedy, then T 0.7. GPU0; retrieval via embed :8101 / rerank :8201 on GPU1; KG data/kg/kg.sqlite. Graded later (ROUGE-L >= .6 and cites gold Dieu). Launch only when the architecture tests pass.
 serve Qwen/Qwen3.5-9B --gpu 0 --share 0.6
-configs/exp/A5_v3b.yaml --set generate.model=Qwen/Qwen3.5-9B --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set split=dev
-wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
-configs/exp/A5_v3b.yaml --set generate.model=Qwen/Qwen3.5-9B --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set split=train
-wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
-configs/exp/A5_v3b.yaml --set generate.model=Qwen/Qwen3.5-9B --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set generate.temperature=0.7 --set split=train
-wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
-configs/exp/A5_v3b.yaml --set generate.model=Qwen/Qwen3.5-9B --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set generate.temperature=0.7 --set split=dev
-wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
+configs/exp/P1_9b.yaml --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set split=dev
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-P1_9b.*-g0"
+configs/exp/P1_9b.yaml --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set split=train
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-P1_9b.*-g0"
+configs/exp/P1_9b.yaml --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.temperature=0.7 --set split=dev
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-P1_9b.*-g0"
+configs/exp/P1_9b.yaml --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.temperature=0.7 --set split=train
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-P1_9b.*-g0"
 do tmux kill-session -t lawrag-llm-g0
