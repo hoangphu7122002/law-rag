@@ -28,7 +28,7 @@ services:
     command: >
       --model /models/dpo_a2 --served-model-name law-rag-dpo-a2 --host 0.0.0.0 --port 8000
       --dtype bfloat16 --max-model-len 32768 --gpu-memory-utilization ${LLM_SHARE:-0.45}
-      --enable-prefix-caching --max-num-seqs 64 --seed 0
+      ${PREFIX_CACHING:---enable-prefix-caching} --max-num-seqs ${MAX_SEQS:-64} --max-num-batched-tokens ${MAX_BATCHED:-16384} --seed 0 ${LLM_EXTRA:-}
   embed:
     <<: *vllm
     deploy:
