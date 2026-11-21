@@ -26,7 +26,7 @@ def pct(xs: list[float], q: float):
 def summarize_load(recs: list[dict], wall: float, users: int) -> dict:
     ok = [r for r in recs if "total" in r]
     ttft, total = [r["ttft"] for r in ok], [r["total"] for r in ok]
-    return {"users": users, "ok": len(ok), "errors": sum(1 for r in recs if r.get("status", 0) >= 500 or r.get("status") == -1),
+    return {"users": users, "ok": len(ok), "errors": sum(1 for r in recs if "status" in r and r["status"] != 429),
             "rejected_429": sum(1 for r in recs if r.get("status") == 429),
             "rps": round(len(ok) / wall, 3) if wall > 0 else 0.0,
             "ttft_p50": pct(ttft, 0.5), "ttft_p95": pct(ttft, 0.95), "total_p50": pct(total, 0.5), "total_p95": pct(total, 0.95),

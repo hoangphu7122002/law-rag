@@ -16,6 +16,7 @@ wait_health() { for _ in $(seq 120); do curl -sf "http://localhost:$1/health" >/
 down() { for p in lawrag-a lawrag-b0 lawrag-b1 lawrag-c lawrag-lb; do docker compose -p $p down >/dev/null 2>&1 || true; done; }
 trap down EXIT
 down
+docker compose -f $C build api   # the image must contain the current src (streaming, metrics)
 case $L in
   A) need 0 30000; TAG="A_1gpu_llm.45"
      GPU=0 API_PORT=8080 docker compose -p lawrag-a -f $C up -d; wait_health 8080; URL=http://localhost:8080 ;;

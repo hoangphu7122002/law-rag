@@ -7,9 +7,9 @@ from load_test import parse_sse_line, summarize_load
 
 def test_summary_throughput_percentiles_and_errors():
     recs = [{"ttft": 0.2, "total": 1.0}, {"ttft": 0.4, "total": 2.0}, {"ttft": 0.6, "total": 3.0}, {"ttft": 1.0, "total": 10.0},
-            {"status": 429}, {"status": 503}]
+            {"status": 429}, {"status": 503}, {"status": 404}]
     s = summarize_load(recs, wall=4.0, users=8)
-    assert s["users"] == 8 and s["ok"] == 4 and s["rejected_429"] == 1 and s["errors"] == 1
+    assert s["users"] == 8 and s["ok"] == 4 and s["rejected_429"] == 1 and s["errors"] == 2
     assert s["rps"] == 1.0                                  # 4 completed / 4 s
     assert s["ttft_p50"] == 0.6 and s["total_p95"] == 10.0 and s["total_p50"] == 3.0
 
