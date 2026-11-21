@@ -40,6 +40,9 @@ def main() -> None:
     d.add_argument("--oracle", type=float, default=0.0, help="p of injecting a gold passage when top-k misses it (RAFT)")
     d.add_argument("--shots", default="0", help="comma list of shot counts drawn per row, e.g. 0,1,2,3")
     d.add_argument("--refuse", type=float, default=0.0, help="p of an extra no-answer row (unrelated context -> refusal)")
+    d.add_argument("--shuffle", type=float, default=0.0, help="p of shuffling the passage order of a train row")
+    d.add_argument("--all-gold", action="store_true", help="with --oracle: inject EVERY missing gold article, not just one")
+    d.add_argument("--drop-gold", type=float, default=0.0, help="p of replacing the gold passages of a train row by non-gold ones (retrieval miss, reference kept)")
     d.add_argument("--set", action="append", default=[], metavar="KEY=VALUE")
     es = sub.add_parser("export-shots", help="few-shot pool (decontaminated train) -> JSON, so the QA container needs no dataset")
     es.add_argument("--out", default="data/serve/shots.json")
@@ -111,7 +114,8 @@ def main() -> None:
 
         kr = tuple(int(x) for x in args.k_range.split(",")) if args.k_range else None
         SFTData(load(args.exp, args.set), args.name, tuple(args.splits.split(",")), kr, args.oracle,
-                shots=tuple(int(x) for x in args.shots.split(",")), refuse=args.refuse).build()
+                shots=tuple(int(x) for x in args.shots.split(",")), refuse=args.refuse,
+                shuffle=args.shuffle, all_gold=args.all_gold, drop_gold_p=args.drop_gold).build()
     elif args.cmd == "export-shots":
         from generate.shots import ShotStore
 

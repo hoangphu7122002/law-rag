@@ -17,6 +17,7 @@ from generate.prompt import Prompt
 from evaluate.retrieval_eval import RetrievalEval
 from generate.shots import ShotStore
 from retrieve import Retrieval
+from train.ctx_mix import drop_gold, inject_all, maybe_shuffle, missing_gold
 
 OUT = Path("data/train")
 REFUSALS = [
@@ -30,13 +31,15 @@ REFUSALS = [
 class SFTData:
     def __init__(self, cfg: Config, name: str, splits: tuple[str, ...] = ("train",),
                  k_range: tuple[int, int] | None = None, oracle: float = 0.0, shots: tuple[int, ...] = (0,),
-                 refuse: float = 0.0, seed: int = 20261031):
+                 refuse: float = 0.0, seed: int = 20261031,
+                 shuffle: float = 0.0, all_gold: bool = False, drop_gold_p: float = 0.0):
         """k_range=(5, 10): each row gets the reranked top-k with k drawn per row (the model sees varied context sizes).
         oracle=p: when the gold Điều is missing from that top-k, with probability p a gold passage (found in the dense
         top-`candidates`) replaces a random slot below the first (RAFT); the rest stay as retrieved (= the test case)."""
         self.cfg, self.name, self.splits = cfg, name, splits   # final model: splits=("train", "dev")
         self.k_range, self.oracle, self.rng = k_range, oracle, random.Random(seed)
         self.shots, self.refuse = shots, refuse
+        self.shuffle, self.all_gold, self.drop_gold_p = shuffle, all_gold, drop_gold_p   # context mixing (train.ctx_mix)
         self.out = OUT / name
 
     def build(self) -> Path:
@@ -55,7 +58,7 @@ class SFTData:
             report["val"] = {k: vrep[k] for k in ("in", "kept", "dropped")}
         report |= {"splits": list(self.splits), "model": self.cfg.generate.model, "prompt": self.cfg.generate.prompt,
                    "retrieval_key": self.cfg.retrieval_key(), "k": self.cfg.retrieve.k, "k_range": self.k_range,
-                   "oracle": self.oracle, "shots": self.shots, "refuse": self.refuse, "gold_in_context": self.stats}
+                   "oracle": self.oracle, "shots": self.shots, "refuse": self.refuse, "shuffle": self.shuffle, "all_gold": self.all_gold, "drop_gold": self.drop_gold_p, "gold_in_context": self.stats}
         Decontam.save(report, self.out / "report.json")
         print(f"sft data: {len(kept)} train rows, {report.get('val', {}).get('kept', 0)} val rows -> {self.out}")
         return self.out
@@ -71,6 +74,8 @@ class SFTData:
                 if oracle else {})
         ev, n, gold_in, injected, refused = RetrievalEval(), 0, 0, 0, 0
         qs = list(questions)
+
+        key_of = lambda p: "%s#%s" % ev.passage_keys({"doc": p.doc, "text": p.text})   # noqa: E731
 
         def render(q, ctx, answer, avoid=frozenset()):
             shots = store.pick(q.text, self.rng.choice(self.shots), avoid) if store else []
@@ -88,10 +93,18 @@ class SFTData:
                     n += 1
                     if not has(ctx) and oracle and self.rng.random() < oracle:
                         gold = [p for p in pool.get(q.qid, []) if has([p])]
-                        if gold:
+                        if gold and self.all_gold:   # every gold article the context lacks (multi-article references), not just one
+                            ctx = inject_all(ctx, missing_gold(ctx, pool.get(q.qid, []), key_of, g.pairs), self.rng)
+                            injected += 1
+                        elif gold:
                             ctx[self.rng.randint(1, len(ctx)) - 1 if len(ctx) > 1 else 0] = gold[0]
                             injected += 1
+                    elif train and self.drop_gold_p and has(ctx) and self.rng.random() < self.drop_gold_p:   # a retrieval miss, reference kept
+                        spares = [p for p in top[q.qid] if p not in ctx and not has([p])]
+                        ctx = drop_gold(ctx, lambda p: has([p]), spares, self.rng)
                     gold_in += has(ctx)
+                if train:
+                    ctx = maybe_shuffle(ctx, self.shuffle, self.rng)
                 avoid = frozenset(g.pairs) if g else frozenset()
                 f.write(json.dumps(render(q, ctx, q.answer, avoid), ensure_ascii=False) + "\n")
                 if train and self.refuse and self.rng.random() < self.refuse:
