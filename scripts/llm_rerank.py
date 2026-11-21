@@ -80,6 +80,34 @@ def reorder(passages: list, order: list[int], k: int) -> list:
     return [passages[i - 1] for i in chosen + rest][:k]
 
 
+def permute(passages: list, mode: str, k: int, seed: int = 0) -> list:
+    """Order test: the top-k passages reversed or shuffled (seeded); reranker order is the control."""
+    import random
+
+    top = list(passages[:k])
+    if mode == "reverse":
+        return top[::-1]
+    random.Random(seed).shuffle(top)
+    return top
+
+
+def build_order_cache(mode: str, sets: list[str], k: int, seed: int) -> None:
+    """Dev retrieval cache with the same top-k passages in another order (key of the config with `sets`, e.g. limit=302)."""
+    from config import load
+    from retrieve.retrieval import CACHE
+
+    src = load("configs/exp/A5_v3b.yaml", ["split=dev", "retrieve.k=10"])
+    out = CACHE / f"{load('configs/exp/A5_v3b.yaml', ['split=dev', 'retrieve.k=5', *sets]).retrieval_key()}.jsonl"
+    n = 0
+    with open(out, "w", encoding="utf-8") as fh:
+        for line in (CACHE / f"{src.retrieval_key()}.jsonl").read_text(encoding="utf-8").splitlines():
+            r = json.loads(line)
+            r["passages"] = permute(r["passages"], mode, k, seed + r["qid"])
+            fh.write(json.dumps(r, ensure_ascii=False) + "\n")
+            n += 1
+    print(n, "questions ->", out)
+
+
 def build_cache(tasks_path: Path, reply_dirs: list[str], sets: list[str], k: int) -> None:
     """Write a retrieval cache whose passage order is the helper's (dev only), under the key of the config with `sets` (use limit=300:
     dev has 300 questions, so the run is unchanged but the key is new and no existing cache is touched)."""
@@ -146,12 +174,20 @@ def main() -> None:
     c.add_argument("--replies", nargs="+", required=True)
     c.add_argument("--set", action="append", default=[], dest="sets")
     c.add_argument("--k", type=int, default=5)
+    o = sub.add_parser("build-order-cache", help="box: dev cache with the top-5 reversed / shuffled")
+    o.add_argument("mode", choices=["reverse", "shuffle"])
+    o.add_argument("--set", action="append", default=[], dest="sets")
+    o.add_argument("--k", type=int, default=5)
+    o.add_argument("--seed", type=int, default=0)
     s = sub.add_parser("score")
     s.add_argument("tasks")
     s.add_argument("replies", nargs="+")
     a = ap.parse_args()
     if a.cmd == "export":
         export(Path(a.out))
+        return
+    if a.cmd == "build-order-cache":
+        build_order_cache(a.mode, a.sets, a.k, a.seed)
         return
     if a.cmd == "build-cache":
         build_cache(Path(a.tasks), a.replies, a.sets, a.k)

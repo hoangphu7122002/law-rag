@@ -36,3 +36,13 @@ def test_reorder_puts_the_chosen_candidates_first_and_keeps_the_rest_in_order():
     assert reorder(ps, [3, 1], k=4) == ["c", "a", "b", "d"]          # 1-based candidate numbers
     assert reorder(ps, [], k=3) == ["a", "b", "c"]                      # no answer: original order
     assert reorder(ps, [9, 2], k=2) == ["b", "a"]                       # an unknown number is ignored
+
+
+def test_permute_reverse_and_seeded_shuffle_keep_the_same_passages():
+    from llm_rerank import permute
+
+    ps = list("abcdefg")
+    assert permute(ps, "reverse", k=5, seed=0) == list("edcba")       # the top-5 reversed, the rest cut
+    a = permute(ps, "shuffle", k=5, seed=1)
+    assert sorted(a) == sorted(ps[:5]) and a == permute(ps, "shuffle", k=5, seed=1)
+    assert permute(ps, "shuffle", k=5, seed=2) != a
