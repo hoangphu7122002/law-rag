@@ -1228,18 +1228,6 @@ Underfull \hbox (badness 5652) in paragraph at lines 395--396
 [11]
 
 [12]
-! Undefined control sequence.
-<argument> kho\h 
-                 {a}n
-l.474 ...ig); (c)~clause-level (\textit{kho\h{a}n}
-                                                  ) chunks with the parent a...
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-
 
 [13] (appendix_examples.tex
 
