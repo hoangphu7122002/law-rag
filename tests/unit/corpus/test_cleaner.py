@@ -83,6 +83,13 @@ def test_vbpl_first_line_is_title():
     assert d.text.split("\n") == ["Căn cứ Nghị định 136;", "Điều 1. Phạm vi"]
 
 
+def test_web_folders_first_line_is_title():
+    raw = "Thông tư số 02/2013/TT-BNG Hướng dẫn cấp hộ chiếu\nTHÔNG TƯ\nHướng dẫn cấp hộ chiếu\n____\nCăn cứ Nghị định 136;\nĐiều 1. Phạm vi"
+    for src in ("web", "web_new_laws"):
+        d = LawCleaner.parse(raw, src)
+        assert d.meta["title"].startswith("Thông tư số 02/2013/TT-BNG"), src
+
+
 def test_transform_title_in_embed_and_llm_text_only():
     doc = Document(text=COURSE, id_="x", metadata={"doc": "x", "source": "corpus"})
     [clean] = LawCleaner()([doc])

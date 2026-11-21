@@ -73,7 +73,7 @@ class LawCleaner(TransformComponent):
         text = unicodedata.normalize("NFC", raw).replace("\xa0", " ").replace("\r", "")
         body, info, relations = cls.split_tail(text)
         paras = cls.paragraphs(body)
-        first = paras.pop(0) if (source.startswith("vbpl") or source == "web") and paras else None
+        first = paras.pop(0) if (source.startswith(("vbpl", "web"))) and paras else None
         head, paras = cls.strip_header(paras, mixed_case_title=first is not None)
         paras = cls.strip_signatures(paras)
         paras = [p for p in paras if not BOILER.match(p) and not cls._is_form(p)]
