@@ -24,7 +24,7 @@ Decisions (user + defaults): teacher = DeepSeek-V4 flash via /vibe (alias deepse
 - Decontaminate (Decontam); test never in any file.
 
 ## Stage 5 - training and evaluation (GPU0/GPU1, one LLM job each)
-- Configs (3 seeds each, stop early if mean(new) - mean(A) < .01 after 2 seeds): A = current v3b (existing .6325/.603/.6134), B = v3b + shuffle + inject-all, C = B + 15 % absent, D = C + teacher rows. Train-only models are evaluated on dev300 greedy (paired bootstrap); the final model trains on train+dev and is evaluated once on test.
+- Configs, **2 seeds each, no early stop** (user): A = current v3b (existing 3 seeds .6325/.603/.6134), B = v3b + shuffle + inject-all, C = B + 15 % absent, D = C + teacher rows. Train-only models are evaluated on dev300 greedy (paired bootstrap); the final model trains on train+dev and is evaluated once on test.
 - Then DPO round(s) from the best SFT as before if D wins.
 
 ## Stage monitoring and abort rules (replaces a pilot)
@@ -33,3 +33,18 @@ Decisions (user + defaults): teacher = DeepSeek-V4 flash via /vibe (alias deepse
 
 ## Expected size of the effect
 Ceiling from fixing questions whose gold Dieu is not in the first top-5 is about +.03 ROUGE-L (react notes); data diversity ~ +.01-.02; +.016 per doubling of data. Report as exploratory unless 3-seed means separate by more than the SFT noise (sd .015).
+
+## GPU schedule (maximise use; estimates from the compute log: SFT ~1 h, dev300 greedy eval ~5 min, DPO ~40 min, 9B rollouts ~2.5 h for 2245 q x 2 seeds)
+Principle: B and C need no teacher data, so they train while the teacher data is being made. Two jobs at a time (one per GPU); embed :8101 + rerank :8201 stay on GPU1 (~6 GB); RAM/disk guard before every launch; GPU util/temp check every ~10 min.
+
+| Slot | GPU0 | GPU1 | CPU / API |
+|---|---|---|---|
+| Tonight (GPU0 idle now) | 9B ReAct rollouts train + dev, K=2 (control index; tools via GPU1 servers) | finish full68 (dev, test) | TDD: --shuffle / inject-all / --absent in sft_data; step-0 diagnostics; gold parser fix; licence read |
+| D+1 08:00-09:15 | SFT B seed1 -> eval | SFT B seed2 -> eval | Stage 2 grading; Stage 3 DeepSeek repair (paced batches, ~1-2 h) |
+| 09:15-10:30 | SFT C seed1 -> eval | SFT C seed2 -> eval | repair continues; Stage 4 build D rows, decontaminate |
+| 10:30-12:00 | SFT D seed1 -> eval | SFT D seed2 -> eval | paired bootstrap B/C vs A |
+| 12:00-13:00 | DPO round 1 from best SFT | SFT train+dev of the best config (final) | |
+| 13:00-14:30 | DPO round 2 + eval (greedy) | final DPO from train+dev SFT | report text, tables |
+| 14:30-15:00 | test eval once (greedy, MBR8) | idle -> spare: extra seed for the closest pair | CHANGELOG, compute-log, PDF |
+
+Gaps are filled with the third seed of any pair whose paired difference is within the noise band (.005-.015).
