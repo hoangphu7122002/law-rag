@@ -26,7 +26,7 @@ trap down EXIT
 down
 docker compose -f $C build api   # the image must contain the current src (streaming, metrics)
 case $L in
-  A) need 0 30000; TAG="A_1gpu_llm.45"
+  A) need 0 30000; TAG="A_1gpu_llm${LLM_SHARE:-.45}"
      GPU=0 API_PORT=8080 docker compose -p lawrag-a -f $C up -d; wait_health 8080; URL=http://localhost:8080 ;;
   B) need 0 38000; need 1 38000; TAG="B_2gpu_dp_llm.6"
      for i in 0 1; do GPU=$i LLM_SHARE=0.6 API_PORT=808$((i+1)) docker compose -p lawrag-b$i -f $C up -d; done
