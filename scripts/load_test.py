@@ -33,6 +33,45 @@ def summarize_load(recs: list[dict], wall: float, users: int) -> dict:
             "total_mean": round(st.mean(total), 3) if total else None}
 
 
+def parse_smi(text: str) -> dict[int, float]:
+    """`nvidia-smi --query-gpu=index,utilization.gpu --format=csv,noheader,nounits` -> {gpu: util %}"""
+    out = {}
+    for ln in text.strip().splitlines():
+        i, u = (x.strip() for x in ln.split(","))
+        out[int(i)] = float(u)
+    return out
+
+
+def mean_by_gpu(samples: list[dict[int, float]]) -> dict[str, float]:
+    if not samples:
+        return {}
+    return {f"gpu{g}_util": round(st.mean(s[g] for s in samples if g in s), 1) for g in sorted(samples[0])}
+
+
+def level_problem(row: dict):
+    """A level that did not really exercise the stack: nothing succeeded, or every GPU stayed idle while requests ran."""
+    if row["ok"] == 0:
+        return f"no request succeeded ({row['errors']} errors, {row['rejected_429']} rejected)"
+    utils = [v for k, v in row.items() if k.endswith("_util")]
+    if utils and max(utils) < 5:
+        return f"all GPUs idle (max mean util {max(utils)} %) although {row['ok']} requests completed: requests are not reaching the LLM"
+    return None
+
+
+async def sample_gpus(samples: list, stop: asyncio.Event) -> None:
+    import subprocess
+
+    while not stop.is_set():
+        try:
+            r = subprocess.run(["nvidia-smi", "--query-gpu=index,utilization.gpu", "--format=csv,noheader,nounits"],
+                               capture_output=True, text=True, timeout=5)
+            if r.returncode == 0:
+                samples.append(parse_smi(r.stdout))
+        except Exception:  # noqa: BLE001 — no nvidia-smi on this host: utilisation is simply not reported
+            return
+        await asyncio.sleep(1.0)
+
+
 async def one_request(client, url: str, question: str) -> dict:
     t0 = time.perf_counter()
     ttft = None
@@ -60,6 +99,9 @@ async def run_level(url: str, questions: list[str], users: int, seconds: float) 
     import httpx
 
     recs: list[dict] = []
+    samples: list[dict[int, float]] = []
+    stop_ev = asyncio.Event()
+    sampler = asyncio.create_task(sample_gpus(samples, stop_ev))
     stop = time.perf_counter() + seconds
     counter = iter(range(10**9))
     async with httpx.AsyncClient(limits=httpx.Limits(max_connections=users + 4)) as client:
@@ -70,7 +112,9 @@ async def run_level(url: str, questions: list[str], users: int, seconds: float) 
         t0 = time.perf_counter()
         await asyncio.gather(*(user() for _ in range(users)))
         wall = time.perf_counter() - t0
-    return summarize_load(recs, wall, users)
+    stop_ev.set()
+    await sampler
+    return summarize_load(recs, wall, users) | mean_by_gpu(samples)
 
 
 def main() -> None:
@@ -88,6 +132,10 @@ def main() -> None:
     for u in (int(x) for x in a.users.split(",")):
         row = {"tag": a.tag} | asyncio.run(run_level(a.url, qs, u, a.seconds))
         print(json.dumps(row), flush=True)
+        problem = level_problem(row)
+        if problem:
+            print(f"PROBLEM at users={u}: {problem}", flush=True)
+            raise SystemExit(2)   # fail fast: a broken stack must not produce a full table of zeros
         if a.out:
             with open(a.out, "a") as f:
                 f.write(json.dumps(row) + "\n")
