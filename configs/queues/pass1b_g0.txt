@@ -1,0 +1,5 @@
+# Probe: 9B with tools (search_law/get_article/kg_related), dev. Needs the tool-call parser, so the server is restarted with --tools. Runs after pass1_g0 finishes.
+serve Qwen/Qwen3.5-9B --gpu 0 --share 0.6 --tools
+configs/exp/P1_9b.yaml --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set split=dev --set generate.agent_tools=[search_law,get_article,kg_related] --set generate.tool_prompt=compact --set generate.max_turns=4
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-P1_9b.*-g0"
+do tmux kill-session -t lawrag-llm-g0
