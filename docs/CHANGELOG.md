@@ -433,3 +433,11 @@ Test split (200 questions, 0 errors, 0 empty), retrieval as in the dev runs (den
 - Bug found by the first concurrent load test: the API aborted ("BLAS: too many memory regions"); fixed (thread pool + OPENBLAS_NUM_THREADS=1). Bench scripts fail fast on broken levels, report GPU util/temperature, stop at 85 C.
 - Layouts (SLO p95 < 10 s): one card 6-7 users, two stacks + nginx (B) 15-18, split LLM / aux (C) 18; throughput at 64 users 3.5 / 5.8 / 5.6 req/s; burst, spike, p99 in the report (Sec. 'Capacity under concurrent load'). vLLM flags (max-num-seqs, batched tokens, FP8 KV, prefix caching): defaults kept.
 - Extra: cited-but-missing laws fetched (9 laws / 24 pages, not yet indexed; 52 still missing, mostly internal bank documents), chunk.split options (sentence / khoan / semantic) with TDD, low-score analysis (scripts/low_score_analysis.py), disk cleanup (81 GB), Future Work section.
+
+## Step 36 — attempts to raise the score, chunking Stage 1, seed replication (2026-11-21)
+- Failure analysis (dev300 mean .664): high (>=.8) 34 % mean .91, middle 48 % mean .63 (54 % of the loss), tail 17 % mean .28 (37 %); P/R of LCS equal, median length 292 vs 294. Oracle ceilings: model answer vs perfect gold quotation +.059; vs {answer, 5 quotes} +.051; tail alone .28 -> .42.
+- Null / negative (dev): truncation +.0006, tone-mark style -.0017, whole-article quote -.085, newer-law preference refuted (5 newer / 9 older), rank-1 quote .534, MBR over {answer, quotes} .557, learned selector CV .644 (oracle .715), cite-weight DPO .4/.6 = .6551/.6458 vs .6543.
+- Learning curve (SFT v3b recipe, 2 seeds per size): 25 % .584/.586, 50 % .601/.605, 100 % .6325/.603/.6134 (3 seeds, sd .015): ~+.016 per doubling.
+- Chunking Stage 1 (retrieval only, store frozen): khoan2000 +.004, sent1000 -.004, khoan1000 -.015, rec1000 -.023 (dev Dieu@5 vs control .9053; test similar); semantic 1000 produced 1.88 M chunks and was OOM-killed at 46 GB after 3.7 h. None passed the gate.
+- DPO replication from SFT seed 555 (.6134): round 1 .6399 (+.027), round 2 .6339 (-.006): the first-round gain replicates, the second-round gain does not. The reported chain starts from the best of 3 SFT seeds.
+- Ops: RAM cap per run 46 GB (1M-chunk index builds were OOM-killed at 32), own systemd unit per run (transient-scope clash lost a run start), GPU watchdog in the monitors.
