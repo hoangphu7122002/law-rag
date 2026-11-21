@@ -38,7 +38,7 @@ Retrieval-augmented generation \cite{lewis2020rag,rag_survey} grounds a language
 \begin{enumerate}[leftmargin=*]
 \item A corpus-aware retrieval stack (one chunk per \dieu, cleaning and de-duplication, an index extended with the laws that the QA set cites, dense top-50 followed by a cross-encoder reranker) that raises the fraction of questions whose cited law is retrievable from $0$ to $0.62$ and, with an untuned Vietnamese 3B generator, test \rl{} from $0.171$ to $0.443$ (Section~\ref{sec:retrieval}).
 \item A supervised recipe for a 2.3B model (decontaminated pairs, few-shot demonstrations drawn from nearest training questions, gold-passage injection, refusal rows) worth $+0.20$ \rl{} over the raw model and $+0.03$ over plain SFT on dev (Section~\ref{sec:generator}).
-\item On-policy, iterated DPO on best-versus-worst self-samples scored by the same lexical reward as RL: two rounds give $+0.031$ dev \rl{} \ci{+0.014}{+0.049} over the SFT model under greedy decoding, replicated with a second seed, while a third round degrades (Section~\ref{sec:posttrain}).
+\item On-policy, iterated DPO on best-versus-worst self-samples scored by the same lexical reward as RL: two rounds give $+0.031$ dev \rl{} \ci{+0.014}{+0.049} over the SFT model under greedy decoding, replicated with a second DPO seed on the same SFT model; starting instead from a second SFT seed, round~1 again helps ($+0.027$) but round~2 adds nothing (Section~\ref{sec:posttrain}); a third round degrades.
 \item A systematic negative-results record and an oracle analysis showing where the remaining error lies (answer wording, not retrieval) (Sections~\ref{sec:negative} and~\ref{sec:analysis}).
 \item A reproducible, containerised QA service with separate LLM, embedding and reranking endpoints, a refusal guard for off-topic questions, and measured latency (Section~\ref{sec:deploy}).
 \end{enumerate}
@@ -332,7 +332,8 @@ Task arithmetic v3b + (c3f$-$v0) & .652 & .667 & +.019 \ci{+.006}{+.034}; MBR $+
 DPO round 1 ($\mathrm{dpo}_a$) & .654 & .659 & +.019 \ci{+.001}{+.038}\\
 DPO round 1, lr $5\!\times\!10^{-5}$ + SFT term & .642 & .659 & worse than $\mathrm{dpo}_a$\\
 \best{DPO round 2 ($\mathrm{dpo}_{a2}$)} & \best{.664} & \best{.672} & \best{+.031 \ci{+.014}{+.049}}; MBR $+.015$ \ci{-.001}{+.030}\\
-\quad second seed ($\mathrm{dpo}_{a2}'$) & .662 & .665 & +.030 \ci{+.011}{+.050}\\
+\quad second DPO seed ($\mathrm{dpo}_{a2}'$) & .662 & .665 & +.030 \ci{+.011}{+.050}\\
+\textit{Seed 555}: SFT/r1/r2 & .613/.640/.634 & -- & r1 $+.027$; r2 $-.006$\\
 \quad MBR with 4 candidates & -- & .667 & \\
 DPO round 3 ($\mathrm{dpo}_{a3}$) & .635 & .642 & $-.029$ \ci{-.045}{-.012} vs round 2\\
 \bottomrule
@@ -384,6 +385,49 @@ $\beta$ & $0.05$ & .642 & $-.012$ vs.\ reference\\
 \end{tabular}
 \end{table}
 No single factor improves on the final configuration: the reranker over $50$ candidates, $k{=}5$ and two shots are at or near the optimum, and removing the reranker costs $0.022$. The only nominally better setting ($k{=}8$, $+.002$) is not significant and would lengthen the context, so it is not adopted. No DPO design variant exceeds the reference ($0.1$/$0.1$), hence the two-round recipe was not re-run. \textbf{Best combined configuration:} because the per-factor winners coincide with the final configuration, the combination \emph{is} the final system, and no further test run was made; we found no further gain from combining the best per-factor settings. The ablation grid was evaluated on dev only, so these conclusions inherit the selection caveats of Section~\ref{sec:limits}.
+
+\subsection{Further attempts to raise the score}\label{sec:further}
+After the main system was fixed we tried to raise the score further with the levers that the analysis of low-scoring answers suggested. Nothing below improved the greedy dev \rl{} of the final system ($.6637$); the results are reported because they bound what this recipe can reach.
+\paragraph{Where the loss is.} On dev ($n{=}300$, mean $.664$) $34\%$ of the answers score $\ge.8$ (mean $.91$), $48\%$ score $.4$--$.8$ (mean $.63$) and $17\%$ score below $.4$ (mean $.28$); the middle group accounts for $54\%$ of the distance to $1.0$ and the tail for $37\%$. Precision and recall of the longest common subsequence are about equal in every group and the median lengths match ($292$ against $294$ tokens), so length is not the problem. Among the tail, the answer cites the reference's article in only $2$ of $27$ questions (against $102$ of $118$ in the high group): the typical failure is the right law with a neighbouring article, or a different law that also fits an under-specified question. If for each question the better of the model answer and a perfect verbatim quotation of the gold article were chosen, dev \rl{} would reach $.722$ ($+.059$; $+.032$ from the middle group and $+.025$ from the tail), and using only what is available at inference (the model answer and a quotation of each of the five retrieved passages) $.715$; the tail alone would rise from $.28$ to $.42$ because references also contain text that is not in the article, so it cannot be raised ``to the top''.
+\begin{table}[H]
+\centering
+\caption{Attempts to raise the score (greedy dev \rl{} unless stated; reference $.6637$ or the stated baseline).}\label{tab:further}
+\small\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}p{6.6cm}p{3.2cm}p{4.6cm}@{}}
+\toprule
+Attempt & Result & Verdict\\
+\midrule
+Truncate long answers (best at $3000$ chars) & $+.0006$ & noise\\
+Convert tone-mark style (the model already matches the references) & $-.0017$ & none\\
+Replace the quotation by the whole article, verbatim & $-.085$ & worse\\
+Prefer the newer law (reference law newer in $5$, older in $9$ of $14$ wrong-law cases) & -- & refuted\\
+Always quote the rank-1 passage / MBR over \{answer, quotes\} & $.534$ / $.557$ & worse\\
+Learned selector over \{answer, 5 quotes\} (5-fold CV on dev) & $.644$ & worse (oracle $.715$)\\
+DPO round~1 with cited-article weight $0.4$ / $0.6$ in the reward (original $0.2$: $.6543$) & $.6551$ / $.6458$ & no gain\\
+SFT on $25\%$ / $50\%$ / $100\%$ of the training questions (two seeds each) & $.585$ / $.603$ / $.616$ (mean of three seeds) & $+.016$ per doubling of the data\\
+\bottomrule
+\end{tabular}
+\end{table}
+\paragraph{More data.} Table~\ref{tab:further} gives a learning curve of about $+0.016$ \rl{} per doubling of the training questions; adding the development questions ($+13\%$) would add about $+0.003$, so more data is a slow lever.
+\paragraph{Chunking.} We re-indexed the store with other ways of cutting the long articles ($17\%$ of the $4.6{\times}10^5$ articles, but $67\%$ of the characters) and measured retrieval only, with the final dense-plus-reranker stack (Table~\ref{tab:chunk}). Fixed-size pieces of $1{,}000$ characters lose context and lower \dieu{}@5 (dev $-.023$, interval \ci{-.046}{-.004}); cutting at sentence ends recovers most of the loss ($.9015$, $\approx$ control) and packing whole clauses up to $2{,}000$ characters is indistinguishable from the control ($+.004$, \ci{-.011}{+.019}). Semantic chunking (breakpoints at the $90$th percentile of neighbouring-sentence distance) produced $1.88$ million chunks against $0.72$ million and its index build ($3.7$\,h) exceeded the $46$\,GB memory cap, so it did not complete; this agrees with reports that semantic chunking does not beat simple splitters on natural documents \cite{vectara}. No variant passed the pre-stated gate (lower bound of the \dieu{}@5 interval above zero), so no generation run was made.
+\begin{table}[H]
+\centering
+\caption{Chunking variants, retrieval only (dense top-50 $\to$ reranker top-5). \dieu{}@5 with the paired difference to the control (one chunk per article, split at $2{,}000$ characters) and its $95\%$ interval.}\label{tab:chunk}
+\small\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Variant & dev \dieu{}@5 & difference & test \dieu{}@5 & difference\\
+\midrule
+Control (per-article, $2000$) & .905 & -- & .898 & --\\
+Clauses merged up to $2000$ & .909 & $+.004$ \ci{-.011}{+.019} & .904 & $+.006$ \ci{.000}{+.017}\\
+Sentences packed to $1000$ & .902 & $-.004$ \ci{-.019}{+.011} & .893 & $-.006$ \ci{-.028}{+.017}\\
+Clauses merged up to $1000$ & .890 & $-.015$ \ci{-.038}{+.004} & .876 & $-.023$ \ci{-.057}{+.006}\\
+Fixed pieces of $1000$ & .883 & $-.023$ \ci{-.046}{-.004} & .876 & $-.023$ \ci{-.057}{+.006}\\
+Semantic $1000$ & \multicolumn{4}{c}{index build did not complete (memory)}\\
+\bottomrule
+\end{tabular}
+\end{table}
+\paragraph{Seed sensitivity.} Three SFT seeds on the full data give $.6325$, $.603$ and $.613$ (mean $.616$, standard deviation $.015$), so the reported chain starts from the best of three SFT runs and the final $.6637$ depends on that choice. Repeating the two DPO rounds from the second best SFT seed (the one with $.613$) reproduces the first-round gain ($.640$, $+.027$) but not the second ($.634$): the robust effect of on-policy DPO is about $+.02$ to $+.03$ over its SFT model, and the additional benefit of the second round is not confirmed.
 
 \subsection{Negative and null results}\label{sec:negative}
 \begin{table}[H]
@@ -517,7 +561,7 @@ FP8 KV cache & 2.14 & 16.2 & 2.99 & 20.6\\
 
 \section{Limitations and Threats to Validity}\label{sec:limits}
 \begin{itemize}[leftmargin=*]
-\item \textbf{Selection on dev.} Up to about ten variants were compared in several stages on a $300$-question dev set; intervals are paired but not corrected for multiple comparisons, and the \texttt{dev\_clean} (166) and \texttt{dev\_strict} (74) subsets are small. Round~2 DPO is replicated by a second DPO seed on both dev and test, other gains are single-run. The SFT stage itself is seed-sensitive: a second SFT seed (v3b) reached only $.603$ greedy / $.641$ MBR-8 on dev against $.633$ / $.658$ for the reported seed, so the absolute level of the pipeline depends on the SFT run; DPO on top of the second SFT seed was not run.
+\item \textbf{Selection on dev.} Up to about ten variants were compared in several stages on a $300$-question dev set; intervals are paired but not corrected for multiple comparisons, and the \texttt{dev\_clean} (166) and \texttt{dev\_strict} (74) subsets are small. Round~2 DPO is replicated by a second DPO seed on both dev and test, other gains are single-run. The SFT stage itself is seed-sensitive (three seeds: $.633$, $.603$, $.613$ greedy dev \rl{}); the reported system starts from the best of the three, and repeating the DPO rounds from another SFT seed reproduces the first-round gain but not the second (Section~\ref{sec:further}), so the absolute level $.664$ is optimistic by a few hundredths.
 \item \textbf{Test-set history.} The $200$-question test set was also scored for earlier configurations (Table~\ref{tab:testold}); the final configuration was fixed on dev beforehand. Test \rl{} differences below $\approx0.02$ are within bootstrap noise.
 \item \textbf{Reference-style metric.} All metrics are lexical or embedding similarity to references written in a fixed template; they do not measure legal correctness, and models fine-tuned on the same template are favoured. Train and test answers share $13$-grams in $32\%$ of test questions.
 \item \textbf{Retrieval store.} The index was extended with laws cited by the QA set (permitted by the protocol: the store may hold laws but no test QA pairs); law-hit is $0.62$ on test; for the remaining questions (including those without an extractable law identifier) the answer must rely on related passages.
