@@ -28,6 +28,7 @@ def summarize_load(recs: list[dict], wall: float, users: int) -> dict:
     ttft, total = [r["ttft"] for r in ok], [r["total"] for r in ok]
     return {"users": users, "ok": len(ok), "errors": sum(1 for r in recs if "status" in r and r["status"] != 429),
             "rejected_429": sum(1 for r in recs if r.get("status") == 429),
+            "top_error": (lambda e: max(set(e), key=e.count) if e else None)([r["error"] for r in recs if "error" in r]),
             "rps": round(len(ok) / wall, 3) if wall > 0 else 0.0,
             "ttft_p50": pct(ttft, 0.5), "ttft_p95": pct(ttft, 0.95), "total_p50": pct(total, 0.5), "total_p95": pct(total, 0.95),
             "total_mean": round(st.mean(total), 3) if total else None}
@@ -66,6 +67,35 @@ def find_max_users(measure, start: int, limit: int, slo_p95: float):
     return lo, rows
 
 
+def parse_phases(spec: str) -> list[tuple[float, float]]:
+    """"0.5:20,4:10,0.5:20" -> [(rate req/s, seconds)]: baseline, burst, baseline (open loop, like trace replay)."""
+    return [(float(r), float(d)) for r, d in (p.split(":") for p in spec.split(","))]
+
+
+def poisson_arrivals(phases: list[tuple[float, float]], seed: int = 0) -> list[tuple[float, int]]:
+    """[(arrival time s, phase index)]: Poisson arrivals at each phase's rate, phases back to back."""
+    import random
+
+    rng, out, t0 = random.Random(seed), [], 0.0
+    for i, (rate, dur) in enumerate(phases):
+        t = t0
+        while rate > 0:
+            t += rng.expovariate(rate)
+            if t >= t0 + dur:
+                break
+            out.append((t, i))
+        t0 += dur
+    return out
+
+
+def summarize_phases(recs: list[dict], phases: list[tuple[float, float]]) -> dict:
+    rows = []
+    for i, (rate, dur) in enumerate(phases):
+        rows.append({"phase": i, "rate": rate, "seconds": dur} | summarize_load([r for r in recs if r["phase"] == i], dur, 0))
+    pre, post = rows[0]["total_p95"], rows[-1]["total_p95"]
+    return {"phases": rows, "recovery_p95_ratio": round(post / pre, 2) if pre and post else None}
+
+
 def parse_smi(text: str) -> dict[int, float]:
     """`nvidia-smi --query-gpu=index,utilization.gpu --format=csv,noheader,nounits` -> {gpu: util %}"""
     out = {}
@@ -81,10 +111,41 @@ def mean_by_gpu(samples: list[dict[int, float]]) -> dict[str, float]:
     return {f"gpu{g}_util": round(st.mean(s[g] for s in samples if g in s), 1) for g in sorted(samples[0])}
 
 
+async def run_burst(url: str, questions: list[str], phases: list[tuple[float, float]], seed: int = 0) -> dict:
+    import httpx
+
+    arrivals = poisson_arrivals(phases, seed)
+    recs: list[dict] = []
+    async with httpx.AsyncClient(limits=httpx.Limits(max_connections=len(arrivals) + 4)) as client:
+        async def fire(i: int, at: float, phase: int):
+            await asyncio.sleep(max(0.0, at - (time.perf_counter() - t0)))
+            recs.append({"phase": phase} | await one_request(client, url, questions[i % len(questions)]))
+
+        t0 = time.perf_counter()
+        await asyncio.gather(*(fire(i, at, ph) for i, (at, ph) in enumerate(arrivals)))
+    return summarize_phases(recs, phases) | {"requests": len(arrivals)}
+
+
+async def run_spike(url: str, questions: list[str], n: int) -> dict:
+    """n requests released at the same instant after an idle moment; reports the whole burst as one level."""
+    import httpx
+
+    recs: list[dict] = []
+    async with httpx.AsyncClient(limits=httpx.Limits(max_connections=n + 4)) as client:
+        t0 = time.perf_counter()
+
+        async def one(i):
+            recs.append(await one_request(client, url, questions[i % len(questions)]))
+
+        await asyncio.gather(*(one(i) for i in range(n)))
+        wall = time.perf_counter() - t0
+    return summarize_load(recs, wall, n) | {"makespan_s": round(wall, 2)}
+
+
 def level_problem(row: dict):
     """A level that did not really exercise the stack: nothing succeeded, or every GPU stayed idle while requests ran."""
     if row["ok"] == 0:
-        return f"no request succeeded ({row['errors']} errors, {row['rejected_429']} rejected)"
+        return f"no request succeeded ({row['errors']} errors, mostly {row.get('top_error')}; {row['rejected_429']} rejected)"
     utils = [v for k, v in row.items() if k.endswith("_util")]
     if utils and max(utils) < 5:
         return f"all GPUs idle (max mean util {max(utils)} %) although {row['ok']} requests completed: requests are not reaching the LLM"
@@ -124,8 +185,8 @@ async def one_request(client, url: str, question: str) -> dict:
                 elif event == "error":
                     return {"status": 503}
         return {"ttft": ttft if ttft is not None else time.perf_counter() - t0, "total": time.perf_counter() - t0}
-    except Exception:  # noqa: BLE001
-        return {"status": -1}
+    except Exception as e:  # noqa: BLE001
+        return {"status": -1, "error": type(e).__name__}
 
 
 async def run_level(url: str, questions: list[str], users: int, seconds: float) -> dict:
@@ -160,11 +221,28 @@ def main() -> None:
     ap.add_argument("--n", type=int, default=100, help="dev questions to cycle")
     ap.add_argument("--tag", default="", help="label stored with every line (e.g. the GPU layout)")
     ap.add_argument("--out", default="")
+    ap.add_argument("--burst", default="", help='open-loop phases "rate:seconds,..." e.g. "0.5:30,4:20,0.5:40" (baseline, burst, recovery)')
+    ap.add_argument("--spike", default="", help="comma list of N: N requests released at once (e.g. 8,16,32,64)")
     ap.add_argument("--find-max", action="store_true", help="search the largest user count that meets the SLO instead of sweeping --users")
     ap.add_argument("--slo-p95", type=float, default=10.0, help="--find-max: p95 total latency bound in seconds")
     ap.add_argument("--limit", type=int, default=256, help="--find-max: upper bound on users")
     a = ap.parse_args()
     qs = [q.text for q in QASet().load("dev")[: a.n]]
+    if a.burst:
+        row = {"tag": a.tag, "burst": a.burst} | asyncio.run(run_burst(a.url, qs, parse_phases(a.burst)))
+        print(json.dumps(row), flush=True)
+        if a.out:
+            with open(a.out, "a") as f:
+                f.write(json.dumps(row) + "\n")
+        return
+    if a.spike:
+        for n in (int(x) for x in a.spike.split(",")):
+            row = {"tag": a.tag, "spike": n} | asyncio.run(run_spike(a.url, qs, n))
+            print(json.dumps(row), flush=True)
+            if a.out:
+                with open(a.out, "a") as f:
+                    f.write(json.dumps(row) + "\n")
+        return
     if a.find_max:
         def measure(u):
             row = {"tag": a.tag} | asyncio.run(run_level(a.url, qs, u, a.seconds))
