@@ -7,12 +7,12 @@ Rows whose reference is a refusal are skipped (the SFT refusal rows already teac
 from train.grpo import is_refusal, score
 
 
-def build_pairs(rows: list[dict], min_margin: float = 0.1) -> list[dict]:
+def build_pairs(rows: list[dict], min_margin: float = 0.1, cite_weight: float = 0.2) -> list[dict]:
     pairs = []
     for r in rows:
         if is_refusal(r["reference"]):
             continue
-        scored = sorted(((score(c, r["reference"], r["prompt"]), c) for c in set(r["cands"])), reverse=True)
+        scored = sorted(((score(c, r["reference"], r["prompt"], cite_weight=cite_weight), c) for c in set(r["cands"])), reverse=True)
         (hi, best), (lo, worst) = scored[0], scored[-1]
         if best.strip() and hi - lo >= min_margin:
             pairs.append({"qid": r["qid"], "prompt": r["prompt"], "chosen": best, "rejected": worst, "margin": round(hi - lo, 4)})

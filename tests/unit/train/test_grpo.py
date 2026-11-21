@@ -31,3 +31,10 @@ def test_filter_long():
     kept, dropped = filter_long(rows, lambda s: len(s.split()), 3)
     assert kept == [rows[0], rows[2]] and dropped == 1
     assert filter_long(rows, lambda s: 3, 3) == (rows, 0)
+
+
+def test_cite_weight_raises_the_cost_of_a_missing_article_and_defaults_to_the_old_reward():
+    wrong = "Điều 9 quy định mức phạt tiền đối với hành vi vi phạm hành chính trong lĩnh vực ngân hàng."
+    assert score(wrong, REF, PROMPT) == score(wrong, REF, PROMPT, cite_weight=0.2)
+    assert score(wrong, REF, PROMPT, cite_weight=0.4) < score(wrong, REF, PROMPT)
+    assert score(REF, REF, PROMPT, cite_weight=0.4) == 1.0           # an exact answer is still a full reward

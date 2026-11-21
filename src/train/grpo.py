@@ -44,7 +44,7 @@ def filter_long(rows, count_tokens, max_tokens: int):
     return kept, len(rows) - len(kept)
 
 
-def score(pred: str, ref: str, prompt: str, length_pen: bool = True, cos: float | None = None) -> float:
+def score(pred: str, ref: str, prompt: str, length_pen: bool = True, cos: float | None = None, cite_weight: float = 0.2) -> float:
     """Reward of one completion. Pure function (unit-testable, no GPU). `cos` = cosine to the reference (config 3), else None."""
     p = pred.strip()
     if not p:
@@ -57,10 +57,11 @@ def score(pred: str, ref: str, prompt: str, length_pen: bool = True, cos: float 
     want = set(DIEU.findall(ref))
     if want:
         cite = len(want & set(DIEU.findall(p))) / len(want)
+    rest = (1.0 - cite_weight) / 0.8      # the other terms keep their proportions; cite_weight 0.2 is the original reward
     if cos is None:
-        r = 0.6 * M.rouge_l_score(p, ref) + 0.2 * M.token_overlap_score(p, ref) + 0.2 * cite
+        r = rest * (0.6 * M.rouge_l_score(p, ref) + 0.2 * M.token_overlap_score(p, ref)) + cite_weight * cite
     else:
-        r = 0.5 * M.rouge_l_score(p, ref) + 0.2 * cos + 0.1 * M.token_overlap_score(p, ref) + 0.2 * cite
+        r = rest * (0.5 * M.rouge_l_score(p, ref) + 0.2 * cos + 0.1 * M.token_overlap_score(p, ref)) + cite_weight * cite
     g = ngrams(p)
     copy = len(g & ngrams(prompt)) / len(g) if g else 0.0       # share of 8-grams found in the prompt context
     ratio = len(M.normalize_text(p).split()) / max(1, len(M.normalize_text(ref).split()))
