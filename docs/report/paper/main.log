@@ -1236,13 +1236,6 @@ Underfull \hbox (badness 5652) in paragraph at lines 396--397
 [10]
 
 [11]
-Overfull \hbox (13.2424pt too wide) in paragraph at lines 458--477
-\TU/TimesNewRoman(0)/m/n/10.95 The QA service streams its answer (server-sent e
-vents, plus an OpenAI-compatible \TU/Menlo(0)/m/n/10.95 /v1/chat/completions\TU
-/TimesNewRoman(0)/m/n/10.95 ),
- []
-
-
 
 [12]
 Package pgfplots info on input line 482: Using 'lua backend=false' for axis: xm
@@ -1286,7 +1279,7 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 Here is how much of TeX's memory you used:
  36520 strings out of 402809
  884283 string characters out of 5440814
- 1469230 words of memory out of 5000000
+ 1467230 words of memory out of 5000000
  64877 multiletter control sequences out of 15000+600000
  637862 words of font info for 122 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
