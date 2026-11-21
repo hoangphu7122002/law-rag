@@ -6,6 +6,7 @@
 \usepackage{booktabs,multirow,graphicx,caption,amsmath,amssymb,enumitem,xcolor,float,array,url}
 \usepackage{pgfplots}
 \usepackage{tikz}
+\usepgfplotslibrary{groupplots}
 \usetikzlibrary{positioning,arrows.meta,shapes.geometric,fit,backgrounds}
 \usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
 \pgfplotsset{compat=1.17}
@@ -453,6 +454,48 @@ Single-request stage means are retrieve $0.08$\,s, rerank $0.21$\,s and generate
 Ten questions were sent to the live service (transcript in \texttt{docs/report/demo.md}): six development questions with references (\rl{} $.558,.617,.753,.601,.675,.821$; mean $.671$), three free questions (traffic fines, personal income tax deductions, capital adequacy ratio), and one off-topic question (``weather in Hanoi''). For the traffic question the system answers in the reference register (``\textit{Căn cứ theo khoản 1 Điều 6 Nghị định 100/2019/NĐ-CP được sửa đổi bởi \ldots}'') and quotes the retrieved article; we did not verify its legal validity (the retrieved text may predate later amendments), which illustrates that the metric rewards similarity to references, not legal correctness. The first run of the off-topic question exposed a failure (an invented, repeating weather bulletin while every reranker score was $0.000$), which motivated the refusal guard: with $\tau{=}0.001$ the service now answers with the fixed refusal sentence in $0.3$\,s without calling the LLM, and only $4$ of $300$ dev questions fall below $\tau$.
 
 %------------------------------------------------------------------------------
+\subsection{Capacity under concurrent load and GPU layout}\label{sec:capacity}
+The QA service streams its answer (server-sent events, plus an OpenAI-compatible \texttt{/v1/chat/completions}), exposes Prometheus metrics, and can bound the number of running and queued requests (HTTP~429 beyond the queue). We measured three layouts on the two L40S cards, with a closed-loop load generator (each virtual user sends dev questions back to back for $30$\,s; client-side times through the streaming endpoint; GPU utilisation and temperature sampled every second, a run stops at $85^\circ$C). The target is the $95$th percentile of the total latency; $p_{99}$ is shown beside it. \textbf{A$'$}: one card, everything shared (LLM $60\%$ of memory, the baseline). \textbf{B}: one complete stack per card (LLM, embedder, reranker, API) behind an nginx least-connections balancer. \textbf{C}: the LLM alone on card~0, embedder and reranker on card~1. The first load test also exposed a defect that unit tests had not: under concurrent requests the API process aborted (OpenBLAS ``too many memory regions'' raised by dozens of fresh threads calling FAISS); retrieval now runs on a bounded thread pool with one BLAS thread each, and every run below has zero errors and zero API restarts.
+\begin{table}[H]
+\centering
+\caption{Closed-loop sweep (dev questions, $n$ users, $30$\,s per level). req/s = completed requests per second; latencies are end-to-end seconds.}\label{tab:capacity}
+\small\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}rccccccccc@{}}
+\toprule
+ & \multicolumn{3}{c}{A$'$ (1 card)} & \multicolumn{3}{c}{B (2 cards, replicas)} & \multicolumn{3}{c}{C (2 cards, split)}\\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}
+users & req/s & $p_{95}$ & $p_{99}$ & req/s & $p_{95}$ & $p_{99}$ & req/s & $p_{95}$ & $p_{99}$\\
+\midrule
+1 & .26 & 6.9 & 6.9 & .26 & 7.0 & 7.0 & .26 & 7.0 & 7.0\\
+4 & .89 & 8.9 & 9.6 & 1.07 & 7.9 & 7.9 & 1.05 & 8.2 & 8.6\\
+8 & 1.59 & 11.0 & 11.2 & 1.85 & 8.7 & 9.3 & 1.84 & 9.2 & 9.9\\
+16 & 2.43 & 14.6 & 15.7 & 2.87 & 11.3 & 11.7 & 2.87 & 11.1 & 11.8\\
+32 & 3.07 & 19.7 & 24.4 & 4.65 & 12.7 & 16.2 & 4.61 & 12.9 & 15.6\\
+64 & 3.48 & 30.9 & 33.9 & 5.76 & 18.4 & 25.3 & 5.63 & 18.5 & 22.4\\
+\bottomrule
+\end{tabular}
+\end{table}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{groupplot}[group style={group size=2 by 1,horizontal sep=1.6cm},width=0.46\linewidth,height=5cm,xmode=log,log basis x=2,xtick={1,2,4,8,16,32,64},xticklabels={1,2,4,8,16,32,64},ymajorgrids,grid style={dotted},xlabel={concurrent users}]
+\nextgroupplot[ylabel={requests / s},legend style={at={(0.02,0.98)},anchor=north west,font=\scriptsize}]
+\addplot[mark=o,thick,blue] coordinates {(1,.262)(2,.48)(4,.893)(8,1.586)(16,2.427)(32,3.072)(64,3.483)};
+\addplot[mark=square,thick,red] coordinates {(1,.259)(2,.577)(4,1.074)(8,1.853)(16,2.871)(32,4.652)(64,5.762)};
+\addplot[mark=triangle,thick,teal,dashed] coordinates {(1,.262)(2,.496)(4,1.048)(8,1.837)(16,2.872)(32,4.61)(64,5.628)};
+\legend{A$'$,B,C}
+\nextgroupplot[ylabel={$p_{95}$ latency (s)}]
+\addplot[mark=o,thick,blue] coordinates {(1,6.923)(2,7.962)(4,8.876)(8,10.962)(16,14.576)(32,19.664)(64,30.946)};
+\addplot[mark=square,thick,red] coordinates {(1,7.013)(2,6.789)(4,7.909)(8,8.687)(16,11.251)(32,12.669)(64,18.368)};
+\addplot[mark=triangle,thick,teal,dashed] coordinates {(1,6.978)(2,7.619)(4,8.178)(8,9.164)(16,11.086)(32,12.933)(64,18.461)};
+\addplot[black,dotted] coordinates {(1,10)(64,10)};
+\end{groupplot}
+\end{tikzpicture}
+\caption{Throughput and $p_{95}$ latency versus concurrent users; the dotted line is the $10$\,s target.}\label{fig:capacity}
+\end{figure}
+\paragraph{Maximum concurrency.} The largest number of users that keeps $p_{95}<10$\,s, no error and no rejection (found by doubling then bisecting) is $6$--$7$ for one card (two settings of the LLM memory share gave $7$ and $6$), $15$ and $18$ for B (two independent measurements) and $18$ for C, i.e.\ about $2.5$ to $3\times$ the single card. B and C are indistinguishable in capacity; C keeps the second card at only $25$--$50\%$ utilisation. We keep B as the default because the replicas fail independently (the balancer routes around a dead stack) and C as the choice when the second card is shared with other work.
+\paragraph{Bursts.} In an open-loop run (Poisson arrivals at $0.5$\,req/s, then $4$\,req/s for $15$\,s, then $0.5$\,req/s) every layout served all requests without errors; the $p_{95}$ during the burst was $12.2$\,s on one card against $9.0$\,s (B) and $9.2$\,s (C), and the post-burst $p_{95}$ returned to $0.86$--$0.92$ of the pre-burst value. Releasing $64$ requests at the same instant took $22.1$\,s to drain on one card, $15.4$\,s (B) and $16.4$\,s (C), with $p_{99}$ of $22.1$, $15.4$ and $16.4$\,s. Each level contains only $8$ to $220$ requests, so $p_{99}$ is close to the maximum and noisy; measurements repeated for B agree within about $0.3$\,s at $p_{95}$ except near the threshold, where the maximum concurrency varied between $15$ and $18$.
+% FLAGSECTION
 \section{Limitations and Threats to Validity}\label{sec:limits}
 \begin{itemize}[leftmargin=*]
 \item \textbf{Selection on dev.} Up to about ten variants were compared in several stages on a $300$-question dev set; intervals are paired but not corrected for multiple comparisons, and the \texttt{dev\_clean} (166) and \texttt{dev\_strict} (74) subsets are small. Round~2 DPO is replicated by a second DPO seed on both dev and test, other gains are single-run. The SFT stage itself is seed-sensitive: a second SFT seed (v3b) reached only $.603$ greedy / $.641$ MBR-8 on dev against $.633$ / $.658$ for the reported seed, so the absolute level of the pipeline depends on the SFT run; DPO on top of the second SFT seed was not run.
