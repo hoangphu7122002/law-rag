@@ -13,7 +13,9 @@ from collections.abc import Sequence
 from llama_index.core.node_parser import NodeParser
 from llama_index.core.node_parser.node_utils import build_nodes_from_splits
 from llama_index.core.schema import BaseNode
-from pydantic import Field
+from pydantic import Field, PrivateAttr
+
+from corpus.ingest.splitters import pack_khoan, pack_sentences, semantic_split
 
 HEADING = re.compile(r"(?m)^Điều\s+(\d+[a-zđ]?)\s*[.:]")
 CHAPTER = re.compile(r"(?m)^Chương\s+[IVXLC\d]+\b.*$")
@@ -23,6 +25,13 @@ NODE_KEYS = ["article", "heading", "chapter"]
 class DieuNodeParser(NodeParser):
     max_chars: int = Field(default=2000, description="articles longer than this are split")
     overlap: int = Field(default=100)
+    split: str = Field(default="recursive", description="how long articles are cut: recursive | sentence | khoan | semantic")
+    semantic_pct: float = Field(default=90.0, description="semantic mode: percentile of neighbour distances that starts a new piece")
+    _embed: object = PrivateAttr(default=None)
+
+    def set_embedder(self, fn) -> None:
+        """semantic mode: fn(list[str]) -> list[vector]"""
+        self._embed = fn
 
     @classmethod
     def class_name(cls) -> str:
@@ -72,10 +81,20 @@ class DieuNodeParser(NodeParser):
     def _fit(self, heading: str, body: str) -> list[str]:
         if len(body) <= self.max_chars:
             return [body]
-        from langchain_text_splitters import RecursiveCharacterTextSplitter
+        if self.split == "recursive":
+            from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-        splitter = RecursiveCharacterTextSplitter(chunk_size=self.max_chars, chunk_overlap=self.overlap)
-        pieces = splitter.split_text(body)
+            pieces = RecursiveCharacterTextSplitter(chunk_size=self.max_chars, chunk_overlap=self.overlap).split_text(body)
+        elif self.split == "sentence":
+            pieces = pack_sentences(body, self.max_chars)
+        elif self.split == "khoan":
+            pieces = pack_khoan(body, self.max_chars)
+        elif self.split == "semantic":
+            if self._embed is None:
+                raise ValueError("semantic split needs set_embedder(...)")
+            pieces = semantic_split(body, self._embed, self.semantic_pct, self.max_chars)
+        else:
+            raise ValueError(f"unknown split {self.split!r}")
         return [pieces[0]] + [f"{heading}\n{p}" if heading else p for p in pieces[1:]]
 
 

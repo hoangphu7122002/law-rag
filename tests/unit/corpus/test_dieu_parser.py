@@ -49,3 +49,23 @@ def test_nodes_carry_article_heading_and_chapter():
     assert by_article["2"]["chapter"] == "Chương II. QUẢN LÝ"
     assert by_article["1"]["chapter"] == "Chương I"
     assert "article" in nodes[0].excluded_embed_metadata_keys
+
+
+def test_split_modes_cut_long_articles_at_sentence_or_clause_boundaries():
+    body = "Điều 9. Dài\n" + "\n".join(f"{i}. " + "Câu dài dài dài. " * 6 for i in range(1, 7))
+    doc = [Document(text=body, metadata={"doc": "x"})]
+    for mode in ("sentence", "khoan"):
+        nodes = DieuNodeParser(max_chars=300, overlap=0, split=mode).get_nodes_from_documents(doc)
+        assert len(nodes) > 1, mode
+        assert all(n.get_content().startswith("Điều 9. Dài") for n in nodes), mode
+        assert all(n.get_content().rstrip().endswith(".") for n in nodes), mode
+        assert all(n.metadata["article"] == "9" for n in nodes), mode
+
+
+def test_semantic_mode_uses_the_given_embedder():
+    body = "Điều 9. Dài\n" + "\n".join(["thuế một.", "thuế hai.", "xe một.", "xe hai."])
+    parser = DieuNodeParser(max_chars=10, overlap=0, split="semantic", semantic_pct=60)
+    parser.set_embedder(lambda ts: [[1.0, 0.0] if "thuế" in t else [0.0, 1.0] for t in ts])
+    nodes = parser.get_nodes_from_documents([Document(text=body, metadata={"doc": "x"})])
+    texts = [n.get_content() for n in nodes]
+    assert any("thuế" in t and "xe" not in t for t in texts) and any("xe" in t and "thuế" not in t for t in texts)
