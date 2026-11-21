@@ -19,6 +19,17 @@ Decisions (user + defaults): teacher = DeepSeek-V4 flash via /vibe (alias deepse
 - Adaptive rounds: round 1 K=2 (T .7). Questions without a good trajectory -> round 2 K=4 (T .9, fresh seeds). Still none -> round 3 with the gold Dieu hinted in the prompt (self-distillation fallback, hint never copied into the stored row) -> then DeepSeek repair. A question gets at most these three rounds.
 - 9B unstable (completed < 90 % or tool-call rate < 80 % or empty/loop > 5 %): stop, fix the system prompt / parser, restart that round; do not feed bad rollouts onward.
 
+## Stage 1c - retrieval profile (like df.info(), user idea) given to the 9B at the start
+Deterministic, no LLM, ~300-500 tokens, built from the retrieval result + chunk metadata + KG; replaces exploratory tool calls (list_articles / kg_related), the 9B calls get_article only to read text.
+```
+[HO SO TRUY XUAT]
+Cau hoi: law number / Dieu mentioned? (so hieu, Dieu) ; type cue (dieu kien / tham quyen / thoi han / quyen-nghia vu)
+Top luat (rerank order): 1. <so hieu> - <title> - <nam> - <hieu luc> - family: <thay the / sua boi ...>
+   retrieved Dieu: 12 (<heading>), 15 (<heading>) ; the law has Dieu 1..37 (table of contents on demand)
+Same-family laws in the result: <21/2019 <-> 29/2024> (neutral: no preferred version)
+```
+Neutral by design (no "use the newer law": refuted). Used only in the teacher rollouts; the 2B one-shot student never sees it, so there is no train/test mismatch. Earlier decision stays: no question rewriting / profiling in the scored system. Code: src/generate/profile.py build_profile(...) (TDD) + cfg flag agent_profile; ablation in the monitor table (good rate with / without profile on 200 train questions).
+
 ## Stage 2 - grading (src/train/react_data.py)
 - Good = ROUGE-L >= .6 vs reference and cites a gold Dieu (S1). Others = wrong. Expected usable ~13 % for an untrained model (datamate), so most rows go to repair.
 
