@@ -108,3 +108,29 @@ def test_stream_refuses_below_threshold_without_calling_the_generator():
     svc = QAService(FakeRetriever(), ReverseReranker(), Boom(), k=2, min_score=5.0)
     events = asyncio.run(collect(svc.stream("off topic")))
     assert events[-1]["refused"] is True and events[-1]["answer"].startswith("Dựa trên")
+
+
+def test_blocking_retrieval_runs_on_a_bounded_thread_pool():
+    import threading
+    import time
+
+    state = {"now": 0, "peak": 0}
+    lock = threading.Lock()
+
+    class SlowRetriever(FakeRetriever):
+        def retrieve(self, question):
+            with lock:
+                state["now"] += 1
+                state["peak"] = max(state["peak"], state["now"])
+            time.sleep(0.05)
+            with lock:
+                state["now"] -= 1
+            return super().retrieve(question)
+
+    svc = QAService(SlowRetriever(), ReverseReranker(), FakeGenerator(), k=2, max_threads=3)
+
+    async def run():
+        await asyncio.gather(*(svc.ask(f"q{i}") for i in range(20)))
+
+    asyncio.run(run())
+    assert 1 <= state["peak"] <= 3      # unbounded default threads crashed OpenBLAS ("too many memory regions") under burst load

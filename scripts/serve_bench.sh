@@ -36,10 +36,16 @@ case $L in
      LLM_GPU=0 AUX_GPU=1 LLM_SHARE=0.88 EMBED_SHARE=0.3 RERANK_SHARE=0.3 API_PORT=8080 docker compose -p lawrag-c -f $C up -d
      wait_health 8080; URL=http://localhost:8080 ;;
 esac
-MODE=${MODE:-sweep}   # sweep | max | both  (max = largest user count meeting the SLO: p95 total < SLO_P95 s, <1 % errors, no 429)
-if [ "$MODE" != max ]; then
-  uv run python scripts/load_test.py --url "$URL" --users "$USERS" --seconds "$SECS" --tag "${TAG}${EXTRA_TAG:-}" --out data/runs/load.jsonl
-fi
-if [ "$MODE" != sweep ]; then
-  uv run python scripts/load_test.py --url "$URL" --find-max --users "${MAXSTART:-8}" --limit "${MAXLIMIT:-256}" --slo-p95 "${SLO_P95:-10}" --seconds "$SECS" --tag "${TAG}${EXTRA_TAG:-}-max" --out data/runs/load.jsonl
-fi
+MODE=${MODE:-all}   # any of: sweep max burst spike (space separated) or all
+[ "$MODE" = all ] && MODE="sweep max burst spike"
+T="${TAG}${EXTRA_TAG:-}"
+has() { [[ " $MODE " == *" $1 "* ]]; }
+LT="uv run python scripts/load_test.py --url $URL --seconds $SECS --out data/runs/load.jsonl"
+has sweep && $LT --users "$USERS" --tag "$T"
+# max: largest user count meeting the SLO (p95 total < SLO_P95 s, <1 % errors, no 429)
+has max && $LT --find-max --users "${MAXSTART:-8}" --limit "${MAXLIMIT:-256}" --slo-p95 "${SLO_P95:-10}" --tag "$T-max"
+# burst: open-loop phases baseline -> burst -> baseline (rate req/s : seconds), reports per phase and the recovery ratio
+has burst && $LT --burst "${BURST:-0.5:20,4:15,0.5:30}" --tag "$T-burst"
+# spike: N requests released at the same instant
+has spike && $LT --spike "${SPIKE:-8,16,32,64}" --tag "$T-spike"
+true
