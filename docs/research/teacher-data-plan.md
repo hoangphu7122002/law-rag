@@ -34,6 +34,12 @@ Same-family laws in the result: <21/2019 <-> 29/2024> (neutral: no preferred ver
 ```
 Neutral by design (no "use the newer law": refuted). Used only in the teacher rollouts; the 2B one-shot student never sees it, so there is no train/test mismatch. Earlier decision stays: no question rewriting / profiling in the scored system. Code: src/generate/profile.py build_profile(...) (TDD) + cfg flag agent_profile; ablation in the monitor table (good rate with / without profile on 200 train questions).
 
+## Stage 1c-2 - question profile: regex first, LLM fallback (user, 2026-11-22; datamate-style preprocess)
+- Layer 1, regex / rules (scalable, general): a registry of extractors, each returns (field, value, confidence); law numbers in all formats (ND-CP, TT-NHNN, QD, QH15, BTC ...), laws named by title + year resolved through the title index (as the gold parser does), Dieu / khoan / diem and ranges, years, question type from a vocabulary, flags (du thao, mau, phu luc, thong bao, hien hanh). Patterns are data (tables + law_key), parametrised tests on real train questions, coverage report script (share of questions with each field).
+- Completeness check: if law and Dieu and type are all missing, or the question is long / compound, go to layer 2.
+- Layer 2, LLM fallback: one short extraction call returning strict JSON {laws:[{number|name}], dieu:[], type, flags, key_terms}. Validation: schema, type from the fixed vocabulary, a law number must match law_key and exist in the store or KG else it is dropped (no invented numbers), result marked unverified; cached by question hash. Model: 9B (local) for the teacher rollouts; at agent inference the 2B itself (extraction is trained as the first step of the agent), never an external API. The LLM sees the question only, never a reference.
+- Measure: fallback rate; law extraction precision (a law named in the question vs the gold law of the reference); share of questions with any specific field; profile on / off ablation in the agent. Question rewriting stays out of the scored one-shot system; key_terms may feed search_law in the agent (ablated).
+
 ## Stage 2 - grading (src/train/react_data.py)
 - Good = ROUGE-L >= .6 vs reference and cites a gold Dieu (S1). Others = wrong. Expected usable ~13 % for an untrained model (datamate), so most rows go to repair.
 
