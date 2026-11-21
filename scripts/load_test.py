@@ -33,6 +33,39 @@ def summarize_load(recs: list[dict], wall: float, users: int) -> dict:
             "total_mean": round(st.mean(total), 3) if total else None}
 
 
+def meets_slo(row: dict, slo_p95: float) -> bool:
+    """SLO: p95 total latency under the bound, under 1 % errors, and nothing rejected (429)."""
+    n = row["ok"] + row["errors"]
+    return bool(row["ok"]) and row["rejected_429"] == 0 and row["errors"] <= 0.01 * n and row["total_p95"] is not None and row["total_p95"] <= slo_p95
+
+
+def find_max_users(measure, start: int, limit: int, slo_p95: float):
+    """Largest user count that meets the SLO: double from `start` until it fails (or hits `limit`), then bisect the gap.
+    `measure(users) -> row`. Returns (best, all rows in call order); best = 0 when even `start` fails."""
+    rows, good, bad, u = [], 0, None, start
+    while True:
+        row = measure(u)
+        rows.append(row)
+        if meets_slo(row, slo_p95):
+            good = u
+            if u >= limit:
+                return good, rows
+            u = min(u * 2, limit)
+        else:
+            bad = u
+            break
+    lo, hi = good, bad
+    while hi - lo > 1:
+        mid = (lo + hi) // 2
+        row = measure(mid)
+        rows.append(row)
+        if meets_slo(row, slo_p95):
+            lo = mid
+        else:
+            hi = mid
+    return lo, rows
+
+
 def parse_smi(text: str) -> dict[int, float]:
     """`nvidia-smi --query-gpu=index,utilization.gpu --format=csv,noheader,nounits` -> {gpu: util %}"""
     out = {}
@@ -127,8 +160,23 @@ def main() -> None:
     ap.add_argument("--n", type=int, default=100, help="dev questions to cycle")
     ap.add_argument("--tag", default="", help="label stored with every line (e.g. the GPU layout)")
     ap.add_argument("--out", default="")
+    ap.add_argument("--find-max", action="store_true", help="search the largest user count that meets the SLO instead of sweeping --users")
+    ap.add_argument("--slo-p95", type=float, default=10.0, help="--find-max: p95 total latency bound in seconds")
+    ap.add_argument("--limit", type=int, default=256, help="--find-max: upper bound on users")
     a = ap.parse_args()
     qs = [q.text for q in QASet().load("dev")[: a.n]]
+    if a.find_max:
+        def measure(u):
+            row = {"tag": a.tag} | asyncio.run(run_level(a.url, qs, u, a.seconds))
+            print(json.dumps(row), flush=True)
+            if a.out:
+                with open(a.out, "a") as f:
+                    f.write(json.dumps(row) + "\n")
+            return row
+
+        best, _ = find_max_users(measure, start=int(a.users.split(",")[0]), limit=a.limit, slo_p95=a.slo_p95)
+        print(json.dumps({"tag": a.tag, "max_users_at_slo": best, "slo_p95_s": a.slo_p95}), flush=True)
+        return
     for u in (int(x) for x in a.users.split(",")):
         row = {"tag": a.tag} | asyncio.run(run_level(a.url, qs, u, a.seconds))
         print(json.dumps(row), flush=True)

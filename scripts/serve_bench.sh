@@ -36,4 +36,10 @@ case $L in
      LLM_GPU=0 AUX_GPU=1 LLM_SHARE=0.88 EMBED_SHARE=0.3 RERANK_SHARE=0.3 API_PORT=8080 docker compose -p lawrag-c -f $C up -d
      wait_health 8080; URL=http://localhost:8080 ;;
 esac
-uv run python scripts/load_test.py --url "$URL" --users "$USERS" --seconds "$SECS" --tag "${TAG}${EXTRA_TAG:-}" --out data/runs/load.jsonl
+MODE=${MODE:-sweep}   # sweep | max | both  (max = largest user count meeting the SLO: p95 total < SLO_P95 s, <1 % errors, no 429)
+if [ "$MODE" != max ]; then
+  uv run python scripts/load_test.py --url "$URL" --users "$USERS" --seconds "$SECS" --tag "${TAG}${EXTRA_TAG:-}" --out data/runs/load.jsonl
+fi
+if [ "$MODE" != sweep ]; then
+  uv run python scripts/load_test.py --url "$URL" --find-max --users "${MAXSTART:-8}" --limit "${MAXLIMIT:-256}" --slo-p95 "${SLO_P95:-10}" --seconds "$SECS" --tag "${TAG}${EXTRA_TAG:-}-max" --out data/runs/load.jsonl
+fi
