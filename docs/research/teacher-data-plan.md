@@ -13,7 +13,7 @@ Decisions (user + defaults): teacher = DeepSeek-V4 flash via /vibe (alias deepse
 - Output data/gen/tdata/rollouts_{train,dev}.jsonl, one line per rollout with trajectory, tool results, final answer.
 
 ## Stage 1b - trajectory monitoring and adaptive sampling (user: watch the 9B trajectories so they cover; sample more if the 9B is unstable)
-- top-5 is a tool: no initial context, search_law always also returns the pipeline top-5 for the original question (search_with_question), min_tool_calls = 1.
+- Initial context is GIVEN (user): the pipeline top-5 goes into the prompt (cfg agent_initial_k = -1, retrieve.k = 5) and the 9B may call tools for more; min_tool_calls = 0 (a question whose context suffices needs no search); search_with_question on for every search_law call. Round 2 gives top-10 as initial context. Optional datamate-style evidence gate (cfg `check`, one nudge) stays off in round 1.
 - Monitor (script prints every ~100 questions and a final table, by split / gold count / tail-mid-high): completed rate (final answer, valid tool JSON), tool-call rate and mean calls, share of trajectories that saw a gold Dieu (react_data.first_bad_step), good rate (ROUGE-L >= .6 + cites gold), loop / empty-answer / over-length rate, tokens per question.
 - Coverage = share of questions with at least one good trajectory (S1) or an accepted repair (S2); target >= 60 % per split and per gold-count group, no group below 40 %.
 - Adaptive rounds: round 1 K=2 (T .7). Questions without a good trajectory -> round 2 K=4 (T .9, fresh seeds). Still none -> round 3 with the gold Dieu hinted in the prompt (self-distillation fallback, hint never copied into the stored row) -> then DeepSeek repair. A question gets at most these three rounds.
