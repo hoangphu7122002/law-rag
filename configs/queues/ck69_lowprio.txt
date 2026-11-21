@@ -1,5 +1,5 @@
 # Chunking Stage 1b, LOW PRIORITY (runs only while no LLM / training job is active on the box): recursive 512-character chunks (~2.2 M nodes, bigger than the semantic-1000 build that was OOM-killed at 32 GB; cap now 46 GB). Retrieval-only dev + test vs control 4ac2a75c, then the index is deleted.
-wait ! tmux ls 2>/dev/null | grep -qE "lawrag-(run|llm|train|queue)-"
+wait ! tmux ls 2>/dev/null | grep -qE "lawrag-(run|llm|train)-"
 sh retr-ck-rec512-dev cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=dev --set retrieve.k=10 --set chunk.split=recursive --set chunk.size=512 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 > data/runs/logs/retr-ck-rec512-dev.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-ck-rec512-dev"
 sh retr-ck-rec512-test cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_v3b.yaml --retrieval-only --set split=test --set retrieve.k=10 --set chunk.split=recursive --set chunk.size=512 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 > data/runs/logs/retr-ck-rec512-test.log 2>&1
