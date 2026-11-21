@@ -105,3 +105,6 @@ Prior numbers: raw 9B teacher on dev .47-.49 (not above SFT 2B), trained 2B ReAc
 
 ## Low-priority side track: chunking Stage 1b (user, 2026-11-22: try it, build in parallel, low priority, only when the GPU is free)
 Control stays per-Dieu 2000/100 (best of the five Stage-1 variants; semantic 1000 OOM, 512 and parent-child never tried). Queue configs/queues/ck69_lowprio.txt: recursive 512 (~2.2 M nodes), retrieval-only dev + test vs control 4ac2a75c (retr_compare), then the index is deleted; it starts only when no lawrag run / llm / train / queue session is active. Next, parent-child (small-to-big): retrieve with small chunks carrying the parent Dieu id, rerank and feed the parent Dieu (needs retriever code, TDD; retrieval-only gate first). Never ahead of the main lanes; RAM guard (index build up to 46 GB) must not collide with a training job.
+
+## Shuffle also in the ReAct rows (user, 2026-11-22)
+The agent rows (a) one-shot in agent format, (b) tool trajectories, (c) "context is enough" get the same passage-order shuffle as the one-shot rows (~50 % of rows): the initial top-5 context and also the order of passages inside each search_law / get_article tool result; rank 1 is not privileged. The retrieval profile lists laws in rerank order in a fraction of rows and in shuffled order in the rest, so the agent does not learn "first = right".
