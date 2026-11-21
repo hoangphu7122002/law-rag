@@ -1,6 +1,6 @@
 # Teacher-data plan: 9B ReAct + DeepSeek correction -> 2B one-shot SFT (decided 2026-11-22, run from 2026-11-23, no pilot)
 
-Decisions (user + defaults): teacher = DeepSeek-V4 flash via /vibe (alias deepseekflash); rollouts by base Qwen3.5-9B (HF hub, same family as the 2B; not the codeact checkpoints); scope = ALL train (2245) + dev (300), never test; student = a 2B CORE AGENT (user, 2026-11-22: train the 2B to be a good enough ReAct agent); the one-shot 2B (format B) stays as control and fallback, both < 4B; no web tool (leak risk).
+Decisions (user + defaults): teacher = DeepSeek-V4 flash via /vibe (alias deepseekflash); rollouts by base Qwen3.5-9B (HF hub, same family as the 2B; not the codeact checkpoints); scope = ALL train (2245) + dev (300), never test; TWO approaches (user, 2026-11-22), both with a < 4B 2B student, built and reported side by side: Approach 1 = one-shot 2B; Approach 2 = ReAct 2B core agent. Neither is only a control for the other; no web tool (leak risk).
 
 ## Stage 0 - preconditions (morning)
 - Index full68 (corpus + web_new_laws) finished and compared with control 4ac2a75c (retr_compare); use the better one for tools and training context.
@@ -52,18 +52,19 @@ Neutral by design (no "use the newer law": refuted). Used only in the teacher ro
 ## Expected size of the effect
 Ceiling from fixing questions whose gold Dieu is not in the first top-5 is about +.03 ROUGE-L (react notes); data diversity ~ +.01-.02; +.016 per doubling of data. Report as exploratory unless 3-seed means separate by more than the SFT noise (sd .015).
 
-## GPU schedule (maximise use; estimates from the compute log: SFT ~1 h, dev300 greedy eval ~5 min, DPO ~40 min, 9B rollouts ~2.5 h for 2245 q x 2 seeds)
-Principle: B and C need no teacher data, so they train while the teacher data is being made. Two jobs at a time (one per GPU); embed :8101 + rerank :8201 stay on GPU1 (~6 GB); RAM/disk guard before every launch; GPU util/temp check every ~10 min.
+## GPU schedule (maximise use; estimates from the compute log: SFT ~1 h, dev300 greedy eval ~5 min, DPO ~40 min, 9B rollouts ~2.5 h for 2245 q x 2 seeds; agent eval is multi-turn, slower)
+Two lanes: GPU0 = Approach 1 (one-shot), GPU1 = Approach 2 (agent) once its data exists. B and C need no teacher data, so they train while the teacher data is made. One job per GPU; embed :8101 + rerank :8201 stay on GPU1 (~6 GB); RAM/disk guard before every launch; GPU util/temp check every ~10 min.
 
-| Slot | GPU0 | GPU1 | CPU / API |
+| Slot | GPU0 (one-shot) | GPU1 (agent / spare) | CPU / API |
 |---|---|---|---|
-| Tonight (GPU0 idle now) | 9B ReAct rollouts train + dev, K=2 (control index; tools via GPU1 servers) | finish full68 (dev, test) | TDD: --shuffle / inject-all / --absent in sft_data; step-0 diagnostics; gold parser fix; licence read |
-| D+1 08:00-09:15 | SFT B seed1 -> eval | SFT B seed2 -> eval | Stage 2 grading; Stage 3 DeepSeek repair (paced batches, ~1-2 h) |
-| 09:15-10:30 | SFT C seed1 -> eval | SFT C seed2 -> eval | repair continues; Stage 4 build D rows, decontaminate |
-| 10:30-12:00 | SFT D seed1 -> eval | SFT D seed2 -> eval | paired bootstrap B/C vs A |
-| 12:00-13:00 | DPO round 1 from best SFT | SFT train+dev of the best config (final) | |
-| 13:00-14:30 | DPO round 2 + eval (greedy) | final DPO from train+dev SFT | report text, tables |
-| 14:30-15:00 | test eval once (greedy, MBR8) | idle -> spare: extra seed for the closest pair | CHANGELOG, compute-log, PDF |
+| Tonight (GPU0 idle now) | 9B ReAct rollouts train + dev (rounds 1-2) | finish full68 (dev, test) | TDD: build_profile, trajectory monitor, shuffle / inject-all / absent; step-0 diagnostics; gold parser fix; licence read |
+| D+1 08:00-09:15 | SFT B s1 -> eval | SFT B s2 -> eval | grading; DeepSeek repair (paced) |
+| 09:15-10:30 | SFT C s1 -> eval | SFT C s2 -> eval | repair continues; build D rows and agent rows; decontaminate |
+| 10:30-12:00 | SFT D s1 -> eval | SFT E s1 (agent) -> eval | bootstrap B/C vs A |
+| 12:00-13:30 | SFT D s2 -> eval | SFT E s2 (agent) -> eval | |
+| 13:30-15:00 | DPO from best one-shot | agent F (DPO / GRPO) if E improves, else spare seed | |
+| 15:00-16:30 | final one-shot SFT on train+dev, then DPO | final agent on train+dev | report text, tables |
+| 16:30-17:30 | test once: one-shot greedy + MBR8 | test once: agent | CHANGELOG, compute-log, PDF |
 
 Gaps are filled with the third seed of any pair whose paired difference is within the noise band (.005-.015).
 
@@ -72,8 +73,8 @@ One agent implementation, three uses: (1) data generator (9B + DeepSeek correcti
 Agent loop: profile block -> initial top-5 context -> tools search_law / get_article / kg_related (neutral) -> answer in the reference template -> evidence gate (one nudge) -> verifier on citations (quoted text must appear in a retrieved or fetched Dieu). Backend-agnostic (OpenAI-compatible: local vLLM 9B, or the Vibe/Mistral route for DeepSeek). Dev numbers of the DeepSeek agent also tell the ceiling of the teacher data (answer vs reference ROUGE-L) without a separate pilot.
 Prior numbers: raw 9B teacher on dev .47-.49 (not above SFT 2B), trained 2B ReAct .537 / .574; the agent line is expected to need the profile + initial context to compete.
 
-## Student = 2B core agent (user, 2026-11-22) - what changes
+## Approach 2 - the 2B core agent (what it is and how it is trained)
 - Agent = one-shot plus optional tool calls: the prompt carries the retrieval profile + top-5 context; most questions are answered in one turn (as the one-shot model does), tool calls only when the context lacks the gold. So the agent must not be worse than the one-shot model on questions that need no tool.
 - Training rows (multi-turn, loss on assistant turns only, src/train/react_sft.py): (a) one-shot rows in agent format (reference answers, all data tricks: shuffle, inject-all, absent rate, template opener) so direct answering stays strong; (b) tool trajectories S1 (9B good) and S2 (DeepSeek-repaired) for questions where the gold Dieu is not in the initial context; (c) refusal / "context is enough, do not search" rows so the agent does not over-call.
-- Configs (2 seeds each): A one-shot v3b (existing), B one-shot + tricks, C B + absent, D one-shot + teacher rows, **E agent SFT = rows (a)+(b)+(c)**, F = E + DPO / multi-turn GRPO if E >= D. Gate: E vs the best one-shot on dev300 (paired bootstrap), split by whether the gold Dieu is in the initial top-5.
+- Configs (2 seeds each): A one-shot v3b (existing), B one-shot + tricks, C B + absent, D one-shot + teacher rows, **E agent SFT = rows (a)+(b)+(c)**, F = E + DPO / multi-turn GRPO if E improves. Compared with the best one-shot on dev300 (paired bootstrap), split by whether the gold Dieu is in the initial top-5; both approaches are reported whatever the outcome.
 - Known risks: trained 2B ReAct was .537 / .574 vs one-shot .633 (dev_clean); datamate: a loop SFT on 1,764 trajectories scored below one-shot; <= 3B students do not always profit from large-teacher data. Mitigation: mixed rows so direct answering is kept, profile + initial context, teacher repairs minimal and verified. Latency (turns) and tool-call rate reported.
