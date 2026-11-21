@@ -108,3 +108,6 @@ Control stays per-Dieu 2000/100 (best of the five Stage-1 variants; semantic 100
 
 ## Shuffle also in the ReAct rows (user, 2026-11-22)
 The agent rows (a) one-shot in agent format, (b) tool trajectories, (c) "context is enough" get the same passage-order shuffle as the one-shot rows (~50 % of rows): the initial top-5 context and also the order of passages inside each search_law / get_article tool result; rank 1 is not privileged. The retrieval profile lists laws in rerank order in a fraction of rows and in shuffled order in the rest, so the agent does not learn "first = right".
+
+### Measured (2026-11-22, rules layer on train 2245 / dev 300)
+Names a full law number 16.0 % / 18.3 %; a partial number (39/2016) 1.4 % / 1.0 %; a named law + year 6.5 % / 5.7 %; a Dieu 1.0 % / 2.7 %; a flag 28 % / 24 % (inflated by loose keywords: tighten); question type found 50 % / 54 %; nothing specific (needs fallback) 49 % / 52 %. When a law number is named it is a gold document 95 % of the time on train (341 / 359) and 100 % on dev (55 / 55): a reliable signal, but present for under one question in five, so the sufficiency check of the plan helps only that minority; the type vocabulary must grow and the small-LLM fallback will run on about half the questions.
