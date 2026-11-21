@@ -12,6 +12,13 @@ Decisions (user + defaults): teacher = DeepSeek-V4 flash via /vibe (alias deepse
 - vLLM Qwen3.5-9B bf16 on GPU0 (~18 GB), tools search_law / get_article / kg_related over the chosen index (embed/rerank on GPU1), max_turns 4, K = 2 rollouts per question at T 0.7, non-thinking.
 - Output data/gen/tdata/rollouts_{train,dev}.jsonl, one line per rollout with trajectory, tool results, final answer.
 
+## Stage 1b - trajectory monitoring and adaptive sampling (user: watch the 9B trajectories so they cover; sample more if the 9B is unstable)
+- top-5 is a tool: no initial context, search_law always also returns the pipeline top-5 for the original question (search_with_question), min_tool_calls = 1.
+- Monitor (script prints every ~100 questions and a final table, by split / gold count / tail-mid-high): completed rate (final answer, valid tool JSON), tool-call rate and mean calls, share of trajectories that saw a gold Dieu (react_data.first_bad_step), good rate (ROUGE-L >= .6 + cites gold), loop / empty-answer / over-length rate, tokens per question.
+- Coverage = share of questions with at least one good trajectory (S1) or an accepted repair (S2); target >= 60 % per split and per gold-count group, no group below 40 %.
+- Adaptive rounds: round 1 K=2 (T .7). Questions without a good trajectory -> round 2 K=4 (T .9, fresh seeds). Still none -> round 3 with the gold Dieu hinted in the prompt (self-distillation fallback, hint never copied into the stored row) -> then DeepSeek repair. A question gets at most these three rounds.
+- 9B unstable (completed < 90 % or tool-call rate < 80 % or empty/loop > 5 %): stop, fix the system prompt / parser, restart that round; do not feed bad rollouts onward.
+
 ## Stage 2 - grading (src/train/react_data.py)
 - Good = ROUGE-L >= .6 vs reference and cites a gold Dieu (S1). Others = wrong. Expected usable ~13 % for an untrained model (datamate), so most rows go to repair.
 
