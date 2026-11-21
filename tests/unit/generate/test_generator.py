@@ -95,3 +95,25 @@ def test_candidates_returns_every_sample_and_answer_picks_among_them():
     g.sample = fake_sample
     cands = asyncio.run(g.candidates("q", [Passage("p", "d", "Điều 5. Nội dung", 1.0)]))
     assert cands == ["a b c d", "a b c e", "x y z"]
+
+
+def test_stream_yields_text_deltas_of_a_chat_call():
+    import asyncio
+    from types import SimpleNamespace
+
+    from records import Passage
+
+    class FakeLLM:
+        async def astream_chat(self, msgs, **kw):
+            async def gen():
+                for d in ["Căn cứ ", "tại ", "Điều 5."]:
+                    yield SimpleNamespace(delta=d)
+            return gen()
+
+    g = gen(mode="chat")
+    g._llm = FakeLLM()
+
+    async def run():
+        return [d async for d in g.stream("q?", [Passage(pid="1", doc="A", text="Điều 5. x", score=1.0)])]
+
+    assert asyncio.run(run()) == ["Căn cứ ", "tại ", "Điều 5."]

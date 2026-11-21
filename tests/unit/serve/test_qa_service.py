@@ -71,3 +71,40 @@ def test_relevant_question_is_not_refused_and_default_guard_is_off():
     out = asyncio.run(QAService(FakeRetriever(), ReverseReranker(), FakeGenerator(), k=2, min_score=0.001).ask("q"))
     assert out["refused"] is False
     assert asyncio.run(QAService(FakeRetriever(), LowScoreReranker(), FakeGenerator(), k=2).ask("q"))["refused"] is False
+
+
+class StreamingGenerator(FakeGenerator):
+    async def stream(self, question, passages):
+        for piece in ["Xin ", "chào ", "bạn"]:
+            yield piece
+
+
+async def collect(agen):
+    return [e async for e in agen]
+
+
+def test_stream_emits_sources_then_tokens_then_done_with_ttft():
+    svc = QAService(FakeRetriever(), ReverseReranker(), StreamingGenerator(), k=2)
+    events = asyncio.run(collect(svc.stream("câu hỏi?")))
+    assert [e["event"] for e in events] == ["sources", "token", "token", "token", "done"]
+    assert [s["doc"] for s in events[0]["sources"]] == ["C", "B"]
+    assert "".join(e["text"] for e in events if e["event"] == "token") == "Xin chào bạn"
+    done = events[-1]
+    assert done["answer"] == "Xin chào bạn" and done["refused"] is False
+    assert 0 <= done["timings"]["ttft_s"] <= done["timings"]["total_s"]
+
+
+def test_stream_falls_back_to_one_token_when_generator_cannot_stream():
+    events = asyncio.run(collect(service(k=1).stream("q")))
+    assert [e["event"] for e in events] == ["sources", "token", "done"]
+    assert events[1]["text"] == events[-1]["answer"]
+
+
+def test_stream_refuses_below_threshold_without_calling_the_generator():
+    class Boom(FakeGenerator):
+        async def answer(self, *a):
+            raise AssertionError("must not be called")
+
+    svc = QAService(FakeRetriever(), ReverseReranker(), Boom(), k=2, min_score=5.0)
+    events = asyncio.run(collect(svc.stream("off topic")))
+    assert events[-1]["refused"] is True and events[-1]["answer"].startswith("Dựa trên")

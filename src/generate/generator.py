@@ -101,6 +101,15 @@ class Generator:
             text = (await self.llm.achat(msgs, **self.sampling(temperature))).message.content or ""
         return self.clean(text)
 
+    async def stream(self, question: str, passages: list[Passage]):
+        """Text deltas of one greedy chat call (the deployed path: no MBR, no thinking). Reasoning blocks are not expected here."""
+        from llama_index.core.llms import ChatMessage
+
+        msgs = [ChatMessage(role=m["role"], content=m["content"]) for m in self.prompt.messages(question, passages, self.shots(question))]
+        async for chunk in await self.llm.astream_chat(msgs, **self.sampling()):
+            if chunk.delta:
+                yield chunk.delta
+
     async def _think(self, messages: list[dict], temperature: float | None) -> str:
         """Thought capped at think_tokens, then the answer after a forced </think>."""
         prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True,
