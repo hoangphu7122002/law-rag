@@ -1,0 +1,10 @@
+# Least-connections load balancer in front of two single-GPU stacks (data parallel):
+#   GPU=0 API_PORT=8081 docker compose -p lawrag-g0 -f docker/compose.yml up -d
+#   GPU=1 API_PORT=8082 docker compose -p lawrag-g1 -f docker/compose.yml up -d
+#   docker compose -p lawrag-lb -f docker/compose.lb.yml up -d        -> http://localhost:8080
+services:
+  lb:
+    image: nginx:1.27-alpine
+    network_mode: host
+    restart: unless-stopped
+    volumes: ["./nginx-lb.conf:/etc/nginx/nginx.conf:ro"]

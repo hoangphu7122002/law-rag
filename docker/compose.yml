@@ -2,7 +2,9 @@
 #   docker compose -f docker/compose.yml up -d        (from the repo root; see docs/ops/docker.md)
 # Needs on the host (paths relative to the repo root): data/models/dpo_a2 (the LLM weights), data/index/dieu-2000-clean__4ac2a75c (index), data/serve/shots.json,
 # and a Hugging Face cache with AITeamVN/Vietnamese_Embedding + Vietnamese_Reranker (downloaded on first start if online).
-# GPU: every endpoint shares one card (fractions as in configs/backends/l40s.yaml); set GPU to the CDI/device index.
+# GPU: by default every endpoint shares one card (GPU=<index>, fractions as in configs/backends/l40s.yaml). Layouts for two cards:
+#   LLM_GPU=0 AUX_GPU=1 LLM_SHARE=0.88 EMBED_SHARE=0.3 RERANK_SHARE=0.3   (disaggregated: LLM alone on card 0, embedder + reranker on card 1)
+#   two stacks, one per card, behind docker/compose.lb.yml (data parallel); use `-p <name>`, GPU=<i>, API_PORT=<port> per stack.
 x-vllm: &vllm
   image: ${VLLM_IMAGE:-vllm/vllm-openai:v0.30.0}
   restart: unless-stopped
@@ -11,15 +13,15 @@ x-vllm: &vllm
     HF_HUB_OFFLINE: ${HF_HUB_OFFLINE:-0}
   volumes: &vllm-vol
     - ${HF_CACHE:-${HOME}/.cache/huggingface}:/hf
-  deploy: &gpu
-    resources:
-      reservations:
-        devices: [{driver: nvidia, device_ids: ["${GPU:-0}"], capabilities: [gpu]}]
   ipc: host
 
 services:
   llm:
     <<: *vllm
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, device_ids: ["${LLM_GPU:-${GPU:-0}}"], capabilities: [gpu]}]
     volumes:
       - ${HF_CACHE:-${HOME}/.cache/huggingface}:/hf
       - ../data/models/dpo_a2:/models/dpo_a2:ro
@@ -29,11 +31,19 @@ services:
       --enable-prefix-caching --max-num-seqs 64 --seed 0
   embed:
     <<: *vllm
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, device_ids: ["${AUX_GPU:-${GPU:-0}}"], capabilities: [gpu]}]
     command: >
       AITeamVN/Vietnamese_Embedding --runner pooling --host 0.0.0.0 --port 8100
       --dtype bfloat16 --gpu-memory-utilization ${EMBED_SHARE:-0.15} --max-num-batched-tokens 32768
   rerank:
     <<: *vllm
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, device_ids: ["${AUX_GPU:-${GPU:-0}}"], capabilities: [gpu]}]
     command: >
       AITeamVN/Vietnamese_Reranker --runner pooling --host 0.0.0.0 --port 8200
       --dtype bfloat16 --gpu-memory-utilization ${RERANK_SHARE:-0.15} --max-num-batched-tokens 32768
@@ -44,6 +54,8 @@ services:
     depends_on: [llm, embed, rerank]
     ports: ["${API_PORT:-8080}:8080"]
     environment:
+      MAX_CONCURRENT: ${MAX_CONCURRENT:-}
+      MAX_QUEUE: ${MAX_QUEUE:-}
       LLM_URL: http://llm:8000/v1
       EMBED_URL: http://embed:8100/v1
       RERANK_URL: http://rerank:8200
