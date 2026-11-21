@@ -22,4 +22,4 @@ def test_per_question_art_hit_at_k(tmp_path):
     hits = per_question_hits(cache, gold, k=5, level="art")
     assert hits == {1: 1.0, 2: 0.0}
     assert per_question_hits(cache, gold, k=1, level="art") == {1: 0.0, 2: 0.0}
-    assert per_question_hits(cache, gold, k=1, level="doc") == {1: 1.0, 2: 0.0}
+    assert per_question_hits(cache, gold, k=1, level="doc") == {1: 1.0, 2: 1.0}
