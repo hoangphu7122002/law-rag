@@ -33,4 +33,4 @@ Gateway/scaler, validity filtering in the scored pipeline, newer-law preference 
 4. Pilot 50 train questions: 9B ReAct (GPU0) Dieu@5 vs pipeline, share needing correction, ROUGE after correction, cost per question.
 5. If the pilot passes: full run on train 2245 + dev 300 in small batches (pacing), tagged by split, test never sent; verification = ROUGE-L vs reference + gold Dieu cited, template opener.
 6. SFT 2B one-shot (student format B) with the data tricks; 3 seeds per config; dev eval with train-only models.
-Open: budget cap, which 9B checkpoint, student format A vs B (default B).
+Decided: teacher = DeepSeek-V4 flash (user, 2026-11-22; vibe alias deepseekflash, price not listed -> measure cost in the pilot, check licence). Open: budget cap, which 9B checkpoint, student format A vs B (default B).
