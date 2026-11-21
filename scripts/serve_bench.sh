@@ -12,7 +12,15 @@ need() { # need <gpu> <MiB>: refuse when another job holds the memory
   total=$(nvidia-smi -i "$1" --query-gpu=memory.total --format=csv,noheader,nounits | tr -d ' ')
   [ $((total - used)) -ge "$2" ] || { echo "GPU $1 has only $((total-used)) MiB free, need $2"; exit 3; }
 }
-wait_health() { for _ in $(seq 120); do curl -sf "http://localhost:$1/health" >/dev/null && return 0; sleep 5; done; echo "no health on $1"; exit 4; }
+wait_health() {
+  for _ in $(seq 120); do
+    curl -sf "http://localhost:$1/health" >/dev/null && return 0
+    dead=$(docker ps -a --filter status=exited --filter status=dead --format '{{.Names}}' | grep '^lawrag-' || true)   # fail fast: a crashed container will never become healthy
+    if [ -n "$dead" ]; then echo "container exited: $dead"; for c in $dead; do docker logs --tail 15 "$c" 2>&1; done; exit 5; fi
+    sleep 5
+  done
+  echo "no health on $1"; exit 4
+}
 down() { for p in lawrag-a lawrag-b0 lawrag-b1 lawrag-c lawrag-lb; do docker compose -p $p down >/dev/null 2>&1 || true; done; }
 trap down EXIT
 down
