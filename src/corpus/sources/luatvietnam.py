@@ -27,6 +27,13 @@ def slug(s: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", s).strip("-")
 
 
+def merge_rows(old: list[dict], new: list[dict]) -> list[dict]:
+    """Manifest rows by file name: old ones stay, a re-fetched file takes the newer row."""
+    by_file = {r["file"]: r for r in old}
+    by_file.update({r["file"]: r for r in new})
+    return list(by_file.values())
+
+
 class LuatVietnam:
     UA: ClassVar[str] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120 Safari/537.36"
     DELAY: ClassVar[float] = 1.0
@@ -117,6 +124,8 @@ class LuatVietnam:
                 (OUT / f"{name}.txt").write_text(f"{title}\n\n{text}", encoding="utf-8")
                 rows.append({"file": f"{name}.txt", "ref": ref["ref"], "url": url, "title": title,
                              "so_ky_hieu": num.group(1) if num else None})
-        pl.DataFrame(rows).write_parquet(OUT / "manifest.parquet")
-        print(f"web: {len(refs)} refs -> {len(rows)} documents in {OUT}")
+        manifest = OUT / "manifest.parquet"
+        old = pl.read_parquet(manifest).to_dicts() if manifest.exists() else []
+        pl.DataFrame(merge_rows(old, rows)).write_parquet(manifest)   # a partial crawl must not drop earlier documents
+        print(f"web: {len(refs)} refs -> {len(rows)} new documents in {OUT}")
         return len(rows)
