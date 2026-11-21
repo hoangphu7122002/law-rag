@@ -27,6 +27,8 @@ class Chunk(Strict):
     flatten: bool = False
     clean: bool = False   # LawCleaner before parsing (strip header / signature / tail blocks, title into metadata)
     dedup: bool = False   # DocDedup after cleaning: exact + same-number near-duplicate documents
+    split: Literal["recursive", "sentence", "khoan", "semantic"] = "recursive"   # kind=dieu: how articles longer than `size` are cut
+    semantic_pct: float = 90.0   # split=semantic: percentile of neighbour-sentence distances that starts a new piece
 
 
 class Embed(Strict):
@@ -157,7 +159,12 @@ class Config(Strict):
         extra = [] if self.sources == ["corpus"] else [self.sources]  # keeps the hash of course-corpus indexes
         if self.embed.engine != "local":
             extra.append(self.embed.engine)
-        chunk = self.chunk.model_dump(exclude={k for k in ("clean", "dedup") if not getattr(self.chunk, k)})  # old keys unchanged
+        drop = {k for k in ("clean", "dedup") if not getattr(self.chunk, k)}
+        if self.chunk.split == "recursive":
+            drop |= {"split", "semantic_pct"}
+        elif self.chunk.split != "semantic":
+            drop |= {"semantic_pct"}
+        chunk = self.chunk.model_dump(exclude=drop)  # old keys unchanged
         return _hash(self.corpus_limit, *extra, chunk, self.embed.model, self.embed.passage_prefix, self.embed.normalize, self.embed.max_len,
                      self.retrieve.metric)
 

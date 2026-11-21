@@ -9,12 +9,19 @@ from corpus.ingest import DocDedup
 
 
 class Chunker:
-    def __init__(self, cfg: Chunk):
-        self.cfg = cfg
+    def __init__(self, cfg: Chunk, embed_fn=None):
+        """embed_fn(list[str]) -> vectors: only for chunk.split == "semantic" (sentence embeddings decide the cut points)."""
+        self.cfg, self.embed_fn = cfg, embed_fn
 
     def parser(self) -> NodeParser:
         if self.cfg.kind == "dieu":
-            return DieuNodeParser(max_chars=self.cfg.size, overlap=self.cfg.overlap)
+            parser = DieuNodeParser(max_chars=self.cfg.size, overlap=self.cfg.overlap, split=self.cfg.split,
+                                    semantic_pct=self.cfg.semantic_pct)
+            if self.cfg.split == "semantic":
+                if self.embed_fn is None:
+                    raise ValueError("chunk.split=semantic needs an embedding function")
+                parser.set_embedder(self.embed_fn)
+            return parser
         from langchain_text_splitters import RecursiveCharacterTextSplitter  # same splitter as the course baseline
 
         lc = RecursiveCharacterTextSplitter(chunk_size=self.cfg.size, chunk_overlap=self.cfg.overlap)

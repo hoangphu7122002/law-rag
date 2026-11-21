@@ -73,3 +73,14 @@ def test_tools_url_does_not_change_the_run_key():
 
     a, b = load("configs/exp/A7_react.yaml"), load("configs/exp/A7_react.yaml", ["generate.tools_url=http://localhost:8100"])
     assert a.run_key() == b.run_key()
+
+
+def test_new_chunk_options_leave_existing_index_keys_unchanged_and_new_ones_distinct():
+    base = load("configs/exp/S1_serve.yaml", backend="fake")
+    assert base.chunk.split == "recursive"
+    assert base.index_key() == "4ac2a75c"                                     # default split adds nothing to the hash
+    sent = load("configs/exp/S1_serve.yaml", overrides=["chunk.split=sentence"], backend="fake")
+    assert sent.index_key() != base.index_key()
+    assert load("configs/exp/S1_serve.yaml", overrides=["chunk.split=sentence", "chunk.size=512"], backend="fake").index_key() != sent.index_key()
+    sem = load("configs/exp/S1_serve.yaml", overrides=["chunk.split=semantic", "chunk.semantic_pct=95"], backend="fake")
+    assert sem.index_key() != load("configs/exp/S1_serve.yaml", overrides=["chunk.split=semantic"], backend="fake").index_key()

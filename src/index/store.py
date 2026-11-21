@@ -35,7 +35,8 @@ class IndexStore:
     def _build_nodes(self) -> list[BaseNode]:
         c = self.cfg.chunk
         docs = CorpusReader(self.cfg.sources, lowercase=c.lowercase, flatten=c.flatten).read(self.cfg.corpus_limit)
-        nodes = Chunker(c).split(docs)
+        embed_fn = self.embedder().get_text_embedding_batch if c.split == "semantic" else None
+        nodes = Chunker(c, embed_fn).split(docs)
         store = SimpleDocumentStore()
         store.add_documents(nodes)
         self.dir.mkdir(parents=True, exist_ok=True)
