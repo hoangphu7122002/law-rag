@@ -441,3 +441,9 @@ Test split (200 questions, 0 errors, 0 empty), retrieval as in the dev runs (den
 - Chunking Stage 1 (retrieval only, store frozen): khoan2000 +.004, sent1000 -.004, khoan1000 -.015, rec1000 -.023 (dev Dieu@5 vs control .9053; test similar); semantic 1000 produced 1.88 M chunks and was OOM-killed at 46 GB after 3.7 h. None passed the gate.
 - DPO replication from SFT seed 555 (.6134): round 1 .6399 (+.027), round 2 .6339 (-.006): the first-round gain replicates, the second-round gain does not. The reported chain starts from the best of 3 SFT seeds.
 - Ops: RAM cap per run 46 GB (1M-chunk index builds were OOM-killed at 32), own systemd unit per run (transient-scope clash lost a run start), GPU watchdog in the monitors.
+
+## Step 37 — LLM re-ranking and passage-order sensitivity (2026-11-22)
+- Exploratory upper bound (dev only sent to Mistral): GLM-5.3 (low) / DeepSeek-V4 re-rank the top-10 articles: Dieu@1 +.14 / +.10 over the fine-tuned reranker (CI excludes 0), Dieu@5 unchanged.
+- Generation (dpo_a2, dev300 greedy, 2 shots) with the LLM order: GLM .6654, DeepSeek .6637 vs baseline .6637 -> no gain.
+- Order sensitivity: reversed .6150 (-.049), shuffled .6459 (-.018). Model reads order, but a better order adds nothing.
+- Open: SFT with shuffled order / all gold articles injected / absent rate; needs 3 seeds per config (SFT sd .015).

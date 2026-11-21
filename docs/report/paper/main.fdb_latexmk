@@ -1,5 +1,5 @@
 # Fdb version 4
-["pdflatex"] 1795236583.15203 "/Users/hoangphu/law-rag/docs/report/paper/main.tex" "main.pdf" "main" 1795236583.62142 2
+["pdflatex"] 1795281497.17941 "/Users/hoangphu/law-rag/docs/report/paper/main.tex" "main.pdf" "main" 1795281497.64054 2
   "/Users/hoangphu/Library/Application Support/MiKTeX/texmfs/data/miktex/data/le/pdftex/pdflatex.fmt" 1778086175.71281 13360213 4471e75a0c559c8b9d6ba44b5467f32d ""
   "/Users/hoangphu/Library/Application Support/MiKTeX/texmfs/install/fonts/tfm/public/cm/cmr10.tfm" 1778081025.49849 1296 45809c5a464d5f32c8f98ba97c1bb47f ""
   "/Users/hoangphu/Library/Application Support/MiKTeX/texmfs/install/tex/latex/base/article.cls" 1778081045.83177 20144 b966087dda3b194755eb460d32e2ef75 ""
@@ -8,9 +8,9 @@
   "/Users/hoangphu/Library/Application Support/MiKTeX/texmfs/install/tex/latex/l3backend/l3backend-pdftex.def" 1778081032.23429 30909 7dedb28cb21a1e79c47a35a35ae3c507 ""
   "/Users/hoangphu/Library/Application Support/MiKTeX/texmfs/install/tex/latex/l3kernel/expl3.sty" 1778081032.52153 6558 f72ebe51bdca4990db99e72c8133397c ""
   "/Users/hoangphu/Library/Application Support/MiKTeX/texmfs/install/tex/latex/l3packages/xparse/xparse.sty" 1778081032.61731 10176 c2fc1c663b3f3899ddac6e6ed3fb1d7e ""
-  "/Users/hoangphu/law-rag/docs/report/paper/main.tex" 1795236580.69108 63041 76c1b8d360805baf3fcf3d87f3ffb443 ""
-  "main.aux" 1795236575.15092 32 3985256e7290058c681f74d7a3565a19 "pdflatex"
-  "main.tex" 1795236580.69108 63041 76c1b8d360805baf3fcf3d87f3ffb443 ""
+  "/Users/hoangphu/law-rag/docs/report/paper/main.tex" 1795281493.37621 69654 71dff8c631063f088de61b9020ad2d73 ""
+  "main.aux" 1795281489.178 32 3985256e7290058c681f74d7a3565a19 "pdflatex"
+  "main.tex" 1795281493.37621 69654 71dff8c631063f088de61b9020ad2d73 ""
   (generated)
   "main.aux"
   "main.log"

@@ -405,6 +405,7 @@ Always quote the rank-1 passage / MBR over \{answer, quotes\} & $.534$ / $.557$ 
 Learned selector over \{answer, 5 quotes\} (5-fold CV on dev) & $.644$ & worse (oracle $.715$)\\
 DPO round~1 with cited-article weight $0.4$ / $0.6$ in the reward (original $0.2$: $.6543$) & $.6551$ / $.6458$ & no gain\\
 SFT on $25\%$ / $50\%$ / $100\%$ of the training questions (two seeds each) & $.585$ / $.603$ / $.616$ (mean of three seeds) & $+.016$ per doubling of the data\\
+Order of the five passages: reversed / shuffled (re-ranked by GLM-5.3 / DeepSeek-V4: $.6654$ / $.6637$) & $.615$ / $.646$ (re-ranked: $+.002$ / $0$) & the model reads the order, a better order adds nothing\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -427,6 +428,7 @@ Semantic $1000$ & \multicolumn{4}{c}{index build did not complete (memory)}\\
 \bottomrule
 \end{tabular}
 \end{table}
+\paragraph{Passage order and LLM re-ranking (exploratory).} As an upper bound on better retrieval, GLM-5.3 and DeepSeek-V4 re-ranked the top-10 articles of the dev questions (dev text only; an exploratory ceiling, not part of the system). They raise \dieu{}@1 by $+.14$ and $+.10$ over the fine-tuned reranker (paired 95\% intervals exclude 0) while \dieu{}@5 is unchanged. Feeding the final model the re-ranked passages gives $.6654$ and $.6637$ against $.6637$: no gain. The model is sensitive to order (reversed $.615$, shuffled $.646$) but not to a better order, consistent with the oracle and fine-tuned reranker results above.
 \paragraph{Seed sensitivity.} Three SFT seeds on the full data give $.6325$, $.603$ and $.613$ (mean $.616$, standard deviation $.015$), so the reported chain starts from the best of three SFT runs and the final $.6637$ depends on that choice. Repeating the two DPO rounds from the second best SFT seed (the one with $.613$) reproduces the first-round gain ($.640$, $+.027$) but not the second ($.634$): the robust effect of on-policy DPO is about $+.02$ to $+.03$ over its SFT model, and the additional benefit of the second round is not confirmed.
 
 \subsection{Negative and null results}\label{sec:negative}

@@ -35,3 +35,4 @@
 | 2026-11-21 | L40S box | GPU0 / GPU1 / CPU | ~5 h overnight | 0 (own box) | Step 34: reranker/k/shots ablations (9 dev runs), DPO margin/beta ablations (4 trainings + evals), SFT seed 777 (train + greedy + MBR8), retrieval-only variants dev+test | no setting beats dpo_a2 greedy .6637; SFT seed 2 .603 |
 | 2026-11-21 | L40S box | GPU0 / GPU1 | ~4 h | 0 (own box) | Step 35: load tests A/A'/B/C (sweep, max, burst, spike), vLLM flag sweep (8 configs x 2 levels), law fetch | max users 6-7 / 15-18 / 18; flags: defaults kept |
 | 2026-11-21 | L40S box | GPU0 / GPU1 | ~9 h | 0 (own box) | Step 36: learning curve (4 SFT + 1), cite-weight DPO x2, SFT seed 555 + 2-round DPO replication, chunking Stage 1 (5 variants x dev/test; 1 OOM) | see Step 36 |
+| 2026-11-22 | L40S box | GPU0 | ~1.5 h | 0 (own box) | Step 37: 4 dev300 generation runs (GLM/DeepSeek order, reversed, shuffled); Mistral Vibe calls for re-ranking (dev only) | |
