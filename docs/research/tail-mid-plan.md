@@ -11,6 +11,7 @@ Context: dev300 mean .664. High (>=.8) 34 %, middle 48 % (54 % of the loss), tai
 ## Direction (user, 2026-11-22)
 - One-shot flow stays the deployed system (answering LLM < 4B), with the agreed enhancements.
 - Add a ReAct flow with a big model (GLM-5.3 / DeepSeek-V4 via /vibe, or the 9B) that uses tools (search over our index, KG family lookup) to build correct context and answers; if the 9B (or the 2B) is wrong, the big teacher corrects it.
+- Refinement (user): the 9B (same Qwen3.5 family as the 2B) runs the ReAct with full tools; GLM/DeepSeek only correct its wrong steps (minimal edits), so the 2B does not imitate a different reasoning style. Earlier trained-2B ReAct was worse than one-shot (.537/.574 vs .633 dev_clean): to beat it, either the student keeps one-shot format (data from corrected trajectories) or ReAct SFT must fix the 66 % own-query search hit.
 - Verified clean data (train questions: accepted only if it matches the reference / cites the gold Dieu; synthetic questions: grounded quote check) + the one-shot data tricks (template opener, shuffle, inject-all gold, absent rate, test-like context) -> train the 2B in the one-shot format.
 - Gate: pilot first (50 train questions): (a) teacher ROUGE-L vs reference with gold context; (b) teacher-agent Dieu@5 vs the pipeline.
 
