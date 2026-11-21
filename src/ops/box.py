@@ -147,7 +147,7 @@ class RemoteBox:
         """(tmux session name, shell command) of one experiment, or of a shell command: exp "sh", args [name, *cmd]."""
         b, name = self.box, Path(exp).stem
         prefix = (f"cd {b.root} && export {self._env()} PATH=$HOME/.local/bin:$PATH HF_HOME={b.hf_home} CUDA_VISIBLE_DEVICES={gpu} && "
-                  f"PYTHONPATH=src systemd-run --user --scope -q -p MemoryMax={MAX_RAM_GB}G ")  # cgroup cap: OOM-kills this run, not the box
+                  f"PYTHONPATH=src systemd-run --user --scope -q --unit=lawrag-job-$(date +%s%N) -p MemoryMax={MAX_RAM_GB}G ")  # cgroup cap: OOM-kills this run, not the box; own unit name (auto names clashed: "Unit run-uNNN.scope was already loaded", 2026-11-21)
         if exp == "sh":
             name, cmd = args[0], " ".join(args[1:])
             return f"{PREFIX}run-{name}", f"{prefix}bash -c {shlex.quote(cmd)} 2>&1 | tee {RUNS}/logs/{name}.log"
