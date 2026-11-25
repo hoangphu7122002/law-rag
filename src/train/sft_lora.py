@@ -68,6 +68,7 @@ def main() -> None:
     ap.add_argument("--rslora", action="store_true", help="rank-stabilised LoRA scaling")
     ap.add_argument("--dora", action="store_true", help="DoRA (weight-decomposed LoRA)")
     ap.add_argument("--init-lora", default="", help="peft init_lora_weights, e.g. pissa")
+    ap.add_argument("--save-last", action="store_true", help="also save the merged model of the LAST step to <out>_last (the main <out> keeps the best-val checkpoint)")
     ap.add_argument("--full", action="store_true", help="full fine-tuning (no adapter); weights kept in fp32 with bf16 autocast")
     ap.add_argument("--batch", type=int, default=2)
     ap.add_argument("--accum", type=int, default=8)
@@ -111,7 +112,21 @@ def main() -> None:
                      gradient_checkpointing=True, logging_steps=5, report_to=[], seed=a.seed, **evals,
                      max_length=a.max_length, completion_only_loss=True, dataset_num_proc=4,
                      save_only_model=a.full)   # full FT: a checkpoint with the optimizer state is ~27 GB; the first full run filled the disk (2026-11-25)
-    trainer = SFTTrainer(model=model, args=args, train_dataset=ds, eval_dataset=val, processing_class=tok, peft_config=lora)
+    from transformers import TrainerCallback
+
+    last_dir = Path(str(out) + "_last")
+
+    class SaveLast(TrainerCallback):
+        """At the final step copy the adapter model, merge the copy and save it (load_best_model_at_end then replaces the live model by the best one)."""
+        def on_step_end(self, args_, state, control, model=None, **kw):
+            if a.save_last and not a.full and state.global_step >= state.max_steps:
+                import copy
+
+                m = copy.deepcopy(model).merge_and_unload().to(torch.bfloat16)
+                m.save_pretrained(last_dir, safe_serialization=True)
+                del m
+
+    trainer = SFTTrainer(model=model, args=args, train_dataset=ds, eval_dataset=val, processing_class=tok, peft_config=lora, callbacks=[SaveLast()])
     if not a.full:
         trainer.model.print_trainable_parameters()
     result = trainer.train()
@@ -120,6 +135,9 @@ def main() -> None:
     merged.save_pretrained(out, safe_serialization=True)
     tok.save_pretrained(out)
     complete_config(a.base, out)
+    if a.save_last and last_dir.exists():
+        tok.save_pretrained(last_dir)
+        complete_config(a.base, last_dir)
     shutil.rmtree(out / "ckpt", ignore_errors=True)
     hist = trainer.state.log_history
     rec = {"base": a.base, "data": str(data), "rows": len(ds), "val_rows": len(val) if val is not None else 0,
