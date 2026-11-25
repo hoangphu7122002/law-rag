@@ -1,0 +1,19 @@
+# DPO round 1 from D3c PiSSA last-epoch (dev .6650 / test .6680), GPU1, same recipe as dpo_D3c_a (rsLoRA, GPU0).
+serve /home/app/phunguyen/law_rag/data/models/q35_D3c_pissa_last --gpu 1 --share 0.45
+sh pref-D3cP-r1 cd /home/app/phunguyen/law_rag && PYTHONPATH=src .venv/bin/python scripts/pref_sample.py --data data/train/q35_D3 --out data/train/pref_D3cP/cands.jsonl --base-url http://localhost:8001/v1 --model /home/app/phunguyen/law_rag/data/models/q35_D3c_pissa_last --n 8 > data/runs/logs/pref-D3cP-r1.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pref-D3cP-r1"
+do tmux kill-session -t lawrag-llm-g1
+sh pairs-D3cP-r1 cd /home/app/phunguyen/law_rag && PYTHONPATH=src .venv/bin/python scripts/build_pairs.py data/train/pref_D3cP/cands.jsonl data/train/pref_D3cP/pairs.jsonl --min-margin 0.1 > data/runs/logs/pairs-D3cP-r1.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pairs-D3cP-r1"
+sh dpo-D3cP-r1 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/dpo.py --pairs data/train/pref_D3cP/pairs.jsonl --base /home/app/phunguyen/law_rag/data/models/q35_D3c_pissa_last --out /home/app/phunguyen/law_rag/data/models/dpo_D3c_pissa_a --lr 2e-5 --beta 0.1 --max-length 16384 > data/runs/logs/dpo-D3cP-r1.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo-D3cP-r1"
+do sleep 90
+serve /home/app/phunguyen/law_rag/data/models/dpo_D3c_pissa_a --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_D3c_pissa_a --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1
+do sleep 90
+serve /home/app/phunguyen/law_rag/data/models/dpo_D3c_pissa_a --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_D3c_pissa_a --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1
