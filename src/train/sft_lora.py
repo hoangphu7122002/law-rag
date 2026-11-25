@@ -109,7 +109,8 @@ def main() -> None:
                      per_device_train_batch_size=a.batch, gradient_accumulation_steps=a.accum, learning_rate=a.lr,
                      lr_scheduler_type="cosine", warmup_steps=0.05, weight_decay=0.0, max_grad_norm=1.0, bf16=True,  # warmup < 1 = ratio
                      gradient_checkpointing=True, logging_steps=5, report_to=[], seed=a.seed, **evals,
-                     max_length=a.max_length, completion_only_loss=True, dataset_num_proc=4)
+                     max_length=a.max_length, completion_only_loss=True, dataset_num_proc=4,
+                     save_only_model=a.full)   # full FT: a checkpoint with the optimizer state is ~27 GB; the first full run filled the disk (2026-11-25)
     trainer = SFTTrainer(model=model, args=args, train_dataset=ds, eval_dataset=val, processing_class=tok, peft_config=lora)
     if not a.full:
         trainer.model.print_trainable_parameters()
