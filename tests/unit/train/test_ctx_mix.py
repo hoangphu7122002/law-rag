@@ -98,3 +98,33 @@ def test_fit_budget_drops_non_gold_passages_from_the_tail_and_never_the_gold():
     assert [p.pid for p in fit_budget(ctx, is_gold, size, 100)] == [p.pid for p in ctx]
     assert [p.pid for p in fit_budget(ctx, is_gold, size, 10)] == ["g#1"]       # r1 is not gold either: only the gold stays
     assert fit_budget([P("g#1"), P("g#2")], is_gold, size, 10) is None           # the gold alone does not fit: row dropped
+
+
+def test_full_gold_replaces_a_chunk_of_a_gold_article_by_the_whole_article_and_drops_its_other_chunks():
+    from train.ctx_mix import full_gold
+
+    ctx = [P("r1"), P("g#1"), P("r3"), P("g#1")]            # two chunks of the same gold article
+    whole = {"g#1": Passage(pid="WHOLE", doc="d", text="g#1")}
+    out = full_gold(ctx, {"g#1"}, KEY, whole.get, random.Random(0))
+    assert [p.pid for p in out] == ["r1", "WHOLE", "r3"]
+
+
+def test_full_gold_puts_every_missing_gold_into_non_gold_slots_and_never_overwrites_a_gold_passage_or_rank_one():
+    from train.ctx_mix import full_gold
+
+    store = {k: Passage(pid=k, doc="d", text=k) for k in ("g#1", "g#2", "g#3")}
+    for seed in range(20):
+        ctx = [P("r1"), P("g#1"), P("r3"), P("r4"), P("r5")]
+        out = full_gold(ctx, {"g#1", "g#2", "g#3"}, lambda p: p.text if p.text.startswith("g#") else p.pid, store.get, random.Random(seed))
+        ids = [p.pid for p in out]
+        assert ids[0] == "r1" and len(out) == 5
+        assert {"g#1", "g#2", "g#3"} <= set(ids)
+
+
+def test_full_gold_grows_the_context_when_there_are_more_gold_articles_than_slots():
+    from train.ctx_mix import full_gold
+
+    store = {k: Passage(pid=k, doc="d", text=k) for k in ("g#1", "g#2", "g#3", "g#4")}
+    ctx = [P("r1"), P("r2")]
+    out = full_gold(ctx, set(store), lambda p: p.pid, store.get, random.Random(0))
+    assert {p.pid for p in out} >= set(store) and out[0].pid == "r1"

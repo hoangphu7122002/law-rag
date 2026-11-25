@@ -17,7 +17,7 @@ from generate.prompt import Prompt
 from evaluate.retrieval_eval import RetrievalEval
 from generate.shots import ShotStore
 from retrieve import Retrieval
-from train.ctx_mix import answerable_context, drop_gold, fit_budget, inject_all, maybe_shuffle, missing_gold
+from train.ctx_mix import answerable_context, drop_gold, fit_budget, full_gold, inject_all, maybe_shuffle, missing_gold
 
 OUT = Path("data/train")
 REFUSALS = [
@@ -33,7 +33,7 @@ class SFTData:
                  k_range: tuple[int, int] | None = None, oracle: float = 0.0, shots: tuple[int, ...] = (0,),
                  refuse: float = 0.0, seed: int = 20261031,
                  shuffle: float = 0.0, all_gold: bool = False, drop_gold_p: float = 0.0,
-                 guarantee: bool = False, extra: str = "", teacher: str = "", max_tokens: int = 0, limit: int = 0):
+                 guarantee: bool = False, extra: str = "", teacher: str = "", max_tokens: int = 0, limit: int = 0, full_gold_articles: bool = False):
         """k_range=(5, 10): each row gets the reranked top-k with k drawn per row (the model sees varied context sizes).
         oracle=p: when the gold Điều is missing from that top-k, with probability p a gold passage (found in the dense
         top-`candidates`) replaces a random slot below the first (RAFT); the rest stay as retrieved (= the test case)."""
@@ -45,6 +45,7 @@ class SFTData:
         # rows whose gold is unknown or not in the corpus are dropped, not trained on. extra: synthetic QA jsonl (train.synth_gen);
         # teacher: jsonl {"qid", "answer"} of verified good teacher answers for train questions (a second answer per question).
         self.guarantee, self.extra, self.teacher = guarantee, extra, teacher
+        self.full_gold = full_gold_articles   # with guarantee: every gold article in the context in FULL (whole article, all of them)
         self.limit = limit   # smoke test: only the first N train questions and the first N synthetic rows
         self.max_tokens = max_tokens   # rows longer than this (prompt + answer) lose non-gold passages from the tail; the trainer's max_length must be >= this
         if guarantee and drop_gold_p:
@@ -72,7 +73,7 @@ class SFTData:
             report["val"] = {k: vrep[k] for k in ("in", "kept", "dropped")}
         report |= {"splits": list(self.splits), "model": self.cfg.generate.model, "prompt": self.cfg.generate.prompt,
                    "retrieval_key": self.cfg.retrieval_key(), "k": self.cfg.retrieve.k, "k_range": self.k_range,
-                   "guarantee": self.guarantee, "max_tokens": self.max_tokens, "extra": self.extra, "teacher": self.teacher, "oracle": self.oracle, "shots": self.shots, "refuse": self.refuse, "shuffle": self.shuffle, "all_gold": self.all_gold, "drop_gold": self.drop_gold_p, "gold_in_context": self.stats}
+                   "guarantee": self.guarantee, "full_gold": self.full_gold, "max_tokens": self.max_tokens, "extra": self.extra, "teacher": self.teacher, "oracle": self.oracle, "shots": self.shots, "refuse": self.refuse, "shuffle": self.shuffle, "all_gold": self.all_gold, "drop_gold": self.drop_gold_p, "gold_in_context": self.stats}
         Decontam.save(report, self.out / "report.json")
         print(f"sft data: {len(kept)} train rows, {report.get('val', {}).get('kept', 0)} val rows -> {self.out}")
         return self.out
@@ -141,7 +142,7 @@ class SFTData:
                         skipped["unverifiable" if not (g and g.pairs) else "unanswerable"] += 1
                         continue
                     gold_in += not has(ctx)   # gold put in from the corpus (the earlier count covers rows that already had it)
-                    ctx = fixed
+                    ctx = full_gold(fixed, set(g.pairs), key_of, lookup, self.rng) if self.full_gold else fixed
                 if train:
                     ctx = maybe_shuffle(ctx, self.shuffle, self.rng)
                 avoid = frozenset(g.pairs) if g else frozenset()

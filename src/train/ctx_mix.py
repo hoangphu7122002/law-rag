@@ -78,3 +78,26 @@ def fit_budget(ctx, is_gold, size, budget):
             return None
         out.pop(spare[0])
     return out
+
+
+def full_gold(ctx, gold_keys, key_of, lookup, rng) -> list:
+    """The reference quotes whole articles, so every gold article must be in the context IN FULL: a gold passage that is only one chunk of its
+    article is replaced by the whole article (lookup(key)), the article's other chunks are dropped, and every gold article still missing takes a
+    non-gold slot (never rank 1, never another gold passage); the context grows when there are more missing articles than free slots."""
+    out, have = [], set()
+    for p in ctx:
+        k = key_of(p)
+        if k in gold_keys:
+            if k in have:
+                continue
+            have.add(k)
+            out.append(lookup(k) or p)
+        else:
+            out.append(p)
+    missing = [w for k in sorted(gold_keys) if k not in have and (w := lookup(k)) is not None]
+    slots = [i for i in range(1, len(out)) if key_of(out[i]) not in gold_keys]
+    rng.shuffle(slots)
+    for slot, w in zip(slots, missing):
+        out[slot] = w
+    out.extend(missing[len(slots):])
+    return out
