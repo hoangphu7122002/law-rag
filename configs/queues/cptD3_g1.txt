@@ -1,0 +1,20 @@
+# SFT on D3 FROM the CPT v2 model (/home/app/phunguyen/law_rag/data/models/q35_cpt_v2), best-val and last-epoch dev+test; waits for the CPT run to write cpt_report.json. Recipe = variant-study C recipe (from a base without SFT): lr 1e-4 (default), 3 epochs.
+wait test -f /home/app/phunguyen/law_rag/data/models/q35_cpt_v2/cpt_report.json
+sh train-q35cptD3_rslora cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/q35_D3 --base /home/app/phunguyen/law_rag/data/models/q35_cpt_v2 --out data/models/q35_cptD3_rslora --rslora --r 64 --alpha 8 --epochs 3 --max-length 16384 --batch 1 --accum 16 --seed 1 --save-last --keep-ckpt > data/runs/logs/train-q35cptD3_rslora.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-train-q35cptD3_rslora"
+serve /home/app/phunguyen/law_rag/data/models/q35_cptD3_rslora --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_cptD3_rslora --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1
+serve /home/app/phunguyen/law_rag/data/models/q35_cptD3_rslora --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_cptD3_rslora --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1
+serve /home/app/phunguyen/law_rag/data/models/q35_cptD3_rslora_last --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_cptD3_rslora_last --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1
+serve /home/app/phunguyen/law_rag/data/models/q35_cptD3_rslora_last --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_cptD3_rslora_last --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1
