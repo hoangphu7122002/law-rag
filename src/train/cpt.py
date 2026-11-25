@@ -46,7 +46,7 @@ def main() -> None:
         model = get_peft_model(model, LoraConfig(r=a.lora_r, lora_alpha=a.lora_r, lora_dropout=0.0, bias="none", task_type="CAUSAL_LM", target_modules="all-linear",
                                                  exclude_modules=r".*(visual|vision|lm_head).*" if multimodal else None))
     args = TrainingArguments(output_dir=str(Path(a.out) / "ckpt"), num_train_epochs=a.epochs, max_steps=4 if a.limit else -1, per_device_train_batch_size=a.batch,
-                             per_device_eval_batch_size=a.batch, gradient_accumulation_steps=a.accum, learning_rate=a.lr, lr_scheduler_type="cosine", warmup_ratio=0.03,
+                             per_device_eval_batch_size=a.batch, gradient_accumulation_steps=a.accum, learning_rate=a.lr, lr_scheduler_type="cosine", warmup_steps=0.03,
                              weight_decay=0.0, max_grad_norm=1.0, bf16=True, gradient_checkpointing=True, gradient_checkpointing_kwargs={"use_reentrant": False},
                              ddp_find_unused_parameters=False, logging_steps=5, eval_strategy="epoch", save_strategy="no", report_to=[], seed=a.seed)
     trainer = Trainer(model=model, args=args, train_dataset=train, eval_dataset=val, data_collator=default_data_collator)
