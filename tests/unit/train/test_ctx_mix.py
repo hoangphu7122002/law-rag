@@ -58,3 +58,43 @@ def test_drop_gold_replaces_gold_with_spares_in_place():
 def test_drop_gold_without_spare_removes_but_keeps_one_passage():
     out = drop_gold([P("g1"), P("g2")], lambda p: p.pid.startswith("g"), [], random.Random(0))
     assert len(out) == 1
+
+
+def test_ensure_gold_pulls_missing_gold_articles_from_a_lookup_and_keeps_rank_one():
+    from train.ctx_mix import ensure_gold
+
+    store = {"g#1": P("g#1"), "h#2": P("h#2")}
+    ctx = [P("r1"), P("r2"), P("r3"), P("r4")]
+    out = ensure_gold(ctx, {"g#1", "h#2", "z#9"}, KEY, store.get, random.Random(0))
+    assert out[0].pid == "r1" and len(out) == 4
+    assert {"g#1", "h#2"} <= {p.pid for p in out}          # z#9 is not in the store: skipped, not an error
+
+
+def test_ensure_gold_leaves_a_context_that_already_has_the_gold_alone():
+    from train.ctx_mix import ensure_gold
+
+    ctx = [P("r1"), P("g#1")]
+    assert ensure_gold(ctx, {"g#1"}, KEY, lambda k: None, random.Random(0)) == ctx
+
+
+def test_answerable_context_returns_none_when_the_gold_cannot_be_put_in():
+    from train.ctx_mix import answerable_context
+
+    has = lambda ps: any(p.pid.startswith("g") for p in ps)   # noqa: E731
+    ctx = [P("r1"), P("r2")]
+    assert answerable_context(ctx, {"g#1"}, KEY, has, {"g#1": P("g#1")}.get, random.Random(0))[0].pid == "r1"
+    assert answerable_context(ctx, {"z#9"}, KEY, has, {}.get, random.Random(0)) is None      # gold not in the corpus lookup
+    assert answerable_context(ctx, set(), KEY, has, {}.get, random.Random(0)) is None        # no known gold: answerability unverifiable
+    assert answerable_context([P("g#1")], {"g#1"}, KEY, has, {}.get, random.Random(0)) == [P("g#1")]
+
+
+def test_fit_budget_drops_non_gold_passages_from_the_tail_and_never_the_gold():
+    from train.ctx_mix import fit_budget
+
+    ctx = [P("r1"), P("g#1"), P("r3"), P("r4"), P("r5")]
+    size = lambda p: 10   # noqa: E731
+    is_gold = lambda p: p.pid.startswith("g")   # noqa: E731
+    assert [p.pid for p in fit_budget(ctx, is_gold, size, 30)] == ["r1", "g#1", "r3"]
+    assert [p.pid for p in fit_budget(ctx, is_gold, size, 100)] == [p.pid for p in ctx]
+    assert [p.pid for p in fit_budget(ctx, is_gold, size, 10)] == ["g#1"]       # r1 is not gold either: only the gold stays
+    assert fit_budget([P("g#1"), P("g#2")], is_gold, size, 10) is None           # the gold alone does not fit: row dropped
