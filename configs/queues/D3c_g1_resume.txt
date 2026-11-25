@@ -1,0 +1,14 @@
+# D3c rsLoRA remaining evals (queue 180423 stopped at the 2nd serve: GPU1 memory not yet released after the first eval). Test best-val, then dev+test last-epoch.
+do sleep 30
+serve /home/app/phunguyen/law_rag/data/models/q35_D3c_rslora --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_D3c_rslora --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1
+serve /home/app/phunguyen/law_rag/data/models/q35_D3c_rslora_last --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_D3c_rslora_last --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1
+serve /home/app/phunguyen/law_rag/data/models/q35_D3c_rslora_last --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_D3c_rslora_last --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1
