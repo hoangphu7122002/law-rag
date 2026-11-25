@@ -1,8 +1,21 @@
-# Data D with rsLoRA r64, seed 1 (GPU1 lane). Waits for the data built by D_g0. NOT launched until the config is approved.
+# Data D, rslora, seed 1, 3 epochs, --save-last: dev300 + TEST ROUGE-L of the best-val checkpoint and of the last-epoch model (user-requested; test numbers are used to choose the training method). GPU1 lane. Waits for data D (D_build).
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1125-122034"
 wait test -f /home/app/phunguyen/law_rag/data/train/q35_D/report.json
-sh train-q35D_rslora cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/q35_D --base Qwen/Qwen3.5-2B --out data/models/q35_D_rslora --rslora --r 64 --alpha 8 --epochs 3 --max-length 16384 --batch 1 --accum 16 --seed 1 > data/runs/logs/train-q35D_rslora.log 2>&1
+sh train-q35D_rslora cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/q35_D --base Qwen/Qwen3.5-2B --out data/models/q35_D_rslora --rslora --r 64 --alpha 8 --epochs 3 --max-length 16384 --batch 1 --accum 16 --seed 1 --save-last > data/runs/logs/train-q35D_rslora.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-train-q35D_rslora"
 serve /home/app/phunguyen/law_rag/data/models/q35_D_rslora --gpu 1 --share 0.45
 configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_D_rslora --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1
+serve /home/app/phunguyen/law_rag/data/models/q35_D_rslora --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_D_rslora --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1
+serve /home/app/phunguyen/law_rag/data/models/q35_D_rslora_last --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_D_rslora_last --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1
+serve /home/app/phunguyen/law_rag/data/models/q35_D_rslora_last --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_D_rslora_last --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set split=test
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
 do tmux kill-session -t lawrag-llm-g1

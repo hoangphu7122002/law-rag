@@ -1,0 +1,2 @@
+# Full build of data D (guarantee, k 3-15, shuffle 0.7, 764 synthetic rows). Launch only after the smoke test is clean.
+sh sftdata-q35D cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli sft-data configs/exp/A3_Q3.yaml --name q35_D --k-range 3,15 --max-tokens 16000 --guarantee --oracle 1.0 --all-gold --shuffle 0.7 --shots 0,1,2,3 --refuse 0.2 --extra data/synth_v1.jsonl --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 > data/runs/logs/sftdata-q35D.log 2>&1
