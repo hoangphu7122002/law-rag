@@ -38,3 +38,13 @@ def test_process_turns_a_good_reply_into_rows_and_a_bad_one_into_a_reject():
     assert all(r["key"] == ART.key for r in rows)
     rows, rej = process("không phải json", batches([ART], 1)[0], blocked=set())
     assert rows == [] and rej[0]["reason"] == "bad_json"
+
+
+def test_summaries_are_a_fourth_kind_that_must_be_shorter_than_the_article_and_keep_its_numbers():
+    s = "Tóm tắt Điều 13 Luật Các công cụ chuyển nhượng số 49/2005/QH11: công cụ bị mất thì phải báo văn bản, thời hạn 30 ngày."
+    assert "summaries" in make_prompt(batches([ART], 1)[0])
+    assert verify_text(s, ART, "summary") is None
+    assert verify_text(s + " " + ART.text * 2, ART, "summary") == "too_long"
+    raw = json.dumps([{"id": "0", "summaries": [s]}])
+    rows, rej = process(raw, batches([ART], 1)[0], blocked=set())
+    assert [r["source"] for r in rows] == ["summary"] and not rej

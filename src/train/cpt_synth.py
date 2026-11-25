@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from train.synth_gen import grams, norm, parse_json_list
 
 NUM = re.compile(r"\d+(?:[.,]\d+)*")
-KINDS = ("paraphrase", "qa_fwd", "qa_rev")
+KINDS = ("paraphrase", "qa_fwd", "qa_rev", "summary")
 
 
 @dataclass(frozen=True)
@@ -45,13 +45,14 @@ def make_prompt(batch: Batch) -> str:
     head = (
         "Bạn là biên tập viên pháp lý. Với MỖI điều luật dưới đây, hãy viết dữ liệu học cho một mô hình ngôn ngữ nhỏ.\n"
         "Trả về DUY NHẤT một danh sách JSON, mỗi phần tử có dạng:\n"
-        '{"id": "<id>", "paraphrases": [3 chuỗi], "qa_fwd": [2 đối tượng {"q","a"}], "qa_rev": [1 đối tượng {"q","a"}]}\n'
+        '{"id": "<id>", "paraphrases": [3 chuỗi], "qa_fwd": [2 đối tượng {"q","a"}], "qa_rev": [1 đối tượng {"q","a"}], "summaries": [2 chuỗi]}\n'
         "QUY TẮC (bắt buộc):\n"
         "- paraphrases: 3 bản viết lại KHÁC NHAU về cách diễn đạt và cấu trúc (một bản giải thích dễ hiểu, một bản tóm tắt gạch đầu dòng, một bản văn phong hành chính "
         "đổi thứ tự trình bày). Mỗi bản phải nêu rõ \"Điều N\" và tên luật, giữ NGUYÊN mọi con số, thời hạn, tỷ lệ, tên cơ quan; KHÔNG thêm con số hay quy định không có trong điều luật.\n"
         "- qa_fwd: 2 câu hỏi về nội dung cụ thể của điều; câu trả lời mở đầu bằng \"Căn cứ theo Điều N <tên luật>\" và đúng với điều luật.\n"
         "- qa_rev: 1 câu hỏi mô tả một chi tiết đặc trưng của điều mà KHÔNG nêu số điều, hỏi quy định đó nằm ở điều nào, luật nào; "
         "câu trả lời nêu rõ \"Điều N\" và tên luật (kèm số hiệu).\n"
+        "- summaries: 2 bản tóm tắt: một câu duy nhất, và 3-4 ý gạch đầu dòng; cả hai nêu \"Điều N\" và tên luật, ngắn hơn điều luật, giữ nguyên con số.\n"
         "- Không chép nguyên văn cả điều trong paraphrases; không thêm lời giải thích ngoài JSON.\n\nCÁC ĐIỀU LUẬT:\n")
     body = []
     for i, a in enumerate(batch.items):
@@ -78,6 +79,8 @@ def verify_text(text: str, art: Article, kind: str, blocked: frozenset | set = f
         g, gs = grams(t, 8), grams(art.text, 8)
         if gs and len(g & gs) / max(len(g), 1) > 0.8:
             return "near_copy"
+    if kind == "summary" and len(t) > 0.9 * len(norm(art.text)):
+        return "too_long"
     if kind == "qa_rev" and art.law.lower() not in t.lower().replace(" ", ""):
         return "no_law_number"
     if blocked and grams(t) & blocked:
@@ -98,6 +101,7 @@ def process(raw: str, batch: Batch, blocked=frozenset()):
             rej.append({"batch": batch.id, "reason": "unknown_id"})
             continue
         cands = [("paraphrase", p) for p in o.get("paraphrases") or [] if isinstance(p, str)]
+        cands += [("summary", x) for x in o.get("summaries") or [] if isinstance(x, str)]
         for kind in ("qa_fwd", "qa_rev"):
             cands += [(kind, f"Hỏi: {norm(x['q'])}\nĐáp: {norm(x['a'])}") for x in o.get(kind) or [] if isinstance(x, dict) and "q" in x and "a" in x]
         for kind, text in cands:
