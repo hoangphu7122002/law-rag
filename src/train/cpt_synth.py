@@ -120,3 +120,92 @@ def process(raw: str, batch: Batch, blocked=frozenset()):
             else:
                 rows.append({"text": text, "source": kind, "key": art.key})
     return rows, rej
+
+
+# ---- second pass: tasks over a group of consecutive articles of one law (multi-article QA, scenarios, group summary)
+@dataclass(frozen=True)
+class Group:
+    key: str          # "<law key>#<first>-<last>" (or "#<n>" for a single article)
+    items: tuple      # Articles
+
+    @property
+    def title(self) -> str:
+        return self.items[0].title
+
+    @property
+    def text(self) -> str:
+        return "\n".join(a.text for a in self.items)
+
+    @property
+    def dieus(self) -> list:
+        return [a.dieu for a in self.items]
+
+
+def groups(arts: list[Article], size: int = 3) -> list[Group]:
+    out, cur = [], []
+    for a in arts:
+        if cur and (a.law != cur[0].law or len(cur) == size):
+            out.append(cur)
+            cur = []
+        cur.append(a)
+    if cur:
+        out.append(cur)
+    return [Group(f"{c[0].law}#{c[0].dieu}" + (f"-{c[-1].dieu}" if len(c) > 1 else ""), tuple(c)) for c in out]
+
+
+def make_prompt_multi(batch) -> str:
+    head = (
+        "Bạn là biên tập viên pháp lý. Mỗi nhóm dưới đây gồm vài điều luật liên tiếp của cùng một luật. Viết dữ liệu học cho một mô hình ngôn ngữ nhỏ.\n"
+        "Trả về DUY NHẤT một danh sách JSON, mỗi phần tử: "
+        '{"id": "<id>", "multi_qa": [2 đối tượng {"q","a"}], "scenario": [1 đối tượng {"q","a"}], "summary": [1 chuỗi]}\n'
+        "QUY TẮC (bắt buộc):\n"
+        "- multi_qa: câu hỏi cần thông tin từ ÍT NHẤT HAI điều khác nhau trong nhóm (nếu nhóm chỉ có một điều thì hỏi hai ý của điều đó); câu trả lời nêu rõ từng \"Điều N\" đã dùng và tên luật kèm số hiệu.\n"
+        "- scenario: một tình huống thực tế ngắn (dùng tên chung như ông A, bà B, công ty X) rồi hỏi quy định áp dụng; câu trả lời căn cứ \"Điều N\" và tên luật, đúng với điều luật.\n"
+        "- summary: một đoạn tóm tắt cả nhóm, nêu tất cả \"Điều N\" và tên luật, ngắn hơn nguyên văn.\n"
+        "- Chỉ dùng con số, thời hạn, tỷ lệ có trong điều luật; không thêm quy định không có.\n\nCÁC NHÓM:\n")
+    body = [f"### id={i} | {g.key} | {g.title}\n{g.text}\n" for i, g in enumerate(batch.items)]
+    return head + "\n".join(body)
+
+
+def verify_multi(text: str, g: Group, kind: str, question: str = "", blocked=frozenset()) -> str | None:
+    t = norm(text)
+    if len(t) < 40:
+        return "too_short"
+    cited = set(re.findall(r"Điều\s+(\d+[a-z]?)", t, flags=re.I))
+    if not cited:
+        return "no_article_number"
+    if cited - {d.lower() for d in g.dieus} - {d for d in g.dieus}:
+        return "wrong_article"
+    if kind == "qa_multi" and len(g.dieus) > 1 and len(cited) < 2:
+        return "single_article"
+    allowed = numbers(g.text) | numbers(g.title) | numbers(g.key) | numbers(question)
+    if numbers(t) - allowed:
+        return "new_numbers"
+    if kind == "law_summary" and len(t) > 0.9 * len(norm(g.text)):
+        return "too_long"
+    if blocked and grams(t) & blocked:
+        return "near_dup_eval"
+    return None
+
+
+def process_multi(raw: str, batch, blocked=frozenset()):
+    objs = parse_json_list(raw)
+    if objs is None:
+        return [], [{"batch": batch.id, "reason": "bad_json", "raw": (raw or "")[:300]}]
+    rows, rej = [], []
+    for o in objs:
+        try:
+            g = batch.items[int(re.match(r"\D*(\d+)", str(o["id"])).group(1))]
+        except (KeyError, ValueError, IndexError, TypeError, AttributeError):
+            rej.append({"batch": batch.id, "reason": "unknown_id"})
+            continue
+        cands = [("law_summary", "", x) for x in o.get("summary") or [] if isinstance(x, str)]
+        for kind, k in (("qa_multi", "multi_qa"), ("scenario", "scenario")):
+            cands += [(kind, norm(x["q"]), f"Hỏi: {norm(x['q'])}\nĐáp: {norm(x['a'])}") for x in o.get(k) or [] if isinstance(x, dict) and "q" in x and "a" in x]
+        for kind, q, text in cands:
+            why = verify_multi(text, g, kind, q, blocked)
+            if why:
+                rej.append({"batch": batch.id, "key": g.key, "kind": kind, "reason": why})
+            else:
+                rows.append({"text": text, "source": kind, "key": g.key})
+    return rows, rej

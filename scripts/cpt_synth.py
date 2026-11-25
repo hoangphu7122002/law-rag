@@ -15,7 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from train import synth_gen as sg
-from train.cpt_synth import Article, batches, make_prompt, process
+from train.cpt_synth import Article, batches, groups, make_prompt, make_prompt_multi, process, process_multi
 
 
 def main() -> None:
@@ -31,6 +31,8 @@ def main() -> None:
     ap.add_argument("--max-calls", type=int)
     ap.add_argument("--max-tokens", type=int, default=60_000_000)
     ap.add_argument("--calls-per-minute", type=float, default=20)
+    ap.add_argument("--mode", choices=["single", "multi"], default="single", help="multi: groups of consecutive articles of one law -> multi-article QA, scenarios, group summary")
+    ap.add_argument("--group-size", type=int, default=3)
     ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--vibe", default=str(Path("~/.claude/skills/vibe/vibe_call.py").expanduser()))
@@ -51,14 +53,23 @@ def main() -> None:
         if norm_key(r["key"]) in excluded or not a.min_chars <= len(r["text"]) <= a.max_chars:
             continue
         arts.append(Article(r["key"], r["title"], r["text"]))
-    random.Random(a.seed).shuffle(arts)
-    arts = arts[: a.limit_articles or None]
-    bs = batches(arts, a.per_call)
+    if a.mode == "multi":
+        units = groups(arts, a.group_size)
+        random.Random(a.seed).shuffle(units)
+        units = units[: a.limit_articles or None]
+        bs = batches(units, a.per_call, prefix="m")
+        make, handle = make_prompt_multi, process_multi
+        arts = units
+    else:
+        random.Random(a.seed).shuffle(arts)
+        arts = arts[: a.limit_articles or None]
+        bs = batches(arts, a.per_call)
+        make, handle = make_prompt, process
     done = sg.read_done(done_f)
     todo = [b for b in bs if b.id not in done]
-    prompts = {b.id: make_prompt(b) for b in todo}
+    prompts = {b.id: make(b) for b in todo}
     est = sum(sg.estimate_tokens(prompts[b.id], len(b.items)) for b in todo)
-    print(f"articles {len(arts)} (dev/test gold excluded: {len(excluded)}); batches {len(bs)}, done {len(done)}, todo {len(todo)}; est tokens {est:,} (cap {a.max_tokens:,})")
+    print(f"{a.mode} units {len(arts)} (dev/test gold excluded: {len(excluded)}); batches {len(bs)}, done {len(done)}, todo {len(todo)}; est tokens {est:,} (cap {a.max_tokens:,})")
     if a.dry_run:
         return
 
@@ -85,7 +96,7 @@ def main() -> None:
         if r.returncode != 0:
             print(f"{b.id}: call failed rc={r.returncode} {r.stderr[-200:]!r}", file=sys.stderr, flush=True)
             return
-        rows, rej = process(r.stdout, b, blocked)
+        rows, rej = handle(r.stdout, b, blocked)
         with lock:
             with open(out, "a") as f:
                 f.writelines(json.dumps(x, ensure_ascii=False) + "\n" for x in rows)

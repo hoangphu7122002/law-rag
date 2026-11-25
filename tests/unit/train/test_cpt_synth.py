@@ -62,3 +62,35 @@ def test_process_matches_an_item_by_its_key_when_the_model_echoes_the_key_as_id(
     for rid in ("49/2005/QH11#13", "0 | 49/2005/QH11#13"):
         rows, rej = process(json.dumps([{"id": rid, "summaries": [s]}]), batches([ART], 1)[0], blocked=set())
         assert len(rows) == 1 and not rej
+
+
+def _arts():
+    mk = lambda n, t: Article(key=f"49/2005/QH11#{n}", title="Luật Các công cụ chuyển nhượng số 49/2005/QH11", text=f"Điều {n}. Tiêu đề\n{t}")   # noqa: E731
+    return [mk(13, "Khi công cụ bị mất, người thụ hưởng thông báo ngay. Thời hạn là 30 ngày."), mk(14, "Việc thông báo thực hiện bằng văn bản gửi người ký phát trong 5 ngày."),
+            mk(15, "Người ký phát phải trả tiền trong 10 ngày kể từ khi nhận thông báo.")]
+
+
+def test_groups_join_consecutive_articles_of_the_same_law_only():
+    from train.cpt_synth import groups
+    other = Article(key="77/2010/QH12#1", title="Luật Khác", text="Điều 1. x\nnội dung")
+    gs = groups([*_arts(), other], size=2)
+    assert [g.key for g in gs] == ["49/2005/QH11#13-14", "49/2005/QH11#15"] or [g.key for g in gs][0] == "49/2005/QH11#13-14"
+    assert all(len({a.law for a in g.items}) == 1 for g in gs)
+
+
+def test_multi_prompt_and_process_keep_valid_multi_article_scenario_and_summary_rows():
+    from train.cpt_synth import groups, make_prompt_multi, process_multi
+    g = groups(_arts(), size=3)
+    b = batches(g, 1)[0]
+    assert "multi_qa" in make_prompt_multi(b) and "scenario" in make_prompt_multi(b) and "49/2005/QH11#13-15" in make_prompt_multi(b)
+    raw = json.dumps([{"id": "0",
+                       "multi_qa": [{"q": "Người thụ hưởng phải làm gì và trong bao lâu khi mất công cụ, và người ký phát phải trả tiền sau bao lâu?",
+                                     "a": "Theo Điều 13 và Điều 15 Luật Các công cụ chuyển nhượng số 49/2005/QH11, người thụ hưởng thông báo ngay trong 30 ngày, người ký phát trả tiền trong 10 ngày."}],
+                       "scenario": [{"q": "Ông A bị mất công cụ chuyển nhượng, ông cần thông báo cho ai?",
+                                     "a": "Theo Điều 14 Luật Các công cụ chuyển nhượng số 49/2005/QH11, ông A thông báo bằng văn bản gửi người ký phát trong 5 ngày."}],
+                       "summary": ["Tóm tắt Điều 13, 14, 15 Luật Các công cụ chuyển nhượng số 49/2005/QH11: mất công cụ thì thông báo trong 30 ngày, bằng văn bản trong 5 ngày, trả tiền trong 10 ngày."]}], ensure_ascii=False)
+    rows, rej = process_multi(raw, b, blocked=set())
+    assert sorted(r["source"] for r in rows) == ["law_summary", "qa_multi", "scenario"] and not rej
+    bad = raw.replace("Điều 14 Luật", "Điều 99 Luật")
+    rows, rej = process_multi(bad, b, blocked=set())
+    assert "scenario" not in {r["source"] for r in rows} and any(r["reason"] == "wrong_article" for r in rej)
