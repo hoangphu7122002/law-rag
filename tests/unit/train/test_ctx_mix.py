@@ -128,3 +128,17 @@ def test_full_gold_grows_the_context_when_there_are_more_gold_articles_than_slot
     ctx = [P("r1"), P("r2")]
     out = full_gold(ctx, set(store), lambda p: p.pid, store.get, random.Random(0))
     assert {p.pid for p in out} >= set(store) and out[0].pid == "r1"
+
+
+def test_place_gold_randomly_moves_gold_to_random_positions_and_keeps_the_non_gold_order():
+    from train.ctx_mix import place_gold_randomly
+
+    is_gold = lambda p: p.pid.startswith("g")   # noqa: E731
+    ctx = [P("g1"), P("r2"), P("r3"), P("g4"), P("r5"), P("r6")]
+    positions = set()
+    for seed in range(60):
+        out = place_gold_randomly(ctx, is_gold, random.Random(seed))
+        assert sorted(p.pid for p in out) == sorted(p.pid for p in ctx)
+        assert [p.pid for p in out if not is_gold(p)] == ["r2", "r3", "r5", "r6"]      # non-gold keep their rank order
+        positions |= {i for i, p in enumerate(out) if p.pid == "g1"}
+    assert len(positions) >= 5                                                          # the gold reaches (almost) every slot

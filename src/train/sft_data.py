@@ -17,7 +17,7 @@ from generate.prompt import Prompt
 from evaluate.retrieval_eval import RetrievalEval
 from generate.shots import ShotStore
 from retrieve import Retrieval
-from train.ctx_mix import answerable_context, drop_gold, fit_budget, full_gold, inject_all, maybe_shuffle, missing_gold
+from train.ctx_mix import answerable_context, drop_gold, fit_budget, full_gold, place_gold_randomly, inject_all, maybe_shuffle, missing_gold
 
 OUT = Path("data/train")
 REFUSALS = [
@@ -143,6 +143,8 @@ class SFTData:
                         continue
                     gold_in += not has(ctx)   # gold put in from the corpus (the earlier count covers rows that already had it)
                     ctx = full_gold(fixed, set(g.pairs), key_of, lookup, self.rng) if self.full_gold else fixed
+                    if self.full_gold:   # the gold articles at random positions, not where retrieval left them (mostly the top)
+                        ctx = place_gold_randomly(ctx, lambda p: key_of(p) in g.pairs, self.rng)
                 if train:
                     ctx = maybe_shuffle(ctx, self.shuffle, self.rng)
                 avoid = frozenset(g.pairs) if g else frozenset()

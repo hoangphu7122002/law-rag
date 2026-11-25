@@ -101,3 +101,19 @@ def full_gold(ctx, gold_keys, key_of, lookup, rng) -> list:
         out[slot] = w
     out.extend(missing[len(slots):])
     return out
+
+
+def place_gold_randomly(ctx, is_gold, rng) -> list:
+    """Gold passages at random positions (any slot, rank 1 included); the non-gold passages keep their retrieval order.
+    Without this the gold sits where retrieval happened to put it (mostly the top), and the model learns 'the answer is up there'."""
+    gold = [p for p in ctx if is_gold(p)]
+    rest = [p for p in ctx if not is_gold(p)]
+    slots = sorted(rng.sample(range(len(ctx)), len(gold)))
+    rng.shuffle(gold)
+    out, gi, ri = [], 0, 0
+    for i in range(len(ctx)):
+        if gi < len(gold) and i == slots[gi]:
+            out.append(gold[gi]); gi += 1
+        else:
+            out.append(rest[ri]); ri += 1
+    return out
