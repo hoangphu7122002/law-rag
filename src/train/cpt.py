@@ -31,14 +31,24 @@ def main() -> None:
 
     from train.sft_lora import complete_config
 
-    seqs = [json.loads(line)["input_ids"] for line in Path(a.data).read_text().splitlines() if line.strip()]
-    if a.limit:
-        seqs = seqs[: a.limit]
-    cut = max(1, len(seqs) // 50)
-    rows = lambda xs: [{"input_ids": s, "labels": s, "attention_mask": [1] * len(s)} for s in xs]   # noqa: E731
-    from datasets import Dataset
+    if a.data.endswith(".npy"):   # train.cpt_mix: [n, seq_len] uint32 matrix, memory-mapped
+        from train.cpt_mix import NpyDataset
 
-    train, val = Dataset.from_list(rows(seqs[cut:])), Dataset.from_list(rows(seqs[:cut]))
+        import numpy as np
+
+        n = np.load(a.data, mmap_mode="r").shape[0]
+        n = min(n, a.limit) if a.limit else n
+        cut = max(1, n // 100)
+        train, val = NpyDataset(a.data, cut, n), NpyDataset(a.data, 0, cut)
+    else:
+        seqs = [json.loads(line)["input_ids"] for line in Path(a.data).read_text().splitlines() if line.strip()]
+        if a.limit:
+            seqs = seqs[: a.limit]
+        cut = max(1, len(seqs) // 50)
+        rows = lambda xs: [{"input_ids": s, "labels": s, "attention_mask": [1] * len(s)} for s in xs]   # noqa: E731
+        from datasets import Dataset
+
+        train, val = Dataset.from_list(rows(seqs[cut:])), Dataset.from_list(rows(seqs[:cut]))
     multimodal = hasattr(AutoConfig.from_pretrained(a.base), "vision_config")
     Model = AutoModelForImageTextToText if multimodal else AutoModelForCausalLM
     model = Model.from_pretrained(a.base, dtype=torch.float32 if a.full else torch.bfloat16, attn_implementation="sdpa")
