@@ -68,6 +68,8 @@ def main() -> None:
     ap.add_argument("--rslora", action="store_true", help="rank-stabilised LoRA scaling")
     ap.add_argument("--dora", action="store_true", help="DoRA (weight-decomposed LoRA)")
     ap.add_argument("--init-lora", default="", help="peft init_lora_weights, e.g. pissa")
+    ap.add_argument("--keep-ckpt", action="store_true", help="keep <out>/ckpt (adapter + optimizer state of the best and the last step) so training can be resumed; small for LoRA, ~27 GB for full FT")
+    ap.add_argument("--resume-from", default="", help="resume training from a checkpoint dir (needs --keep-ckpt of the earlier run; same data, seed and --epochs larger than before to train more)")
     ap.add_argument("--save-last", action="store_true", help="also save the merged model of the LAST step to <out>_last (the main <out> keeps the best-val checkpoint)")
     ap.add_argument("--full", action="store_true", help="full fine-tuning (no adapter); weights kept in fp32 with bf16 autocast")
     ap.add_argument("--batch", type=int, default=2)
@@ -129,7 +131,7 @@ def main() -> None:
     trainer = SFTTrainer(model=model, args=args, train_dataset=ds, eval_dataset=val, processing_class=tok, peft_config=lora, callbacks=[SaveLast()])
     if not a.full:
         trainer.model.print_trainable_parameters()
-    result = trainer.train()
+    result = trainer.train(resume_from_checkpoint=a.resume_from or None)
 
     merged = trainer.model.to(torch.bfloat16) if a.full else trainer.model.merge_and_unload()
     merged.save_pretrained(out, safe_serialization=True)
@@ -138,7 +140,8 @@ def main() -> None:
     if a.save_last and last_dir.exists():
         tok.save_pretrained(last_dir)
         complete_config(a.base, last_dir)
-    shutil.rmtree(out / "ckpt", ignore_errors=True)
+    if not a.keep_ckpt:
+        shutil.rmtree(out / "ckpt", ignore_errors=True)
     hist = trainer.state.log_history
     rec = {"base": a.base, "data": str(data), "rows": len(ds), "val_rows": len(val) if val is not None else 0,
            "args": vars(a), "train_loss": result.training_loss, "steps": result.global_step,
