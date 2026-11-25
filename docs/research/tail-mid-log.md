@@ -22,3 +22,6 @@ Stages on dev (n / rouge_l), C PiSSA vs D3c rsLoRA: gold not in passages 25 / .3
 
 ## CPT v2 data (2026-11-26 00:31)
 data/cpt/mix.npy = 102,132 sequences x 2048 = 209.2M tokens (real tokenizer): raw laws 8.0M, DeepSeek augmentation 6.7M, external law 174.8M (th1nhng0 55M est., tmquan 35M, court judgments 30M PII-masked, Pháp điển 19.8M, án lệ 12M, UTS 6M, Wikisource 3M), general replay 11.4M (FineWeb-2 vie, Wikipedia vi), SFT D3 replay 8.0M. All chunks decontaminated (13-gram) vs dev/test questions and references. CPT v2 starts when both GPUs are free; SFT-from-CPT queues (PiSSA on data C and on D3) start automatically after cpt_report.json.
+
+## DPO round 1 on D3c rsLoRA best-val (dpo_D3c_a), dev300 — 2026-11-26 00:48
+rouge_l dev **.6195** vs base D3c rsLoRA .6258 (-.0063, inside seed noise ~.015 but NOT an improvement). Refusal 0.7% (same), len ratio 1.03 (base 1.02). Stages (n / rouge_l), DPO vs base: gold not in passages 25 / .340 vs .331; ref cites no article 36 / .510 vs .521; retrieved cites other Điều 27 / .425 vs 31 / .413; cites none 2 / .358 vs .390; retrieved and cited 210 / .699 vs 206 / .714. => DPO helps the weak groups slightly (+.01) but loses on the large "retrieved and cited" group (-.015). Pairs: 1347 (margin .39, chosen 1585 vs rejected 1931 chars). Test eval running next; PiSSA DPO (dpo_D3cP_a) train finishing ~00:52.
