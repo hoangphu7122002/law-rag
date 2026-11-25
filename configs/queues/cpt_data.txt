@@ -1,0 +1,2 @@
+# CPT data: text of the laws cited by the train/dev/test questions, from the index nodes, packed into 2048-token sequences (CPU, loads the docstore).
+sh cpt-data cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m train.cpt_data --out data/cpt/laws.jsonl --base Qwen/Qwen3.5-2B > data/runs/logs/cpt-data.log 2>&1
