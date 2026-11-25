@@ -17,6 +17,7 @@ from config import Box, load_backend
 from runs import RUNS, Ledger
 
 PREFIX = "lawrag-"
+TOOLS_MIN_RAM_GB = 50   # the tools endpoint (index + docstore, cap 44 GB) is started outside any run: it needs this much free RAM first (2026-11-22 it started with 41 GB free, box went silent ~10 min later)
 MIN_RAM_GB, MIN_DISK_GB, MAX_RAM_GB = 14, 20, 46   # an index build of 1M chunks peaks above 32 GB (OOM-killed at 32, 2026-11-21); 62 GB box shared with others, the guard still needs 14 GB free
 MAX_RUNS = 3  # LLM-bound runs on cached retrieval are light; never queue two index builds side by side
 LABEL = "com.lawrag.autosync"  # launchd agent on the Mac
@@ -182,6 +183,7 @@ class RemoteBox:
                 exp_path = "configs/exp/" + args[0] if "/" not in args[0] else args[0]   # the index + docstore peak above the 32 GB per-run cap: own cap 44 GB
                 sets = " ".join(f"--set {shlex.quote(a)}" for a in args[1:])
                 lines += ["tmux kill-session -t lawrag-tools 2>/dev/null || true",
+                          f"until ( {self._guard(TOOLS_MIN_RAM_GB)} ); do sleep 120; done",
                           f"tmux new -d -s lawrag-tools {shlex.quote(f'cd {b.root} && export {self._env()} PATH=$HOME/.local/bin:$PATH HF_HOME={b.hf_home} && PYTHONPATH=src systemd-run --user --scope -q -p MemoryMax=44G .venv/bin/python -m generate.tools_service --exp {exp_path} {sets} --port 8300 2>&1 | tee {RUNS}/logs/tools.log')}",
                           f"until grep -q 'tools endpoint on' {RUNS}/logs/tools.log 2>/dev/null; do tmux has-session -t lawrag-tools 2>/dev/null || {{ echo 'tools endpoint died'; exit 1; }}; sleep 5; done; echo 'ready: tools endpoint :8300'"]
                 continue
@@ -207,14 +209,14 @@ class RemoteBox:
         self.shell(f"cat > {script} <<'QUEUE'\n" + "\n".join(lines) + "\nQUEUE\n"
                    f"tmux new -d -s {session} 'bash {script} 2>&1 | tee {log}' && echo queued {len(jobs)} jobs: {session}, log {log}")
 
-    def _guard(self) -> str:
+    def _guard(self, min_ram: int = MIN_RAM_GB) -> str:
         """Shell test run before every launch: enough free RAM / disk and no other run of ours, else refuse.
         2026-11-18: 4 parallel M2 retrieval jobs + an index build hung the box (RAM) until a hard reboot."""
         return (f"ram=$(free -g | awk '/^Mem:/{{print $7}}'); disk=$(df -BG --output=avail {self.box.root} | tail -1 | tr -dc 0-9); "
                 f"runs=$(tmux ls 2>/dev/null | grep -c '^{PREFIX}run-' || true); "
                 f"echo \"box: RAM available ${{ram}}G, disk free ${{disk}}G, our runs ${{runs}}\"; "
-                f"[ \"$ram\" -ge {MIN_RAM_GB} ] && [ \"$disk\" -ge {MIN_DISK_GB} ] && [ \"$runs\" -lt {MAX_RUNS} ] "
-                f"|| {{ echo 'refused: need RAM >= {MIN_RAM_GB}G, disk >= {MIN_DISK_GB}G, fewer than {MAX_RUNS} lawrag-run'; exit 1; }}")
+                f"[ \"$ram\" -ge {min_ram} ] && [ \"$disk\" -ge {MIN_DISK_GB} ] && [ \"$runs\" -lt {MAX_RUNS} ] "
+                f"|| {{ echo 'refused: need RAM >= {min_ram}G, disk >= {MIN_DISK_GB}G, fewer than {MAX_RUNS} lawrag-run'; exit 1; }}")
 
     def status(self) -> None:
         self.shell(f"""
