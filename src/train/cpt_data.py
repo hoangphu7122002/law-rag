@@ -32,8 +32,13 @@ def main() -> None:
     import polars as pl
     from transformers import AutoTokenizer
 
+    import re
+
+    from llama_index.core.schema import MetadataMode
+
     from config import load
     from corpus.keys import stem_key
+    from evaluate.retrieval_eval import RetrievalEval
     from index import IndexStore
 
     ap = argparse.ArgumentParser()
@@ -44,7 +49,13 @@ def main() -> None:
     a = ap.parse_args()
     wanted = {d for r in pl.read_parquet("data/processed/gold.parquet").iter_rows(named=True) for d in (r["docs"] or ())}
     store = IndexStore(load("configs/exp/A5_v3b.yaml"))
-    nodes = ((stem_key(n.metadata.get("doc", "")), i, n.get_content()) for i, n in enumerate(store.nodes()))
+    def order(i, n):   # chunks of one law in article order (the docstore order is not the document order); the whole key sorts (Điều number, position)
+        art = RetrievalEval.passage_keys({"doc": n.metadata.get("doc", ""), "text": n.get_content()[:400]})[1]
+        m = re.match(r"\d+", art or "")
+        return (int(m.group()) if m else 0, i)
+
+    # LLM-mode content keeps the law title line before each chunk, so every article is tied to its law (as in the retrieval prompts)
+    nodes = ((stem_key(n.metadata.get("doc", "")), order(i, n), n.get_content(metadata_mode=MetadataMode.LLM)) for i, n in enumerate(store.nodes()))
     texts = docs_text(nodes, wanted)
     keys = sorted(texts)[: a.limit or None]
     tok = AutoTokenizer.from_pretrained(a.base)
