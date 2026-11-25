@@ -117,15 +117,15 @@ def main() -> None:
             ["subject_title_vi", "article_title", "content_text"])
     if "anle" in only:
         run("anle", "tmquan/anle-toaan-gov-vn", ["documents-00000-of-00001.parquet"],
-            lambda r: [dict(text=r["markdown"] or "", title=r["doc_name"] or "", pii=True, min_chars=1500)], ["doc_name", "markdown"])
+            lambda r: [dict(text=r["markdown"] or "", title="" if (r["doc_name"] or "").isdigit() else (r["doc_name"] or ""), pii=True, min_chars=1500)], ["doc_name", "markdown"])
     if "th" in only:   # vbpl.vn laws (HTML) joined with the metadata for the title and the document number
         meta = {r["id"]: r for r in pq.read_table(download("th1nhng0/vietnamese-legal-documents", "data/metadata.parquet", tmp),
-                                                  columns=["id", "document_number", "title", "legal_type"]).to_pylist()}
+                                                  columns=["id", "so_ky_hieu", "title", "loai_van_ban"]).to_pylist()}
         def th_rows(r):
             m = meta.get(r["id"], {})
-            if m.get("legal_type") and m["legal_type"] not in LAW_TYPES:
+            if m.get("loai_van_ban") and m["loai_van_ban"] not in LAW_TYPES:
                 return []
-            return [dict(text=r["content_html"] or "", title=m.get("title") or "", key=m.get("document_number"), html_in=True)]
+            return [dict(text=r["content_html"] or "", title=m.get("title") or "", key=m.get("so_ky_hieu"), html_in=True)]
         pth = download("th1nhng0/vietnamese-legal-documents", "data/content.parquet", tmp)
         pf = pq.ParquetFile(pth)
         order = list(range(pf.metadata.num_row_groups))
@@ -137,6 +137,8 @@ def main() -> None:
             for r in pf.read_row_group(g, columns=["id", "content_html"]).to_pylist():
                 for kw in th_rows(r):
                     done += sink.doc("th", **kw)
+                if done >= budget["th"]:
+                    break
             print(f"th: row group {g} -> {done / CPT / 1e6:.1f}M tokens {dict(sink.stats['th'])}", flush=True)
         Path(pth).unlink(missing_ok=True)
     if "tvpl" in only:
@@ -149,7 +151,7 @@ def main() -> None:
         shards = [f"documents-{i:05d}-of-00016.parquet" for i in range(16)]
         rng.shuffle(shards)
         run("cbba", "tmquan/cbba-toaan-gov-vn", shards[:3],
-            lambda r: [dict(text=r["markdown"] or "", title=r["doc_name"] or "", pii=True, min_chars=2000)] if rng.random() < 0.05 else [], ["doc_name", "markdown"])
+            lambda r: [dict(text=r["markdown"] or "", title="" if (r["doc_name"] or "").isdigit() else (r["doc_name"] or ""), pii=True, min_chars=2000)] if rng.random() < 0.05 else [], ["doc_name", "markdown"])
     if "wikisource" in only:
         run("wikisource", "wikimedia/wikisource", ["20231201.vi/train-00000-of-00001.parquet"],
             lambda r: [dict(text=r["text"], title=r["title"])] if WS_LAW.search(r["title"] or "") else [], ["title", "text"])

@@ -55,11 +55,17 @@ CAP = r"[A-ZÀ-Ỹ][a-zà-ỹ]+"
 NAME = re.compile(r"\b((?:[Bb]ị cáo|[Bb]ị hại|[Nn]guyên đơn|[Bb]ị đơn|[Nn]gười có quyền lợi, nghĩa vụ liên quan|[Oo]ng|[Bb]à|[Aa]nh|[Cc]hị|[Ee]m|[Cc]háu|[Cc]ụ|ông|bà)\s+)" + rf"({CAP}(?:\s+{CAP}){{1,3}})")
 
 
+FAMILY = re.compile(r"\b((?:chồng|vợ|con|cha|mẹ|anh|chị|em|bố|ông|bà)\s+)" + rf"({CAP}(?:\s+{CAP}){{1,3}})")
+INITIAL = re.compile(rf"\b{CAP}(?:\s+{CAP}){{1,2}}\s+[A-ZÀ-Ỹ]\b(?!\.)")
+
+
 def mask_pii(t: str) -> str:
     t = EMAIL.sub("[EMAIL]", t)
     t = PHONE.sub("[SĐT]", t)
     t = IDNUM.sub("[SỐ]", t)
-    return NAME.sub(lambda m: m.group(1) + "[TÊN]", t)
+    t = NAME.sub(lambda m: m.group(1) + "[TÊN]", t)
+    t = FAMILY.sub(lambda m: m.group(1) + "[TÊN]", t)
+    return INITIAL.sub("[TÊN]", t)
 
 
 def _h(s: str) -> str:

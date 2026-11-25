@@ -45,3 +45,10 @@ def test_chunk_doc_cuts_on_paragraphs_prefixes_the_title_and_never_exceeds_the_l
     assert len(chunks) > 3 and all(c.startswith("Luật Mẫu số 1/2020/QH14\n") for c in chunks)
     assert all(len(c) <= 1500 + 80 for c in chunks)
     assert "".join(c.split("\n", 1)[1] for c in chunks).replace("\n", "") == doc.replace("\n", "")
+
+
+def test_mask_pii_also_hides_family_context_names_and_names_already_cut_to_an_initial():
+    out = mask_pii("con ông Lê Văn Cường và bà Phạm Thị Dung; có chồng Nguyễn Hoàng D và 02 con; Quách Thị V sinh năm 1987")
+    assert "Lê Văn Cường" not in out and "Phạm Thị Dung" not in out
+    assert "Nguyễn Hoàng D" not in out and "Quách Thị V" not in out and "sinh năm 1987" in out
+    assert "Hội đồng xét xử" in mask_pii("Hội đồng xét xử nhận định Công ty TNHH A")
