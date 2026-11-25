@@ -28,3 +28,8 @@ rouge_l dev **.6195** vs base D3c rsLoRA .6258 (-.0063, inside seed noise ~.015 
 
 ## DPO round 1 on D3c rsLoRA best-val (dpo_D3c_a), test200 — 2026-11-26 00:53
 rouge_l test **.6016** vs base D3c rsLoRA .6233 (**-.022**); dev .6195 vs .6258 (-.006). DPO round 1 from D3c rsLoRA is worse on both splits => do NOT run round 2 from it. PiSSA-last DPO (dpo_D3c_pissa_a, train done in 60.8 min) evals running on GPU1.
+
+## DPO round 1 on D3c PiSSA last-epoch (dpo_D3c_pissa_a) — 2026-11-26 01:05
+rouge_l dev **.6405** vs base .6320 (+.0085); test **.6279** vs base .6252 (+.0027). Small gain, inside noise but positive on both splits (rsLoRA DPO was negative on both). Dev stages (n / rouge_l) DPO vs base: gold not in passages 25 / .370 vs .330; ref cites no article 36 / .505 vs .530; retrieved cites other Điều 24 / .461 vs 27 / .430; cites none 2 / .318 vs .323; retrieved and cited 213 / .718 vs .716. Refusal 1.3% (base 2.0%), len ratio 1.03. Pairs 1123 (margin .36). Reading: DPO helps the weak groups (a +.03, b +.04) without hurting the main group, for PiSSA but not for rsLoRA; effect size ~ +.003..+.009 overall, far below dpo_a2's +.03 on v3b. For comparison C PiSSA SFT alone: dev .6414 / test .6307.
+## CPT v2 launched 2026-11-26 01:05
+torchrun 2 GPU, mix.npy 209.2M tokens, 6320 steps at ~2.77 s/it => ~4h50, ETA ~05:55. SFT queues 1126-001308 (PiSSA data C, GPU0) and 1126-001311 (PiSSA data D3, GPU1) start automatically after cpt_report.json.
