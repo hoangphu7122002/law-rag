@@ -1,5 +1,5 @@
 # TEST-split ROUGE-L of the finished SFT variants, requested explicitly by the user (2026-11-25): these test numbers are used to choose the 2 training methods, so test is no longer untouched for them - say so in the report. GPU0 lane; waits for the D smoke build.
-wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1125-150516"
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1125-150831"
 serve /home/app/phunguyen/law_rag/data/models/q35_V_pissa --gpu 0 --share 0.45
 configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_V_pissa --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set split=test
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
