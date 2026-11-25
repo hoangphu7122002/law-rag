@@ -25,3 +25,6 @@ data/cpt/mix.npy = 102,132 sequences x 2048 = 209.2M tokens (real tokenizer): ra
 
 ## DPO round 1 on D3c rsLoRA best-val (dpo_D3c_a), dev300 — 2026-11-26 00:48
 rouge_l dev **.6195** vs base D3c rsLoRA .6258 (-.0063, inside seed noise ~.015 but NOT an improvement). Refusal 0.7% (same), len ratio 1.03 (base 1.02). Stages (n / rouge_l), DPO vs base: gold not in passages 25 / .340 vs .331; ref cites no article 36 / .510 vs .521; retrieved cites other Điều 27 / .425 vs 31 / .413; cites none 2 / .358 vs .390; retrieved and cited 210 / .699 vs 206 / .714. => DPO helps the weak groups slightly (+.01) but loses on the large "retrieved and cited" group (-.015). Pairs: 1347 (margin .39, chosen 1585 vs rejected 1931 chars). Test eval running next; PiSSA DPO (dpo_D3cP_a) train finishing ~00:52.
+
+## DPO round 1 on D3c rsLoRA best-val (dpo_D3c_a), test200 — 2026-11-26 00:53
+rouge_l test **.6016** vs base D3c rsLoRA .6233 (**-.022**); dev .6195 vs .6258 (-.006). DPO round 1 from D3c rsLoRA is worse on both splits => do NOT run round 2 from it. PiSSA-last DPO (dpo_D3c_pissa_a, train done in 60.8 min) evals running on GPU1.
