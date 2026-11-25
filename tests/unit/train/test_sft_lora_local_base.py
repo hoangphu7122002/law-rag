@@ -12,3 +12,10 @@ def test_complete_config_with_a_local_base_dir_copies_configs_only(tmp_path: Pat
     (out / "tokenizer.json").write_text("mine")
     complete_config(str(base), out)
     assert sorted(p.name for p in out.iterdir()) == ["chat_template.jinja", "config.json", "tokenizer.json"]
+
+
+def test_adapter_kwargs_only_carries_the_variants_that_were_asked_for():
+    from train.sft_lora import adapter_kwargs
+
+    assert adapter_kwargs() == {}
+    assert adapter_kwargs(rslora=True, dora=True, init="pissa") == {"use_rslora": True, "use_dora": True, "init_lora_weights": "pissa"}

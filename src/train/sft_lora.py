@@ -43,6 +43,18 @@ def clean_merged(base: str, out: Path) -> None:
             f.unlink()
 
 
+def adapter_kwargs(rslora: bool = False, dora: bool = False, init: str = "") -> dict:
+    """Optional LoRA variants for peft.LoraConfig: rsLoRA (alpha/sqrt(r) scaling), DoRA (weight-decomposed), init_lora_weights (e.g. "pissa")."""
+    kw: dict = {}
+    if rslora:
+        kw["use_rslora"] = True
+    if dora:
+        kw["use_dora"] = True
+    if init:
+        kw["init_lora_weights"] = init
+    return kw
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", required=True)
@@ -53,6 +65,10 @@ def main() -> None:
     ap.add_argument("--r", type=int, default=32)
     ap.add_argument("--alpha", type=int, default=32)
     ap.add_argument("--dropout", type=float, default=0.05)
+    ap.add_argument("--rslora", action="store_true", help="rank-stabilised LoRA scaling")
+    ap.add_argument("--dora", action="store_true", help="DoRA (weight-decomposed LoRA)")
+    ap.add_argument("--init-lora", default="", help="peft init_lora_weights, e.g. pissa")
+    ap.add_argument("--full", action="store_true", help="full fine-tuning (no adapter); weights kept in fp32 with bf16 autocast")
     ap.add_argument("--batch", type=int, default=2)
     ap.add_argument("--accum", type=int, default=8)
     ap.add_argument("--max-length", type=int, default=6144)
@@ -84,20 +100,22 @@ def main() -> None:
     tok = AutoTokenizer.from_pretrained(a.base)
     multimodal = hasattr(AutoConfig.from_pretrained(a.base), "vision_config")
     Model = AutoModelForImageTextToText if multimodal else AutoModelForCausalLM
-    model = Model.from_pretrained(a.base, dtype=torch.bfloat16, attn_implementation="sdpa")
+    model = Model.from_pretrained(a.base, dtype=torch.float32 if a.full else torch.bfloat16, attn_implementation="sdpa")
 
-    lora = LoraConfig(r=a.r, lora_alpha=a.alpha, lora_dropout=a.dropout, bias="none", task_type="CAUSAL_LM",
-                      target_modules="all-linear", exclude_modules=r".*(visual|vision|lm_head).*" if multimodal else None)
+    lora = None if a.full else LoraConfig(r=a.r, lora_alpha=a.alpha, lora_dropout=a.dropout, bias="none", task_type="CAUSAL_LM",
+                      target_modules="all-linear", exclude_modules=r".*(visual|vision|lm_head).*" if multimodal else None,
+                      **adapter_kwargs(a.rslora, a.dora, a.init_lora))
     args = SFTConfig(output_dir=str(out / "ckpt"), num_train_epochs=a.epochs, max_steps=4 if a.limit else -1,
                      per_device_train_batch_size=a.batch, gradient_accumulation_steps=a.accum, learning_rate=a.lr,
                      lr_scheduler_type="cosine", warmup_steps=0.05, weight_decay=0.0, max_grad_norm=1.0, bf16=True,  # warmup < 1 = ratio
                      gradient_checkpointing=True, logging_steps=5, report_to=[], seed=a.seed, **evals,
                      max_length=a.max_length, completion_only_loss=True, dataset_num_proc=4)
     trainer = SFTTrainer(model=model, args=args, train_dataset=ds, eval_dataset=val, processing_class=tok, peft_config=lora)
-    trainer.model.print_trainable_parameters()
+    if not a.full:
+        trainer.model.print_trainable_parameters()
     result = trainer.train()
 
-    merged = trainer.model.merge_and_unload()
+    merged = trainer.model.to(torch.bfloat16) if a.full else trainer.model.merge_and_unload()
     merged.save_pretrained(out, safe_serialization=True)
     tok.save_pretrained(out)
     complete_config(a.base, out)
