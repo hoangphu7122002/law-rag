@@ -48,3 +48,17 @@ def test_summaries_are_a_fourth_kind_that_must_be_shorter_than_the_article_and_k
     raw = json.dumps([{"id": "0", "summaries": [s]}])
     rows, rej = process(raw, batches([ART], 1)[0], blocked=set())
     assert [r["source"] for r in rows] == ["summary"] and not rej
+
+
+def test_process_accepts_ids_the_model_decorates_such_as_id_equals_0():
+    s = "Tóm tắt Điều 13 Luật Các công cụ chuyển nhượng số 49/2005/QH11: công cụ bị mất thì phải báo văn bản, thời hạn 30 ngày."
+    for rid in ("id=0", 0, "0", " 0 "):
+        rows, rej = process(json.dumps([{"id": rid, "summaries": [s]}]), batches([ART], 1)[0], blocked=set())
+        assert len(rows) == 1 and not rej
+
+
+def test_process_matches_an_item_by_its_key_when_the_model_echoes_the_key_as_id():
+    s = "Tóm tắt Điều 13 Luật Các công cụ chuyển nhượng số 49/2005/QH11: công cụ bị mất thì phải báo văn bản, thời hạn 30 ngày."
+    for rid in ("49/2005/QH11#13", "0 | 49/2005/QH11#13"):
+        rows, rej = process(json.dumps([{"id": rid, "summaries": [s]}]), batches([ART], 1)[0], blocked=set())
+        assert len(rows) == 1 and not rej

@@ -88,6 +88,15 @@ def verify_text(text: str, art: Article, kind: str, blocked: frozenset | set = f
     return None
 
 
+def _pick(batch: Batch, rid) -> Article:
+    """The model echoes the id in many shapes: 0, "id=0", "0 | key", or just the key."""
+    rid = str(rid)
+    for a in batch.items:
+        if a.key in rid:
+            return a
+    return batch.items[int(re.match(r"\D*(\d+)\s*(?:\||$)", rid).group(1))]
+
+
 def process(raw: str, batch: Batch, blocked=frozenset()):
     """-> (rows, rejects)."""
     objs = parse_json_list(raw)
@@ -96,8 +105,8 @@ def process(raw: str, batch: Batch, blocked=frozenset()):
     rows, rej = [], []
     for o in objs:
         try:
-            art = batch.items[int(o["id"])]
-        except (KeyError, ValueError, IndexError, TypeError):
+            art = _pick(batch, o["id"])
+        except (KeyError, ValueError, IndexError, TypeError, AttributeError):
             rej.append({"batch": batch.id, "reason": "unknown_id"})
             continue
         cands = [("paraphrase", p) for p in o.get("paraphrases") or [] if isinstance(p, str)]

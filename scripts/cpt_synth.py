@@ -9,7 +9,9 @@ import json
 import random
 import subprocess
 import sys
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from train import synth_gen as sg
@@ -29,6 +31,7 @@ def main() -> None:
     ap.add_argument("--max-calls", type=int)
     ap.add_argument("--max-tokens", type=int, default=60_000_000)
     ap.add_argument("--calls-per-minute", type=float, default=20)
+    ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--vibe", default=str(Path("~/.claude/skills/vibe/vibe_call.py").expanduser()))
     ap.add_argument("--model", default="deepseekflash")
@@ -60,33 +63,41 @@ def main() -> None:
         return
 
     pdir.mkdir(exist_ok=True)
-    used = calls = n_ok = 0
-    last = 0.0
-    for b in todo:
+    lock = threading.Lock()
+    stats = {"calls": 0, "ok": 0, "used": 0}
+    gate = {"last": 0.0}
+
+    def work(b):
         add = sg.estimate_tokens(prompts[b.id], len(b.items))
-        if (a.max_calls and calls >= a.max_calls) or not sg.within_budget(used, add, a.max_tokens):
-            print("budget reached, stop")
-            break
-        wait = last + sg.min_interval(a.calls_per_minute) - time.time()
+        with lock:
+            if (a.max_calls and stats["calls"] >= a.max_calls) or not sg.within_budget(stats["used"], add, a.max_tokens):
+                return
+            stats["calls"] += 1
+            stats["used"] += add
+            wait = gate["last"] + sg.min_interval(a.calls_per_minute) - time.time()
+            gate["last"] = max(time.time(), gate["last"] + sg.min_interval(a.calls_per_minute))
         if wait > 0:
             time.sleep(wait)
         pf = pdir / f"{b.id}.txt"
         pf.write_text(prompts[b.id])
-        last = time.time()
         r = subprocess.run([sys.executable, a.vibe, "--model", a.model, "--thinking", "off", "--label", "cpt-synth",
                             "--prompt-file", str(pf)], capture_output=True, text=True)
-        calls, used = calls + 1, used + add
         if r.returncode != 0:
-            print(f"{b.id}: call failed rc={r.returncode} {r.stderr[-200:]!r}", file=sys.stderr)
-            continue
+            print(f"{b.id}: call failed rc={r.returncode} {r.stderr[-200:]!r}", file=sys.stderr, flush=True)
+            return
         rows, rej = process(r.stdout, b, blocked)
-        with open(out, "a") as f:
-            f.writelines(json.dumps(x, ensure_ascii=False) + "\n" for x in rows)
-        with open(rejects, "a") as f:
-            f.writelines(json.dumps(x, ensure_ascii=False) + "\n" for x in rej)
-        sg.mark_done(done_f, b.id)
-        n_ok += len(rows)
-        print(f"{b.id}: ok {len(rows)} rej {len(rej)} (calls {calls}, ~tokens {used:,})")
+        with lock:
+            with open(out, "a") as f:
+                f.writelines(json.dumps(x, ensure_ascii=False) + "\n" for x in rows)
+            with open(rejects, "a") as f:
+                f.writelines(json.dumps(x, ensure_ascii=False) + "\n" for x in rej)
+            sg.mark_done(done_f, b.id)
+            stats["ok"] += len(rows)
+            print(f"{b.id}: ok {len(rows)} rej {len(rej)} (calls {stats['calls']}, ~tokens {stats['used']:,})", flush=True)
+
+    with ThreadPoolExecutor(a.workers) as ex:
+        list(ex.map(work, todo))
+    n_ok, used = stats["ok"], stats["used"]
     print(f"finished: {n_ok} rows this run -> {out}")
 
 
