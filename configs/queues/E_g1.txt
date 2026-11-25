@@ -1,8 +1,0 @@
-# Data E seed 2 (GPU1 lane). Waits for the data built by E_g0. NOT launched until the config is approved.
-wait test -f /home/app/phunguyen/law_rag/data/train/q35_E/report.json
-sh train-q35E_s2 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/q35_E --base Qwen/Qwen3.5-2B --out data/models/q35_E_s2 --epochs 3 --max-length 16384 --batch 1 --accum 16 --seed 2 > data/runs/logs/train-q35E_s2.log 2>&1
-wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-train-q35E_s2"
-serve /home/app/phunguyen/law_rag/data/models/q35_E_s2 --gpu 1 --share 0.45
-configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_E_s2 --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
-wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
-do tmux kill-session -t lawrag-llm-g1
