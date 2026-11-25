@@ -1,0 +1,2 @@
+# Smoke test of data D: first 30 train questions + 30 synthetic rows, same flags as D_g0. Check report.json before the full build.
+sh sftdata-q35Dsmoke cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli sft-data configs/exp/A3_Q3.yaml --name q35_Dsmoke --limit 30 --k-range 3,15 --max-tokens 16000 --guarantee --oracle 1.0 --all-gold --shuffle 0.7 --shots 0,1,2,3 --refuse 0.2 --extra data/synth_v1.jsonl > data/runs/logs/sftdata-q35Dsmoke.log 2>&1
