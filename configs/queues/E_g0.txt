@@ -1,4 +1,5 @@
 # Data E: every training row answerable (oracle 1.0, all gold injected, no drop-gold); k 3-10, shuffle 50%, shots 0-3, 20% refusal rows. Seed 1 here (GPU0), seed 2 in E_g1. Runs after the variant study.
+wait ! tmux ls 2>/dev/null | grep -qE "lawrag-queue-1125-11114[14]"
 sh sftdata-q35E cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli sft-data configs/exp/A3_Q3.yaml --name q35_E --k-range 3,10 --oracle 1.0 --all-gold --shuffle 0.5 --shots 0,1,2,3 --refuse 0.2 > data/runs/logs/sftdata-q35E.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-sftdata-q35E"
 sh train-q35E_s1 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/q35_E --base Qwen/Qwen3.5-2B --out data/models/q35_E_s1 --epochs 3 --max-length 12288 --batch 1 --accum 16 --seed 1 > data/runs/logs/train-q35E_s1.log 2>&1
