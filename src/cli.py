@@ -43,6 +43,7 @@ def main() -> None:
     d.add_argument("--shuffle", type=float, default=0.0, help="p of shuffling the passage order of a train row")
     d.add_argument("--guarantee", action="store_true", help="every non-refusal row gets its gold article in the context (from the corpus if retrieval missed it); rows with unknown / missing gold are dropped")
     d.add_argument("--max-tokens", type=int, default=0, help="rows longer than this many tokens lose non-gold passages from the tail (trainer max_length must be >= this)")
+    d.add_argument("--limit", type=int, default=0, help="smoke test: only the first N train questions and N synthetic rows")
     d.add_argument("--extra", default="", help="synthetic QA jsonl (train.synth_gen) added as training questions")
     d.add_argument("--teacher", default="", help="jsonl {qid, answer}: verified teacher answers as a second row per train question")
     d.add_argument("--all-gold", action="store_true", help="with --oracle: inject EVERY missing gold article, not just one")
@@ -120,7 +121,7 @@ def main() -> None:
         SFTData(load(args.exp, args.set), args.name, tuple(args.splits.split(",")), kr, args.oracle,
                 shots=tuple(int(x) for x in args.shots.split(",")), refuse=args.refuse,
                 shuffle=args.shuffle, all_gold=args.all_gold, drop_gold_p=args.drop_gold,
-                guarantee=args.guarantee, extra=args.extra, teacher=args.teacher, max_tokens=args.max_tokens).build()
+                guarantee=args.guarantee, extra=args.extra, teacher=args.teacher, max_tokens=args.max_tokens, limit=args.limit).build()
     elif args.cmd == "export-shots":
         from generate.shots import ShotStore
 

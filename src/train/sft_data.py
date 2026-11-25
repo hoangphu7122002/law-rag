@@ -33,7 +33,7 @@ class SFTData:
                  k_range: tuple[int, int] | None = None, oracle: float = 0.0, shots: tuple[int, ...] = (0,),
                  refuse: float = 0.0, seed: int = 20261031,
                  shuffle: float = 0.0, all_gold: bool = False, drop_gold_p: float = 0.0,
-                 guarantee: bool = False, extra: str = "", teacher: str = "", max_tokens: int = 0):
+                 guarantee: bool = False, extra: str = "", teacher: str = "", max_tokens: int = 0, limit: int = 0):
         """k_range=(5, 10): each row gets the reranked top-k with k drawn per row (the model sees varied context sizes).
         oracle=p: when the gold Điều is missing from that top-k, with probability p a gold passage (found in the dense
         top-`candidates`) replaces a random slot below the first (RAFT); the rest stay as retrieved (= the test case)."""
@@ -45,6 +45,7 @@ class SFTData:
         # rows whose gold is unknown or not in the corpus are dropped, not trained on. extra: synthetic QA jsonl (train.synth_gen);
         # teacher: jsonl {"qid", "answer"} of verified good teacher answers for train questions (a second answer per question).
         self.guarantee, self.extra, self.teacher = guarantee, extra, teacher
+        self.limit = limit   # smoke test: only the first N train questions and the first N synthetic rows
         self.max_tokens = max_tokens   # rows longer than this (prompt + answer) lose non-gold passages from the tail; the trainer's max_length must be >= this
         if guarantee and drop_gold_p:
             raise ValueError("guarantee and drop_gold are contradictory")
@@ -59,7 +60,10 @@ class SFTData:
         dc = Decontam()
         kept, report = dc.filter([q for s in self.splits for q in QASet().load(s)])
         self.extra_gold = {}
-        kept = kept + self._extra_questions() + self._teacher_questions(kept)
+        if self.limit:
+            kept = kept[: self.limit]
+        extras = self._extra_questions()
+        kept = kept + (extras[: self.limit] if self.limit else extras) + self._teacher_questions(kept)
         self.out.mkdir(parents=True, exist_ok=True)
         self._write(tok, kept, self.out / "train.jsonl")
         if "dev" not in self.splits:
