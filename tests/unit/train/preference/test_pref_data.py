@@ -56,3 +56,47 @@ def test_build_pairs_with_extent_weights_prefers_the_candidate_with_the_right_ex
     rows = [{"qid": 1, "prompt": "p", "reference": ref, "cands": [short_wrong, good]}]
     p = build_pairs(rows, min_margin=0.05, khoan_weight=0.15, length_weight=0.15)
     assert p and p[0]["chosen"] == good and p[0]["rejected"] == short_wrong
+
+
+# ---- extent pairs (2026-11-26): balanced length-direction negatives + hard pairs, mixed with a subsample of the standard pairs
+REF = "Căn cứ theo khoản 2 Điều 17 Thông tư X như sau:\n" + "\n".join(f"Dòng {i} " + "nội dung chi tiết " * 12 for i in range(8))
+
+
+def test_truncate_negative_cuts_at_a_line_boundary_to_about_half_and_skips_one_line_answers():
+    import random
+
+    from train.preference.pref_data import truncate_negative
+    cut = truncate_negative(REF, random.Random(0))
+    assert cut and REF.startswith(cut) and 0.3 * len(REF) <= len(cut) <= 0.65 * len(REF) and not cut.endswith(" ")
+    assert truncate_negative("một dòng duy nhất rất dài " * 20, random.Random(0)) is None
+
+
+def test_extend_negative_appends_a_paragraph_of_the_prompt_context_that_the_answer_does_not_contain():
+    import random
+
+    from train.preference.pref_data import extend_negative
+    prompt = "ngữ cảnh\n" + "Một đoạn ngữ cảnh khác không có trong câu trả lời " * 6 + "\n" + REF.split("\n")[1]
+    ext = extend_negative(REF, prompt, random.Random(0))
+    assert ext.startswith(REF.rstrip()) and len(ext) > 1.3 * len(REF) and "đoạn ngữ cảnh khác" in ext
+    assert extend_negative(REF, "chỉ có " + REF, random.Random(0)) is None   # nothing new to append
+
+
+def test_extent_pairs_from_samples_find_good_vs_short_bad_and_good_vs_long_bad():
+    from train.preference.pref_data import extent_pairs
+    good = REF
+    short = "\n".join(REF.split("\n")[:2])
+    long = REF + "\n" + "thêm rất nhiều ý không liên quan " * 90
+    row = {"qid": 7, "prompt": "p", "reference": REF, "cands": [good, short, long]}
+    kinds = {p["source"] for p in extent_pairs(row)}
+    assert kinds == {"real_short", "real_long"}
+    assert all(p["chosen"] == good for p in extent_pairs(row))
+
+
+def test_mix_pairs_subsamples_the_standard_pairs_keeps_all_extra_pairs_and_shuffles_deterministically():
+    from train.preference.pref_data import mix_pairs
+    std = [{"qid": i, "chosen": "c", "rejected": "r", "source": "standard"} for i in range(100)]
+    extra = [{"qid": 1000 + i, "chosen": "c", "rejected": "r", "source": "synthetic"} for i in range(30)]
+    a = mix_pairs(std, extra, keep_standard=60, seed=1)
+    b = mix_pairs(std, extra, keep_standard=60, seed=1)
+    assert a == b and len(a) == 90 and sum(p["source"] == "standard" for p in a) == 60
+    assert [p["qid"] for p in a] != sorted(p["qid"] for p in a)
