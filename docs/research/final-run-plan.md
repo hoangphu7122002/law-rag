@@ -7,3 +7,5 @@ Recipe (chosen from dev+test comparisons of the PiSSA family; test was therefore
 5. Test evaluated ONCE per final model: greedy (A5_v3b, 2 shots) and MBR8 (A6_mbr, 2 shots). No further tuning after this.
 Two chains run in parallel as replicates: chain A (GPU0, seed 1) is the pre-declared headline; chain B (GPU1, seed 2) is reported as the replicate (the seed spread of whole chains was up to .016 in dev+test earlier).
 Queues: configs/queues/final/{final_data,final_chainA_g0,final_chainB_g1}.txt. Expected wall time ≈ 4–5 h; disk ≈ 30 GB.
+
+**Update 2026-11-26 22:16 (user request):** chain B (replicate, GPU1) was stopped during PiSSA init so that GPU1 is free for inference experiments (n-gram speculative decoding etc.). Only chain A (GPU0, seed 1, the pre-declared headline) runs; there is no replicate, so the seed spread (.016 between whole chains in dev+test) must be stated when reporting the single final number. GPU1 keeps the embed/rerank servers (ports 8101/8201) that chain A's evals use: do not stop them.

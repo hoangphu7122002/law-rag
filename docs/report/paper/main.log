@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (MiKTeX 22.1) (preloaded format=xelatex 2026.10.7)  26 NOV 2026 22:00
+This is XeTeX, Version 3.141592653-2.6-0.999993 (MiKTeX 22.1) (preloaded format=xelatex 2026.10.7)  26 NOV 2026 22:16
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1380,20 +1380,16 @@ LaTeX Font Info:    Font shape `TU/Menlo(0)/m/n' will be
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-03-20>
  ***********
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
 Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: BC62D3EA1263F6881BFFC2038EDD4A48;6411.
  ) 
 Here is how much of TeX's memory you used:
  36530 strings out of 402809
  884394 string characters out of 5440814
- 1465747 words of memory out of 5000000
+ 1466747 words of memory out of 5000000
  64887 multiletter control sequences out of 15000+600000
  637862 words of font info for 122 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  99i,18n,108p,1650b,2517s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main.xdv (27 pages, 956320 bytes).
+Output written on main.xdv (27 pages, 956432 bytes).
