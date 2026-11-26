@@ -127,3 +127,14 @@ Loss accounting on tail/mid discovery rows 0–149: 40% answers cite the right �
 
 ## 2026-11-26 20:25 — dpo_Vp_A2c (cite-contrast: round 2 from dpo_Vp_A on 1043 standard + 143 cite-contrast pairs, shuffled; model verified)
 dev .6728 / test .6413, pooled .6602, +.0046 vs dpo_a2 [−.0082,+.0178] (≈ dpo_Vp_A2 .6620). Stage table dev: other-Điều 22 / .512 (A2 .501), retrieved-and-cited 212 / .746 (A2 .752), gold-not-in-passages 25 / .376 (A2 .350), len ratio .96. Read: no measurable gain on the targeted wrong-article group (+.011 on n=22) and none overall; not worse than plain A2 → recipe is a safe equal. Seed-777 replicate queued on GPU1 (dpo_Vp_A2cs2).
+
+## 2026-11-26 21:00 — why does retrieval miss the gold article? (scripts/analysis/diag_retrieval_miss.py; dev, 264 questions with a gold (law, Điều); cached dense→rerank top-5 and dense top-50 pool)
+| class | n | share | rougeL dpo_Vp_A2 | rougeL with oracle injection | question names a law number |
+|---|---|---|---|---|---|
+| hit (gold pair in top-5) | 239 | 90.5% | .722 | .722 | 47/239 |
+| dropped by rerank/k (gold in dense top-10) | 9 | 3.4% | .329 | .459 | 0/9 |
+| law ok, other article (sibling/amended) | 9 | 3.4% | .367 | .457 | 2/9 |
+| law in pool, article not | 3 | 1.1% | .232 | .232 | 0/3 |
+| law not in corpus | 4 | 1.5% | .443 | .443 | 1/4 |
+| law in corpus but not in dense top-50 | 0 | 0% | - | - | - |
+Read: corpus gap is only 1.5%; the dense top-50 contains the gold LAW for every question that has it in the corpus; the real retrieval losses are rerank/k cut (9) and wrong sibling article (9) = 6.8%, and even with the gold passage injected they only reach .46 against .72 for hits → the missed questions are intrinsically harder (answer extent/phrasing), so fixing them is worth ≈ +.006 overall (consistent with oracle +.0072). Questions that name a law number: 20% among hits, 0–2 of the missed ones (misses are questions without an explicit law reference).
