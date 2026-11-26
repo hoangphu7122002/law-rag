@@ -100,3 +100,14 @@ def test_mix_pairs_subsamples_the_standard_pairs_keeps_all_extra_pairs_and_shuff
     b = mix_pairs(std, extra, keep_standard=60, seed=1)
     assert a == b and len(a) == 90 and sum(p["source"] == "standard" for p in a) == 60
     assert [p["qid"] for p in a] != sorted(p["qid"] for p in a)
+
+
+def test_best_of_n_row_picks_the_highest_rouge_sample_inside_the_length_band_and_none_when_all_are_bad():
+    from train.preference.pref_data import best_of_n_row
+    good = REF
+    short = "\n".join(REF.split("\n")[:2])
+    row = {"qid": 3, "prompt": "p", "reference": REF, "cands": [short, good + " thêm ít", good]}
+    out = best_of_n_row(row, min_rouge=0.55)
+    assert out == {"qid": 3, "prompt": "p", "completion": good}
+    assert best_of_n_row({**row, "cands": [short]}, min_rouge=0.55) is None
+    assert best_of_n_row({**row, "reference": "Tôi không thể trả lời câu hỏi này."}, min_rouge=0.55) is None

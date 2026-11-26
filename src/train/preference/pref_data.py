@@ -92,3 +92,17 @@ def mix_pairs(standard: list[dict], extra: list[dict], keep_standard: int, seed:
     out = std + list(extra)
     rng.shuffle(out)
     return out
+
+
+def best_of_n_row(row: dict, min_rouge: float = 0.55, lo: float = 0.8, hi: float = 1.3) -> dict | None:
+    """Rejection-sampling SFT row: the model's own best sample (ROUGE-L vs the reference) with length lo..hi x the reference and rouge >= min_rouge, as prompt/completion.
+    None when the reference is a refusal or no sample qualifies."""
+    ref = row["reference"]
+    if is_refusal(ref):
+        return None
+    n = max(len(ref), 1)
+    ok = [(rouge_l_score(c, ref), c) for c in dict.fromkeys(row["cands"]) if lo <= len(c) / n <= hi]
+    ok = [x for x in ok if x[0] >= min_rouge]
+    if not ok:
+        return None
+    return {"qid": row["qid"], "prompt": row["prompt"], "completion": max(ok, key=lambda x: x[0])[1]}
