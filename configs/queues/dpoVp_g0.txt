@@ -1,0 +1,15 @@
+# DPO B on V_pissa (extent-aware pairs) on GPU0: waits for the full-article eval queue and for pairs_B.jsonl (made by queue dpoVp_g1), then dev + test.
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1126-081051"
+wait test -s /home/app/phunguyen/law_rag/data/train/pref_Vp/pairs_B.jsonl && ! tmux ls 2>/dev/null | grep -q lawrag-run-pairs-VpB
+sh dpo-VpB cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/dpo.py --pairs data/train/pref_Vp/pairs_B.jsonl --base /home/app/phunguyen/law_rag/data/models/q35_V_pissa --out /home/app/phunguyen/law_rag/data/models/dpo_Vp_B --lr 2e-5 --beta 0.1 --max-length 12288 > data/runs/logs/dpo-VpB.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo-VpB"
+do sleep 60
+serve /home/app/phunguyen/law_rag/data/models/dpo_Vp_B --gpu 0 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_Vp_B --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
+do tmux kill-session -t lawrag-llm-g0
+do sleep 90
+serve /home/app/phunguyen/law_rag/data/models/dpo_Vp_B --gpu 0 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_Vp_B --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
+do tmux kill-session -t lawrag-llm-g0
