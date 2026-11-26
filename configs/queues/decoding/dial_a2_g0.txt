@@ -1,0 +1,12 @@
+# Weight-space dial: theta = V_pissa + alpha*(dpo_Vp_A2 - V_pissa), alpha .5 and 1.5, dev only (GPU0, after the A2m eval queue). Compare with V_pissa .6414 / dpo_Vp_A2 .6743 (alpha 1).
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1126-140025"
+do sleep 90
+serve /home/app/phunguyen/law_rag/data/models/dpo_Vp_A2_x0.5 --gpu 0 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_Vp_A2_x0.5 --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
+do tmux kill-session -t lawrag-llm-g0
+do sleep 90
+serve /home/app/phunguyen/law_rag/data/models/dpo_Vp_A2_x1.5 --gpu 0 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_Vp_A2_x1.5 --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
+do tmux kill-session -t lawrag-llm-g0
