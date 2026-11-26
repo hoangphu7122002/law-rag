@@ -9,8 +9,7 @@ from pathlib import Path
 
 import requests
 
-from evaluate.metrics import rouge_l_score
-from train.synth.rationale import accept_trace, split_think, to_think_prompt
+from train.synth.rationale import assemble, pick_thought, rationale_request, split_think, to_think_prompt, valid_rationale
 
 ap = argparse.ArgumentParser()
 ap.add_argument("src")
@@ -22,6 +21,7 @@ ap.add_argument("--conc", type=int, default=48)
 ap.add_argument("--max-tokens", type=int, default=2200)
 ap.add_argument("--min-rouge", type=float, default=0.5)
 ap.add_argument("--limit", type=int, default=0)
+ap.add_argument("--no-rationalise", action="store_true", help="skip pass 2 (9B writes a short rationale, shown the reference, for rows pass 1 could not solve)")
 a = ap.parse_args()
 
 
@@ -33,15 +33,25 @@ def sample(row: dict) -> dict | None:
         outs = [c["text"].replace("<|im_end|>", "") for c in r["choices"]]
     except Exception:
         return None
-    best = None
-    for text in outs:
-        parts = split_think(text)
-        if not parts or not accept_trace(parts[0], parts[1], row["completion"], a.min_rouge):
+    cands = [parts for text in outs if (parts := split_think(text))]
+    thought = pick_thought(cands, row["completion"], a.min_rouge)
+    if thought is not None:
+        return {"qid": row["qid"], "prompt": prompt, "completion": thought + "\n</think>\n\n" + row["completion"], "source": "genuine"}
+    return None
+
+
+def rationalise(row: dict) -> dict | None:
+    """Pass 2 (STaR rationalisation by our own 9B): rows the blind pass could not solve are exactly the hard tail/mid ones, so write a short reasoning shown the reference."""
+    for _ in range(3):
+        try:
+            r = requests.post(f"{a.url}/chat/completions", json={"model": a.model, "messages": [{"role": "user", "content": rationale_request(row["prompt"], row["completion"])}],
+                                                                  "temperature": 0.7, "max_tokens": 600, "chat_template_kwargs": {"enable_thinking": False}}, timeout=600).json()
+            text = r["choices"][0]["message"]["content"].strip()
+        except Exception:
             continue
-        key = (rouge_l_score(parts[1], row["completion"]), -len(parts[0]))
-        if best is None or key > best[0]:
-            best = (key, parts[0])
-    return None if best is None else {"qid": row["qid"], "prompt": prompt, "completion": best[1] + "\n</think>\n\n" + row["completion"]}
+        if valid_rationale(text, row["completion"]):
+            return {**assemble(row, text), "source": "rationalised"}
+    return None
 
 
 out = Path(a.out)
@@ -51,7 +61,14 @@ for split in ("train", "val"):
     rows = rows[:a.limit] if a.limit else rows
     with ThreadPoolExecutor(a.conc) as ex:
         res = list(ex.map(sample, rows))
+    if not a.no_rationalise:
+        todo = [row for row, r in zip(rows, res) if r is None]
+        with ThreadPoolExecutor(a.conc) as ex:
+            res2 = list(ex.map(rationalise, todo))
+        it = iter(res2)
+        res = [r if r else next(it) for r in res]
     kept = [r for r in res if r]
     with open(out / f"{split}.jsonl", "w", encoding="utf-8") as f:
-        f.writelines(json.dumps(r, ensure_ascii=False) + "\n" for r in kept)
-    print(json.dumps({"split": split, "rows": len(rows), "kept": len(kept)}), flush=True)
+        f.writelines(json.dumps({k: v for k, v in r.items() if k != "source"}, ensure_ascii=False) + "\n" for r in kept)   # SFT rows stay {qid, prompt, completion}
+    (out / f"{split}_sources.json").write_text(json.dumps({r["qid"]: r["source"] for r in kept}))
+    print(json.dumps({"split": split, "rows": len(rows), "kept": len(kept), "genuine": sum(r["source"] == "genuine" for r in kept), "rationalised": sum(r["source"] == "rationalised" for r in kept)}), flush=True)

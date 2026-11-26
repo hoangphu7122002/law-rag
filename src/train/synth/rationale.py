@@ -50,7 +50,7 @@ def split_think(text: str) -> tuple[str, str] | None:
     return (thought, answer) if thought and answer else None
 
 
-def accept_trace(thought: str, final: str, reference: str, min_rouge: float = 0.5, min_thought: int = 120, max_thought: int = 6000) -> bool:
+def accept_trace(thought: str, final: str, reference: str, min_rouge: float = 0.5, min_thought: int = 120, max_thought: int = 1800) -> bool:
     """A self-generated thought is kept when it ends in an answer that cites every Điều of the reference (and none the reference lacks) and overlaps it (ROUGE-L)."""
     from evaluate.metrics import rouge_l_score
     if not (min_thought <= len(thought) <= max_thought):
@@ -70,3 +70,23 @@ def valid_thinking(text: str, reference: str, min_chars: int = 400, max_chars: i
     if not (min_chars <= len(t) <= max_chars) or LEAK.search(t):
         return False
     return dieu_numbers(reference) <= dieu_numbers(t)
+
+
+VI_WORDS = ("của", "và", "là", "các", "không", "được", "điều", "khoản", "này", "câu hỏi")
+
+
+def is_vietnamese(text: str) -> bool:
+    """Cheap language check: a Vietnamese thought uses several of the most frequent Vietnamese function words."""
+    t = text.lower()
+    return sum(w in t for w in VI_WORDS) >= 4
+
+
+def pick_thought(cands: list[tuple[str, str]], reference: str, min_rouge: float = 0.5, tol: float = 0.05) -> str | None:
+    """Among (thought, final answer) pairs keep the Vietnamese, accepted ones; the best final-answer ROUGE-L sets the bar (within `tol`) and the SHORTEST thought above it wins
+    (short thoughts cost little latency at inference)."""
+    from evaluate.metrics import rouge_l_score
+    ok = [(t, rouge_l_score(f, reference)) for t, f in cands if is_vietnamese(t) and accept_trace(t, f, reference, min_rouge)]
+    if not ok:
+        return None
+    best = max(r for _, r in ok)
+    return min((t for t, r in ok if r >= best - tol), key=len)

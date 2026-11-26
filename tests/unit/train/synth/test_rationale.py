@@ -63,3 +63,19 @@ def test_valid_thinking_accepts_a_longer_stepwise_thought_but_not_leaks_or_forei
     assert valid_thinking(good + " Điều 99 nói về việc khác nên loại.", REF)                  # eliminating another Điều is fine
     assert not valid_thinking(good.replace("Điều 17", "điều này"), REF)                       # but the reference's Điều must be named
     assert not valid_thinking("Quá ngắn.", REF)
+
+
+def test_is_vietnamese_rejects_english_thoughts():
+    from train.synth.rationale import is_vietnamese
+    assert is_vietnamese("Câu hỏi hỏi về mức phạt, và Điều 17 là điều khoản của luật này nên ta chọn khoản 1.")
+    assert not is_vietnamese("Thinking Process: the question asks about the fine, so we should pick clause 1 of Article 17 and quote it.")
+
+
+def test_pick_thought_takes_the_shortest_thought_among_near_best_answers_and_skips_bad_ones():
+    from train.synth.rationale import pick_thought
+    vi = "Câu hỏi hỏi mức phạt, và Điều 17 là điều khoản của luật này nên chọn khoản 1. "
+    good = "Căn cứ khoản 1 Điều 17 Thông tư X như sau:\nPhạt 100.000 đồng."
+    cands = [(vi * 6, good), (vi * 3, good), ("Thinking Process: " + "english " * 40, good), (vi * 2, "Căn cứ Điều 18 như sau:\nPhạt 100.000 đồng.")]
+    assert pick_thought(cands, REF, min_rouge=0.5) == vi * 3          # shortest valid; English and wrong-Điều candidates ignored
+    assert pick_thought([(vi * 3, "Căn cứ Điều 18: khác.")], REF) is None
+    assert pick_thought([("t" * 3000, good)], REF) is None            # too long for a deployable thought (max 1800 chars)
