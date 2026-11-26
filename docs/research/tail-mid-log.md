@@ -65,3 +65,9 @@ Pooled dev+test mean rouge_l and paired-bootstrap difference vs dpo_a2 (mean .65
 dev **.6743** / test **.6435** vs dpo_a2 dev .6637 / test .6433 (dev +.0106, test +.0002). Pooled dev+test (n=500) .6620 vs dpo_a2 .6556: +.0064 [-.0066,+.0197] (not significant); vs dpo_Vp_A (round 1) +.0234 [+.0112,+.0355] (round 2 is what matters, as with dpo_a -> dpo_a2). Pairs of round 2: 1043 (margin .284, chosen is greedy 12%).
 Wide-context eval of dpo_a2 (dev, retrieve.k markers): base k=5 .6637 | 102 (gate->top10) .6609 | 103 (gate->top15) .6629 | 104 (always top15) .6545 | 105 (oracle widen) .6667 => widening context does not help dpo_a2 (oracle upper bound only +.003).
 Seed replicates queued: round 2 with DPO seed 777 (GPU1, dpo_Vp_A2s2) and a full second chain (round 1 + sampling + round 2, seed 777, GPU0, dpo_Vp_As2 / dpo_Vp_As2_r2).
+
+## 12:05 — seed replicate of round 2, soup (rouge_l)
+- **dpo_Vp_A2s2** (round 2, DPO seed 777, same pairs/base dpo_Vp_A): dev **.6782** / test **.6472** (dpo_Vp_A2: .6743 / .6435; dpo_a2 .6637 / .6433). The round-2 step reproduces (dev spread .004, test .004). Pooled dev+test .6658 vs dpo_a2 .6556: +.0102 [-.0020,+.0231] (p~.1); dpo_Vp_A2 +.0064. Tail/mid dev (n / rouge_l): cited-correct 214 / .754, cites other 21 / .475, gold missing 25 / .371, ref no article 36 / .591, refusal .3%, len ratio .97.
+- dpo_Vp_As2 (round 1, seed 777; the replicate chain on GPU0): dev .6544 (dpo_Vp_A .6493). Test pending; round 2 of that chain follows.
+- **soup_a2 = mean(dpo_a2, dpo_a2s2)**: dev .6632 / test .6346 (dpo_a2 .6637/.6433, dpo_a2s2 .6623/.6377); pooled .6518 vs dpo_a2 -.0038 [-.0111,+.0032] => weight averaging of the DPO seeds does NOT help (dropped).
+- MBR8 of dpo_Vp_A2 (A6_mbr, shots 2) running on GPU1.
