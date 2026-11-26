@@ -71,3 +71,9 @@ Seed replicates queued: round 2 with DPO seed 777 (GPU1, dpo_Vp_A2s2) and a full
 - dpo_Vp_As2 (round 1, seed 777; the replicate chain on GPU0): dev .6544 (dpo_Vp_A .6493). Test pending; round 2 of that chain follows.
 - **soup_a2 = mean(dpo_a2, dpo_a2s2)**: dev .6632 / test .6346 (dpo_a2 .6637/.6433, dpo_a2s2 .6623/.6377); pooled .6518 vs dpo_a2 -.0038 [-.0111,+.0032] => weight averaging of the DPO seeds does NOT help (dropped).
 - MBR8 of dpo_Vp_A2 (A6_mbr, shots 2) running on GPU1.
+
+## 12:31 — MBR8 of dpo_Vp_A2, round 1 seed replicate
+- **dpo_Vp_A2 + MBR8** (A6_mbr: greedy + 7 x T0.7, ROUGE-L consensus, shots 2): dev **.6822** (greedy .6743, +.008) / test **.6446** (greedy .6435, +.001). dpo_a2 + MBR8 had test .6521 (+.009 over greedy .6433). => MBR adds ~+.001..+.009; on the best model it does not move test. Not worth 8x inference cost unless accuracy mode is wanted.
+- dpo_Vp_As2 (round 1, seed 777): dev .6544 / test .6263 (dpo_Vp_A .6493 / .6226): round 1 also reproduces (spread +.005 / +.004).
+- GPU0: dpo_Vp_As2_r2 (round 2 of the second chain) training; GPU1: round 3 sampling from dpo_Vp_A2 (queue 1126-122633).
+- Disk 67G after deleting the CPT models and soup_a2 with the user's approval (31G freed).
