@@ -1,0 +1,4 @@
+# n-gram speculative decoding A/B (dpo_Vp_A2) on GPU1, re-run after the thinking queue (first run lost the JSON quotes of --speculative-config in tmux; fixed with printf %q)
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1126-231542"
+sh specab cd /home/app/phunguyen/law_rag && bash scripts/serve/spec_ab.sh /home/app/phunguyen/law_rag/data/models/dpo_Vp_A2 1 > data/runs/logs/spec_ab.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-specab"
