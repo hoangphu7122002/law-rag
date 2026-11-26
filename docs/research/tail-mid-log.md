@@ -86,3 +86,11 @@ Bucket = mean ROUGE-L of the 8 samples (tail <.45, mid .45–.65, head ≥.65).
 | mid | 299 | 402 | 1.34 | 56 | 239 |
 | head | 807 | 629 | 0.78 | 310 | 283 |
 Read: tail under-covered (0.84/prompt, 21% no pair); head wastes 283 extent pairs. Gap for tail+mid ≈ 130 prompts with no pair (+ ~150 more tail pairs for parity). Haiku 5.5 low candidate targets: those prompts (chosen = Haiku answer verified by rougeL vs gold ≥ .65, rejected = model's worst); decontaminate vs dev/test (train split is disjoint by qid; also check question text). Queued dpo_Vp_A2m (queue 1126-125335) on GPU0 after chain-2.
+
+## 2026-11-26 13:40 — full chain-2 replicate and round 3 (rouge_l; models verified via config.yaml)
+| model | dev | test | pooled n=500 | diff vs dpo_a2 (95% CI) | dev len ratio |
+|---|---|---|---|---|---|
+| dpo_Vp_A2 (chain 1) | .6743 | .6435 | .6620 | +.0064 [-.0066,+.0197] | .96 |
+| dpo_Vp_As2_r2 (chain 2, all seeds 777, from scratch) | .6586 | .6299 | .6471 | -.0085 [-.0216,+.0049] | .99 |
+| dpo_Vp_A3 (round 3 from A2) | .6453 | .6166 | .6338 | -.0217 [-.0351,-.0085] | 1.11 |
+Read: the two-round chain does NOT reproduce from scratch (chain 2 is -.016 dev vs chain 1; round-1 did reproduce .6544/.6263). Round-2 gain depends on the round-1 sample set (seed noise ~±.01-.015). Round 3 is significantly worse and over-long (len ratio 1.11, ref-cites-no-article .554, other-Điều .445) → stop at 2 rounds. dpo_Vp_A2m (mixed extent pairs) is running on GPU0.
