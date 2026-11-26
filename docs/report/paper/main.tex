@@ -455,7 +455,7 @@ round 2, mixed pairs $+$ gold-chosen pairs & .6363 & .6376 & .6368 & $-.019$ \ci
 \bottomrule
 \end{tabular}
 \end{table}
-\paragraph{Other attempts that did not help.} Continued pre-training on $209$M tokens of legal text (LoRA $r{=}64$, one epoch) raised closed-book cloze accuracy by $15$ points but not \rl{}. Weight averaging of two DPO seeds, a wider context (more passages) and full-article context gave no gain. A blind Haiku~5.5 (low reasoning) answer for the $129$ tail/middle questions without a pair passed the quality gate (\rl{}$\ge.6$ against the reference, length $.75$--$1.3\times$, $\ge.1$ above the model's worst sample) for $1$ of $12$ prompts (typically answers $2.5$--$11\times$ too long or $\rl{}<.5$), so generation was stopped. A weight-space search in the style of \cite{wsp} (an LLM agent edits weights directly, with a budget of $50$ forward requests, paired standard errors and a head guard set) found no edit above two standard errors in its first $22$ requests; the best candidate, a $+2$ bias on the end-of-turn logit, changed \rl{} by $+.004\pm.005$ on held-out feedback questions. The search is still running and is reported only as exploratory.
+\paragraph{Other attempts that did not help.} Continued pre-training on $209$M tokens of legal text (LoRA $r{=}64$, one epoch) raised closed-book cloze accuracy by $15$ points but not \rl{}. Weight averaging of two DPO seeds, a wider context (more passages) and full-article context gave no gain. A weight-space search in the style of \cite{wsp} (an LLM agent edits weights directly, with a budget of $50$ forward requests, paired standard errors and a head guard set) found no edit above two standard errors in its first $22$ requests; the best candidate, a $+2$ bias on the end-of-turn logit, changed \rl{} by $+.004\pm.005$ on held-out feedback questions. The search is still running and is reported only as exploratory.
 
 \subsection{Negative and null results}\label{sec:negative}
 \begin{table}[H]
@@ -474,7 +474,6 @@ Distillation \cite{hinton} from a 9B teacher & raw teacher $.41$--$.43$ $<$ SFT 
 Legal-domain base models & see Section~\ref{sec:generator} & Knowledge comes from retrieval\\
 Continued pre-training (209M tokens) & cloze $+15$ points, \rl{} unchanged & Style and extent, not knowledge, limit \rl{}\\
 Gold answers as DPO chosen & $.6368$ pooled, $-.019$ \ci{-.033}{-.004} & Off-policy chosen answers hurt the cited group (Section~\ref{sec:pissa})\\
-Haiku 5.5 blind answers for tail pairs & $1/12$ pass the quality gate & Same extent ambiguity as the model\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -671,7 +670,6 @@ The reversed control moving by $+.016$ at one strength and by $-.004$ on a secon
 \subsection{Pairs and data for preference training}
 \paragraph{Where the pairs were.} Counting by mean score of the eight samples per training question, the tail group ($346$ questions, mean below $.45$) received $0.84$ pairs per question and $73$ of them none, the middle group ($299$) $1.34$ and $56$ none, the head group ($807$) $0.78$. A re-balanced set was built from the first-round samples: real pairs in which a good answer (\rl{}$\ge.65$, length $.75$--$1.3\times$ reference) is set against the worst shorter one ($86$), the worst longer one ($115$) and the worst same-length one with \rl{} $.35$--$.6$ ($122$), plus $300$ synthetic negatives (the chosen answer cut at a line boundary to $35$--$60\%$, or followed by a paragraph of the prompt it does not contain). It trained as stably as the plain recipe (Table~\ref{tab:pissa}) and not better.
 \paragraph{Gold answers as chosen.} For the $129$ tail/middle questions that had no pair, the reference answer was used as chosen and the model's worst sample as rejected. Pooled \rl{} fell by $.019$; in the stage table of dev, the group ``retrieved and cited'' lost $.025$ and ``cites no article'' grew from $3$ to $8$ questions. The model is moved toward text it would not generate itself, and the DPO objective has no term that tells it which part of that text matters.
-\paragraph{Teacher answers.} Blind answers from a small commercial model ($12$ of the $129$ questions, about $15$k tokens of context read per question) passed the gate in one case; the rest were far too long or quoted the wrong clause. Extrapolating the cost to all questions ($\approx1.8$M tokens for about ten usable pairs) ended the experiment.
 
 \subsection{Other negatives of this round}
 \begin{itemize}[leftmargin=*]
