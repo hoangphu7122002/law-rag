@@ -2,7 +2,6 @@
 
 **Ask a question about Vietnamese law. A 2B model finds the right Điều and answers in the register of a legal reference, quoting the provision.**
 
-[![Last commit](https://img.shields.io/github/last-commit/hoangphu7122002/law-rag)](https://github.com/hoangphu7122002/law-rag/commits/main)
 ![Python](https://img.shields.io/badge/python-3.11%2B-3776ab)
 ![Generator](https://img.shields.io/badge/generator-Qwen3.5--2B-6a5acd)
 ![Test ROUGE-L](https://img.shields.io/badge/test%20ROUGE--L-0.643-2f6fde)
@@ -66,46 +65,11 @@ make web            # cited laws still missing, from public portal sitemaps (rat
 
 ## How it works
 
-One question, from the request to the quoted answer:
+<p align="center"><img src="docs/assets/architecture.png" alt="Architecture: a client calls POST /ask on the QA service, which embeds the question, searches a FAISS index of one passage per Điều, reranks to 5 passages (or refuses), and asks the Qwen3.5-2B generator; offline, the corpus is chunked and indexed, and the generator is trained with LoRA SFT then two on-policy DPO rounds" width="100%"></p>
 
-```mermaid
-flowchart TD
-    Q["Question<br/>'Mức phạt ... mũ bảo hiểm ...?'"] --> E["Embed the question<br/>(Vietnamese_Embedding)"]
-    E --> D["Dense search over<br/>one passage per Điều (FAISS)"]
-    D --> R["Rerank the top 50<br/>(Vietnamese_Reranker)"]
-    R -->|"best score < threshold"| X["Refuse:<br/>context does not cover it"]
-    R --> P["Prompt: top-5 passages<br/>+ 2 nearest training Q/A pairs<br/>+ the question"]
-    P --> G["Qwen3.5-2B<br/>SFT + 2 DPO rounds<br/>greedy (or MBR-8)"]
-    G --> A["'Căn cứ tại khoản k Điều n ...'<br/>+ quoted provision + sources"]
-```
-
-And how the generator was trained:
-
-```mermaid
-flowchart LR
-    T["Train split<br/>(decontaminated)"] --> S["SFT data: k in 3..10 passages,<br/>gold injected 70%, 0-3 shots,<br/>20% refusal rows"]
-    S --> F["LoRA SFT<br/>3 epochs"]
-    F --> S1["Sample 8 answers<br/>per train prompt"]
-    S1 --> P1["Pairs: best vs worst<br/>by ROUGE-L (margin .1)"]
-    P1 --> D1["DPO round 1"]
-    D1 --> S2["Sample again"] --> P2["Pairs"] --> D2["DPO round 2<br/>= final model"]
-```
+<sub>Drawn by [`docs/assets/make_figures.py`](docs/assets/make_figures.py) (needs Google Chrome). Facts from `docker/compose.yml`, `configs/exp/A5_v3b.yaml` and `src/serve/api.py`.</sub>
 
 ## Architecture
-
-```mermaid
-flowchart LR
-    user(["Client"]) -->|"POST /ask"| api["QA service<br/>FastAPI (src/serve)"]
-    subgraph gpu["One L40S"]
-        llm["vLLM: Qwen3.5-2B<br/>(SFT + DPO)"]
-        emb["vLLM: embedder"]
-        rr["vLLM: reranker"]
-    end
-    api --> emb
-    api --> idx[("FAISS index<br/>per-Điều passages")]
-    api --> rr
-    api --> llm
-```
 
 | Layer | Stack |
 |---|---|
