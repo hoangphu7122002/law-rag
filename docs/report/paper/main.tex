@@ -665,6 +665,7 @@ Closed-form ridge fit of one MLP output to the reference, rank $4$ / rank $32$ &
 \bottomrule
 \end{tabular}
 \end{table}
+A second round on the same model measured each candidate by teacher forcing only (the mean log-probability of the reference, deterministic, standard error about $.001$) and screened the decay of the linear-attention layers and the gates of the attention outputs: scaling the decay by $0.5$ or $1.5$ lowered the reference log-probability on hard questions by $.014$ and $.004$, and every gate shift lowered it by $.010$ to $.109$, always two to four times more on hard questions than on the head group. The agent therefore stopped after $8$ requests with the original weights, having found no global change that favours hard questions.
 The reversed control moving by $+.016$ at one strength and by $-.004$ on a second sample of questions is a reminder of how little a $64$-question request can resolve: with a paired standard error of $.009$--$.017$, only effects above about $.02$ are visible, and the whole search stayed below that. Direction edits did not leave a trace in length either (length ratios $1.22$--$1.55$ against $1.28$ for the original on the same questions), so the behaviours the method controlled well in \cite{wsp} (hesitation and loops in long reasoning) are not what separates good from bad answers here: our answers quote a legal text and the open question is how much of it and from which clause.
 
 \subsection{Pairs and data for preference training}
