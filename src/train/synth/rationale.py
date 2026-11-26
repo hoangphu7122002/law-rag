@@ -62,3 +62,11 @@ def accept_trace(thought: str, final: str, reference: str, min_rouge: float = 0.
     if gold and cited != gold:
         return False
     return rouge_l_score(final, reference) >= min_rouge
+
+
+def valid_thinking(text: str, reference: str, min_chars: int = 400, max_chars: int = 3500) -> bool:
+    """Longer step-by-step thought (teacher-written): no answer-key leak and it names every Điều of the reference (other Điều may be mentioned: that is the elimination)."""
+    t = text.strip()
+    if not (min_chars <= len(t) <= max_chars) or LEAK.search(t):
+        return False
+    return dieu_numbers(reference) <= dieu_numbers(t)

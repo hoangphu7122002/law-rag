@@ -52,3 +52,14 @@ def test_accept_trace_for_a_refusal_reference_wants_a_refusal_answer():
     refusal = "Tôi không thể trả lời câu hỏi này vì ngữ cảnh không có thông tin."
     assert accept_trace("t" * 200, refusal, refusal)
     assert not accept_trace("t" * 200, "Căn cứ khoản 1 Điều 17 như sau: Phạt.", refusal)
+
+
+def test_valid_thinking_accepts_a_longer_stepwise_thought_but_not_leaks_or_foreign_articles():
+    from train.synth.rationale import valid_thinking
+    good = ("Câu hỏi hỏi mức phạt khi không có bảo hiểm. Xem ngữ cảnh: Điều 17 có ba khoản. Khoản 1 nói về người không có bảo hiểm bắt buộc, đúng với câu hỏi. "
+            "Khoản 2 nói về giấy đăng ký xe nên loại. Khoản 3 là tái phạm, câu hỏi không nhắc. Vậy chọn khoản 1 Điều 17 và trích nguyên văn khoản này, không cần thêm khoản khác. " * 2)
+    assert valid_thinking(good, REF)
+    assert not valid_thinking(good + " Theo đáp án chuẩn thì đúng.", REF)
+    assert valid_thinking(good + " Điều 99 nói về việc khác nên loại.", REF)                  # eliminating another Điều is fine
+    assert not valid_thinking(good.replace("Điều 17", "điều này"), REF)                       # but the reference's Điều must be named
+    assert not valid_thinking("Quá ngắn.", REF)
