@@ -39,3 +39,26 @@ def valid_rationale(text: str, reference: str) -> bool:
 
 def assemble(row: dict, rationale: str) -> dict:
     return {"qid": row["qid"], "prompt": to_think_prompt(row["prompt"]), "completion": rationale.strip() + "\n</think>\n\n" + row["completion"]}
+
+
+def split_think(text: str) -> tuple[str, str] | None:
+    """Model output of a thinking turn (the opening <think> is in the prompt): (thought, final answer), None when the thought was cut off or empty."""
+    if "</think>" not in text:
+        return None
+    thought, answer = text.split("</think>", 1)
+    thought, answer = thought.strip(), answer.strip()
+    return (thought, answer) if thought and answer else None
+
+
+def accept_trace(thought: str, final: str, reference: str, min_rouge: float = 0.5, min_thought: int = 120, max_thought: int = 6000) -> bool:
+    """A self-generated thought is kept when it ends in an answer that cites every Điều of the reference (and none the reference lacks) and overlaps it (ROUGE-L)."""
+    from evaluate.metrics import rouge_l_score
+    if not (min_thought <= len(thought) <= max_thought):
+        return False
+    from train.preference.grpo import is_refusal
+    if is_refusal(reference):      # no-answer rows: the reasoning must end in a refusal too
+        return is_refusal(final)
+    gold, cited = dieu_numbers(reference), dieu_numbers(final)
+    if gold and cited != gold:
+        return False
+    return rouge_l_score(final, reference) >= min_rouge

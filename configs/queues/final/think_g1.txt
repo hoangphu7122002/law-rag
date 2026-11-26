@@ -1,14 +1,14 @@
-# Thinking-mode SFT experiment (user go 2026-11-26): rationales for the q35_C rows from Qwen3.5-9B (STaR-style rationalisation, thinking off), SFT PiSSA r32 3 epochs on q35_T (prompt opens <think>, completion = rationale + </think> + gold), dev eval with thinking on. Compare with V_pissa (non-thinking SFT, dev .6414). GPU1, after the spec-decoding bench.
+# Thinking-mode SFT with GENUINE reasoning (user: needs proper thinking): Qwen3.5-9B (thinking on) answers each q35_C prompt blind, n=4; a sample is kept when its final answer cites exactly the reference's Điều and overlaps it (ROUGE-L>=.5); training row = prompt opening <think> + the kept thought + </think> + the REFERENCE answer. Then SFT PiSSA r32 3 epochs on q35_T and a dev eval with thinking on. Compare with V_pissa (non-thinking SFT, dev .6414). GPU1, after the spec-decoding bench.
 wait ! tmux ls 2>/dev/null | grep -q "spec-ab"
-serve Qwen/Qwen3.5-9B --gpu 1 --share 0.5
-sh rationale cd /home/app/phunguyen/law_rag && PYTHONPATH=src .venv/bin/python scripts/train/gen_rationales.py data/train/q35_C data/train/q35_T --url http://localhost:8001/v1 --model Qwen/Qwen3.5-9B > data/runs/logs/rationale.log 2>&1
-wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-rationale"
+serve Qwen/Qwen3.5-9B --gpu 1 --share 0.7
+sh thinkgen cd /home/app/phunguyen/law_rag && PYTHONPATH=src .venv/bin/python scripts/train/gen_thinking.py data/train/q35_C data/train/q35_T --url http://localhost:8001/v1 --model Qwen/Qwen3.5-9B --n 4 > data/runs/logs/thinkgen.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-thinkgen"
 do tmux kill-session -t lawrag-llm-g1
 do sleep 60
 sh sftT cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft/sft_lora.py --data data/train/q35_T --base Qwen/Qwen3.5-2B --out /home/app/phunguyen/law_rag/data/models/q35_T_pissa --init-lora pissa --epochs 3 --max-length 12288 --batch 1 --accum 16 --seed 1 > data/runs/logs/sftT.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-sftT"
 do sleep 60
 serve /home/app/phunguyen/law_rag/data/models/q35_T_pissa --gpu 1 --share 0.45
-configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_T_pissa --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set generate.thinking=true --set generate.think_tokens=512
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_T_pissa --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set generate.thinking=true --set generate.think_tokens=1536
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
 do tmux kill-session -t lawrag-llm-g1
