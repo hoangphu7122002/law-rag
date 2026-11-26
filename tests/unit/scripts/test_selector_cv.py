@@ -1,5 +1,3 @@
-import sys
-from pathlib import Path
 
 from selector_cv import candidate_features, pick_by_prediction
 

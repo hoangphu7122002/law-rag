@@ -1,5 +1,3 @@
-import sys
-from pathlib import Path
 
 from api_eval import summarize
 

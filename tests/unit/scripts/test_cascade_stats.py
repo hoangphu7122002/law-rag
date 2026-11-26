@@ -1,5 +1,3 @@
-import sys
-from pathlib import Path
 
 from cascade_stats import cascade_curve
 

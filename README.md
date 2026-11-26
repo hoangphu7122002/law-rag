@@ -85,7 +85,7 @@ python scripts/serve/demo.py docs/report/demo_questions.json > docs/report/demo.
 ```
 src/        corpus (data, decontamination) · index · retrieve · generate (prompt, generator, ReAct) · train (SFT, DPO, GRPO, merge) · evaluate · serve (QA service) · ops (GPU box)
 configs/    base.yaml · exp/<id>.yaml · backends/ · queues/ (job queues for the GPU box)
-scripts/    DPO sampling / pairs, analyses (MBR oracle, cascade, citation), demo, API evaluation
+scripts/    entry points by stage: data/ train/ analysis/ serve/ ops/ (see scripts/README.md); queues: configs/queues/<group>/
 tests/      unit/ (no data, no models) · smoke/ (pipeline with BM25 + fake LLM)     docker/  compose + API image
 docs/       report/ (paper, demo) · CHANGELOG · ops/ · notes/ · ADR/ · reference/ (assignment brief)
 ```

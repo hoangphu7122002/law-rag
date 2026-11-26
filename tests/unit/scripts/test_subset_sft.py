@@ -1,6 +1,4 @@
 import json
-import sys
-from pathlib import Path
 
 from subset_sft import subset_rows, write_subset
 

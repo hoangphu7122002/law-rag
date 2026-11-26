@@ -1,5 +1,3 @@
-import sys
-from pathlib import Path
 
 from low_score_analysis import failure_stage, summarize_stages
 

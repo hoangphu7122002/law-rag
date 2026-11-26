@@ -1,5 +1,3 @@
-import sys
-from pathlib import Path
 
 from cite_stats import cite_stats
 

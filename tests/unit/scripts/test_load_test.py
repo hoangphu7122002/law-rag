@@ -1,5 +1,3 @@
-import sys
-from pathlib import Path
 
 from load_test import parse_sse_line, summarize_load
 

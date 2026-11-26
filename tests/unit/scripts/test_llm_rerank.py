@@ -1,5 +1,3 @@
-import sys
-from pathlib import Path
 
 from llm_rerank import build_prompt, parse_answer, score_rankings
 

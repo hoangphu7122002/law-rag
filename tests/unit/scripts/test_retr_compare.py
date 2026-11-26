@@ -1,6 +1,4 @@
 import json
-import sys
-from pathlib import Path
 
 from retr_compare import per_question_hits
 
