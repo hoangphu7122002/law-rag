@@ -447,3 +447,9 @@ Test split (200 questions, 0 errors, 0 empty), retrieval as in the dev runs (den
 - Generation (dpo_a2, dev300 greedy, 2 shots) with the LLM order: GLM .6654, DeepSeek .6637 vs baseline .6637 -> no gain.
 - Order sensitivity: reversed .6150 (-.049), shuffled .6459 (-.018). Model reads order, but a better order adds nothing.
 - Open: SFT with shuffled order / all gold articles injected / absent rate; needs 3 seeds per config (SFT sd .015).
+
+## Step 38 — final pre-declared chain, n-gram speculative decoding, thinking data (2026-11-26/27)
+- Final chain (train+dev SFT PiSSA r32 → DPO r1 on n=8 samples → DPO r2 on mixed pairs, seed 1), test scored once: greedy .640, MBR-8 .646, vs the reported system .643 / .652: inside the seed spread (.016), so the reported system stays dpo_a2 (paper Table tab:finalchain).
+- vLLM n-gram speculative decoding (dpo_Vp_A2, GPU1, 40 dev prompts, `scripts/serve/spec_ab.sh`): conc 1 tok/s 160 → 242 / 312 / 382 (ngram3 / 5 / 8, up to 2.4x, p95 6.2 → 2.4 s); conc 16 1380 → 722 / 1099 / 1305 (0.52-0.95x). Helps a single user, hurts or does nothing under load. Only 11-15/40 answers identical to the baseline (spec decoding should not change greedy output: check before using). Base run is from 22:34 (the 02:2x rerun hit a quoting bug, fixed); ngram3 ran while the box was disturbed (see below), so treat its conc-16 number as noisy.
+- Thinking SFT data: take 1 (blind Qwen3.5-9B thoughts, kept when the answer cites the right Điều) kept 1/1683: the 9B thinks in English and runs past 2200 tokens. Take 2: 9B rationalisation shown the reference (Vietnamese, 3-6 sentences, must name the cited Điều, may rule out others): 1147/1683 train, 133/188 val. SFT + dev eval running.
+- Ops: a co-tenant benchmark's box-wide `pkill vllm` killed law-rag's GPU1 servers at 02:17; fixed on their side (kill only own session), servers restarted.
