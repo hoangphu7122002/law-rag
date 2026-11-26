@@ -9,7 +9,7 @@ mkdir -p data/runs/spec data/runs/logs
 run_one() {   # name, extra args
   local name=$1; shift
   tmux kill-session -t $S 2>/dev/null; sleep 15
-  tmux new -d -s $S "CUDA_VISIBLE_DEVICES=$GPU HF_HOME=/home/app/phunguyen/hf $VLLM serve $MODEL --host 127.0.0.1 --port $PORT --seed 0 --gpu-memory-utilization 0.45 --dtype bfloat16 --max-model-len 32768 --enable-prefix-caching --max-num-seqs 64 --max-num-batched-tokens 16384 $* 2>&1 | tee data/runs/logs/$S-$name.log"
+  tmux new -d -s $S "VLLM_USE_FLASHINFER_SAMPLER=0 VLLM_CACHE_ROOT=$PWD/.cache/vllm FLASHINFER_WORKSPACE_BASE=$PWD/.cache/flashinfer TMPDIR=$PWD/.cache/tmp CUDA_VISIBLE_DEVICES=$GPU HF_HOME=/home/app/phunguyen/hf $VLLM serve $MODEL --host 127.0.0.1 --port $PORT --seed 0 --gpu-memory-utilization 0.45 --dtype bfloat16 --max-model-len 32768 --enable-prefix-caching --max-num-seqs 64 --max-num-batched-tokens 16384 $* 2>&1 | tee data/runs/logs/$S-$name.log"
   for i in $(seq 1 120); do curl -sf localhost:$PORT/v1/models >/dev/null && break; sleep 5; done
   echo "== $name"; PYTHONPATH=src .venv/bin/python scripts/serve/spec_bench.py --url http://localhost:$PORT/v1 --model $MODEL --out data/runs/spec/$name.json
 }
