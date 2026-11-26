@@ -105,3 +105,7 @@ dev .6642 / test .6418 (len ratio .97); pooled .6553, −.0003 vs dpo_a2 [−.01
 
 ## 2026-11-26 14:45 — dpo_Vp_A2ms2 (seed 777 replicate of A2m; model verified)
 dev .6663 / test .6410, pooled .6561 (+.0006 vs dpo_a2 [−.0136,+.0143]); A2m pooled .6553 → the mixed-pair recipe reproduces across seeds (spread .0008 vs .0147 for plain-recipe A2 vs A2s2/As2_r2 chains) but sits at dpo_a2 level, below dpo_Vp_A2 (.6620, within noise). Stage table dev: other-Điều 22/.471, retrieved-and-cited 214/.741, len ratio .95. Read: mix = more stable, not better. dpo_Vp_A2m deleted (replicate kept: A2ms2). Next: dpo_Vp_A2g (gold tail/mid pairs) training on GPU1.
+
+## 2026-11-26 15:35 — dpo_Vp_A2g (round 2 from dpo_Vp_A on pairs_mix_gold: pairs_mix + 129 gold-as-chosen tail/mid pairs; model verified)
+dev .6363 / test .6376, pooled .6368, −.0188 vs dpo_a2 [−.0334,−.0042] (significantly worse; −.019 vs A2ms2). Stage table dev: retrieved-and-cited 205/.716 (A2ms2 214/.741), cites-none 8/.424 (was 3), other-Điều 26/.459, len ratio .94. Read: off-policy gold as chosen (not the model's own style) hurts the already-good cited group and raises "cites none"; do NOT add gold-chosen pairs. Keep on-policy chosen only.
+WSP agent round 1 (so far): feedback baseline at max_new_tokens 1024: tail/mid .440/.448 (disc/conf), head .831; EOS-bias/stop-probe levers too small (+.003..+.005); first L15 rank-one edit (+4·d(gold−own)) hurt: −.041±.017 on 64 rows. Still running (6 forward / 22 analyses used).
