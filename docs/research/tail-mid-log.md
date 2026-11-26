@@ -100,3 +100,5 @@ Blind answers (prompt only, no gold) for batches 0–1 (12 prompts): gate rougeL
 
 ## 2026-11-26 14:20 — dpo_Vp_A2m (round 2 from dpo_Vp_A on pairs_mix: 700 standard + 323 real extent/hard + 300 synthetic, shuffled; model verified via config.yaml)
 dev .6642 / test .6418 (len ratio .97); pooled .6553, −.0003 vs dpo_a2 [−.0136,+.0133]; vs dpo_Vp_A2 (.6743/.6435) −.010 dev. Stage table dev: other-Điều 18 / .490 (A2: 22 / .501), retrieved-and-cited 218 / .734 (A2 .752). Read: balanced length-direction + extent pairs with fewer standard pairs ≈ same as the plain recipe (no gain, no loss); fewer prompts-with-cite-info did not help. Seed replicate dpo_Vp_A2ms2 and gold-tail variant dpo_Vp_A2g queued on GPU1.
+
+## 2026-11-26 14:35 — models deleted on the box with the user's approval (kept: V_pissa, dpo_Vp_A/A2/A2s2/A2m/A2ms2/A2g(training), dpo_a2/a2s2, q35_v3b): dpo_Vp_A3, dpo_Vp_As2(+_r2), dpo_Vp_B, dpo_D3c_a, dpo_D3c_pissa_a, q35_D3c_{pissa,rslora}(+_last), dpo_vb_ext, q35_C_s1, q35_V_rslora. dpo_Vp_A2m to go after A2ms2 evals.
