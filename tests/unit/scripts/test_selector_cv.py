@@ -1,7 +1,6 @@
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 from selector_cv import candidate_features, pick_by_prediction
 
 

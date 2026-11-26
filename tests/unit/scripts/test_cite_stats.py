@@ -1,7 +1,6 @@
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 from cite_stats import cite_stats
 
 REF = "Căn cứ tại khoản 2 Điều 5 Thông tư 07 quy định mức phạt tiền như sau: mức phạt từ 1 đến 2 triệu đồng."

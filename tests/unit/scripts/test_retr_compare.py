@@ -2,7 +2,6 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 from retr_compare import per_question_hits
 
 
