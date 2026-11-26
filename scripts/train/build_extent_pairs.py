@@ -21,10 +21,13 @@ def main():
     ap.add_argument("--n-trunc", type=int, default=150, help="synthetic under-quoting negatives (the chosen answer cut at a line boundary)")
     ap.add_argument("--n-extend", type=int, default=150, help="synthetic over-quoting negatives (the chosen answer + a context paragraph)")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--frac", action="store_true", help="scale to the size of the standard set (final run): keep 67%% of it, n-trunc = n-extend = 14.4%% of it")
     a = ap.parse_args()
     rng = random.Random(a.seed)
     rows = [json.loads(line) for line in open(a.cands, encoding="utf-8")]
     standard = [json.loads(line) for line in open(a.standard, encoding="utf-8")]
+    if a.frac:
+        a.keep_standard, a.n_trunc, a.n_extend = round(0.67 * len(standard)), round(0.144 * len(standard)), round(0.144 * len(standard))
     extra = [p for r in rows for p in extent_pairs(r)]
     # synthetic negatives hang off the chosen answers of the standard pairs (good answers by construction)
     prompts = {r["qid"]: r["prompt"] for r in rows}

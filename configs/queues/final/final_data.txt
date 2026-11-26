@@ -1,0 +1,2 @@
+# FINAL RUN step 0 (user go 2026-11-26): the q35_C recipe on train+dev (data q35_CF). Same flags as q35_C plus --splits train,dev. Test stays untouched.
+sh sftdata-q35CF cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli sft-data configs/exp/A3_Q3.yaml --name q35_CF --splits train,dev --k-range 3,10 --oracle 0.7 --all-gold --shuffle 0.5 --drop-gold 0.15 --shots 0,1,2,3 --refuse 0.2 > data/runs/logs/sftdata-q35CF.log 2>&1
