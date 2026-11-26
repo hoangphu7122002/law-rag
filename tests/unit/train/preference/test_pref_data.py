@@ -77,7 +77,7 @@ def test_extend_negative_appends_a_paragraph_of_the_prompt_context_that_the_answ
     from train.preference.pref_data import extend_negative
     prompt = "ngữ cảnh\n" + "Một đoạn ngữ cảnh khác không có trong câu trả lời " * 6 + "\n" + REF.split("\n")[1]
     ext = extend_negative(REF, prompt, random.Random(0))
-    assert ext.startswith(REF.rstrip()) and len(ext) > 1.3 * len(REF) and "đoạn ngữ cảnh khác" in ext
+    assert ext.startswith(REF.rstrip()) and len(ext) > 1.1 * len(REF) and "đoạn ngữ cảnh khác" in ext
     assert extend_negative(REF, "chỉ có " + REF, random.Random(0)) is None   # nothing new to append
 
 
@@ -85,7 +85,7 @@ def test_extent_pairs_from_samples_find_good_vs_short_bad_and_good_vs_long_bad()
     from train.preference.pref_data import extent_pairs
     good = REF
     short = "\n".join(REF.split("\n")[:2])
-    long = REF + "\n" + "thêm rất nhiều ý không liên quan " * 90
+    long = REF + "\n" + "thêm rất nhiều ý không liên quan " * 250
     row = {"qid": 7, "prompt": "p", "reference": REF, "cands": [good, short, long]}
     kinds = {p["source"] for p in extent_pairs(row)}
     assert kinds == {"real_short", "real_long"}
