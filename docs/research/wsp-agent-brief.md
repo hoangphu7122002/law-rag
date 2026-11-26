@@ -15,3 +15,12 @@ Box: `ssh app@100.101.115.108`, repo `~/phunguyen/law_rag`, `PYTHONPATH=src .ven
 4. Controls: reversed direction, equal-norm random orthogonal direction, dose sweep (several strengths).
 5. Keep an edit only if the paired mean change on the HEAD guard rows (300–399) is not below −1 SE (no head regression: run `weights="both"` on them for every candidate you intend to keep), and the gain on fresh confirmation rows (150–299, `weights="both"`) is clearly above the paired SE (> 2 SE) with regressions not > rescues. Keeping the original weights is a valid outcome (6/16 paper searches did).
 Deliver: `workdir/final/` (via `env.save`) or "keep original", `workdir/log.md` (request table), 10-line summary.
+
+## How to run code (kernel is already running, model loaded on GPU, `env` ready)
+Submit a snippet from your shell (each submit = 1 analysis; output is returned in full; variables persist between snippets):
+```
+ssh app@100.101.115.108 'cd ~/phunguyen/law_rag && PYTHONPATH=src .venv/bin/python scripts/train/wsp_kernel.py --work data/wsp/runN --submit' <<'EOF'
+r = env.generate(range(0, 64), weights="both"); print(r["paired_diff"])
+EOF
+```
+Namespace: env, torch, json, math, statistics, np. `env.model` is the live HF model (edit in place under torch.no_grad()); `env.original` is the untouched CPU copy; `env.rows[i]` = prompt/reference/bucket. Write `workdir/log.md` yourself (data/wsp/runN/log.md on the box) after each forward request.
