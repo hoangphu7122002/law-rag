@@ -151,3 +151,14 @@ State of all recipes (pooled dev+test, n=500, greedy): dpo_a2 .6556 | Vp_A2 .662
 
 ## 2026-11-26 22:00 — clause hint (lexical khoản selector) check; correction of the earlier "top-1 47% / top-3 82%" figure
 Implemented src/generate/clause_hint.py (khoản units + idf-weighted overlap with the question; 4 tests) and scripts/analysis/clause_hint_eval.py. Dev, 174 questions whose reference names "khoản K Điều N": gold khoản is among the khoản units of the 5 retrieved passages for 129 (74%); hint top-1 37/174 (21%; 29% of those present), top-2 56 (32%), top-3 80 (46%; 62% of those present), Điều-level top-3 117 (67%). The model's OWN answer (dpo_Vp_A2) names the gold khoản in 90/174 (52%). So the lexical hint is far less accurate than the model's own choice → a hint line would mislead more than help; the earlier 47%/82% was measured on a different, easier definition (not reproduced here). Hint experiment closed without training. A learned khoản scorer would have to beat 52% with ~1.4k labelled questions: not plausible.
+
+## Version-twin diagnostic (dev, run A5_v3b__2e66c86a = dpo_Vp_A2, scripts/analysis/diag_version.py)
+Source passage = the retrieved passage with the largest token overlap with the answer (heuristic); twin = near-duplicate (5-gram Jaccard >= .6) of the in-context gold passage.
+| class | n | share | mean rougeL |
+|---|---|---|---|
+| right source | 176 | 66.7% | .763 |
+| wrong law, other | 43 | 16.3% | .556 |
+| no gold passage in context | 25 | 9.5% | .350 |
+| wrong Điều, same law | 11 | 4.2% | .648 |
+| wrong law, version twin of the gold passage | 9 | 3.4% | .808 |
+Reading: law-version duplicates are NOT the problem (3.4% of questions and their answers score .808: the twin text is as good as the gold). The biggest loss class is quoting a passage of ANOTHER law while the gold passage is in context (16%, .556). Not yet inspected case by case.
