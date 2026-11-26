@@ -138,48 +138,46 @@
 \newlabel{tab:chunk}{{12}{11}{Chunking variants, retrieval only (dense top-50 $\to $ reranker top-5). \dieu {}@5 with the paired difference to the control (one chunk per article, split at $2{,}000$ characters) and its $95\%$ interval}{table.caption.37}{}}
 \@writefile{toc}{\contentsline {paragraph}{Passage order and LLM re-ranking (exploratory).}{11}{section*.38}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Seed sensitivity.}{12}{section*.39}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.7}Replication on a PiSSA generator and new pair constructions}{12}{subsection.5.7}\protected@file@percent }
-\newlabel{sec:pissa}{{5.7}{12}{Replication on a PiSSA generator and new pair constructions}{subsection.5.7}{}}
-\@writefile{toc}{\contentsline {paragraph}{Supervised variants.}{12}{section*.40}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Iterated DPO from $V_p$.}{12}{section*.41}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Pair construction.}{12}{section*.42}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.7}Later experiments: a PiSSA generator and new training pairs}{12}{subsection.5.7}\protected@file@percent }
+\newlabel{sec:pissa}{{5.7}{12}{Later experiments: a PiSSA generator and new training pairs}{subsection.5.7}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces Post-training from the PiSSA generator $V_p$ (greedy, 2 shots, ROUGE-L{}). Pooled = dev$+$test; interval = paired bootstrap against $\mathrm  {dpo}_{a2}$. Round~2 always starts from the round-1 model.}}{12}{table.caption.40}\protected@file@percent }
+\newlabel{tab:pissa}{{13}{12}{Post-training from the PiSSA generator $V_p$ (greedy, 2 shots, \rl {}). Pooled = dev$+$test; interval = paired bootstrap against $\mathrm {dpo}_{a2}$. Round~2 always starts from the round-1 model}{table.caption.40}{}}
+\@writefile{toc}{\contentsline {paragraph}{What the table shows.}{12}{section*.41}\protected@file@percent }
 \citation{wsp}
 \citation{react}
 \citation{hinton}
-\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces Post-training from the PiSSA generator $V_p$ (greedy, 2 shots; ROUGE-L{}). Pooled = dev$+$test ($n{=}500$); the interval is a paired bootstrap against $\mathrm  {dpo}_{a2}$.}}{13}{table.caption.43}\protected@file@percent }
-\newlabel{tab:pissa}{{13}{13}{Post-training from the PiSSA generator $V_p$ (greedy, 2 shots; \rl {}). Pooled = dev$+$test ($n{=}500$); the interval is a paired bootstrap against $\mathrm {dpo}_{a2}$}{table.caption.43}{}}
-\@writefile{toc}{\contentsline {paragraph}{Other attempts that did not help.}{13}{section*.44}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Final configuration, pre-declared.}{13}{section*.45}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.8}Negative and null results}{14}{subsection.5.8}\protected@file@percent }
-\newlabel{sec:negative}{{5.8}{14}{Negative and null results}{subsection.5.8}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces Ideas that were tested and not retained (dev unless stated).}}{14}{table.caption.46}\protected@file@percent }
-\newlabel{tab:neg}{{14}{14}{Ideas that were tested and not retained (dev unless stated)}{table.caption.46}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {6}Analysis}{14}{section.6}\protected@file@percent }
-\newlabel{sec:analysis}{{6}{14}{Analysis}{section.6}{}}
-\@writefile{toc}{\contentsline {paragraph}{Where the error is.}{14}{section*.47}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{What can be checked automatically.}{14}{section*.48}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces Automatic checks of the final system's test answers ($n{=}200$). Agreement rates are over the questions whose reference contains an article or a law identifier; grounding is over the answers that contain numbers.}}{15}{table.caption.49}\protected@file@percent }
-\newlabel{tab:checks}{{15}{15}{Automatic checks of the final system's test answers ($n{=}200$). Agreement rates are over the questions whose reference contains an article or a law identifier; grounding is over the answers that contain numbers}{table.caption.49}{}}
-\@writefile{toc}{\contentsline {paragraph}{Headroom.}{15}{section*.50}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Why DPO on self-samples works here.}{15}{section*.51}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {7}Deployment and Demonstration}{15}{section.7}\protected@file@percent }
-\newlabel{sec:deploy}{{7}{15}{Deployment and Demonstration}{section.7}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {16}{\ignorespaces Measured behaviour through the HTTP API (dev questions, greedy, $k{=}5$, 2 shots).}}{15}{table.caption.52}\protected@file@percent }
-\newlabel{tab:lat}{{16}{15}{Measured behaviour through the HTTP API (dev questions, greedy, $k{=}5$, 2 shots)}{table.caption.52}{}}
-\@writefile{toc}{\contentsline {paragraph}{Demonstration.}{15}{section*.53}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Capacity under concurrent load and GPU layout}{16}{subsection.7.1}\protected@file@percent }
-\newlabel{sec:capacity}{{7.1}{16}{Capacity under concurrent load and GPU layout}{subsection.7.1}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {17}{\ignorespaces Closed-loop sweep (dev questions, $n$ users, $30$\,s per level). req/s = completed requests per second; latencies are end-to-end seconds.}}{16}{table.caption.54}\protected@file@percent }
-\newlabel{tab:capacity}{{17}{16}{Closed-loop sweep (dev questions, $n$ users, $30$\,s per level). req/s = completed requests per second; latencies are end-to-end seconds}{table.caption.54}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Throughput and $p_{95}$ latency versus concurrent users; the dotted line is the $10$\,s target.}}{16}{figure.caption.55}\protected@file@percent }
-\newlabel{fig:capacity}{{5}{16}{Throughput and $p_{95}$ latency versus concurrent users; the dotted line is the $10$\,s target}{figure.caption.55}{}}
-\@writefile{toc}{\contentsline {paragraph}{Maximum concurrency.}{16}{section*.56}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Bursts.}{16}{section*.57}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Engine settings.}{17}{section*.58}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {18}{\ignorespaces vLLM settings on one card (A), requests/s and $p_{95}$ latency (s) at $16$ and $32$ concurrent users. $^\dagger $64 sequences, 16k batched tokens, prefix caching on.}}{17}{table.caption.59}\protected@file@percent }
-\newlabel{tab:flags}{{18}{17}{vLLM settings on one card (A), requests/s and $p_{95}$ latency (s) at $16$ and $32$ concurrent users. $^\dagger $64 sequences, 16k batched tokens, prefix caching on}{table.caption.59}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {8}Limitations and Threats to Validity}{17}{section.8}\protected@file@percent }
-\newlabel{sec:limits}{{8}{17}{Limitations and Threats to Validity}{section.8}{}}
+\@writefile{toc}{\contentsline {paragraph}{Other attempts that did not help.}{13}{section*.42}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Final configuration, pre-declared.}{13}{section*.43}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.8}Negative and null results}{13}{subsection.5.8}\protected@file@percent }
+\newlabel{sec:negative}{{5.8}{13}{Negative and null results}{subsection.5.8}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces Ideas that were tested and not retained (dev unless stated).}}{13}{table.caption.44}\protected@file@percent }
+\newlabel{tab:neg}{{14}{13}{Ideas that were tested and not retained (dev unless stated)}{table.caption.44}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Analysis}{13}{section.6}\protected@file@percent }
+\newlabel{sec:analysis}{{6}{13}{Analysis}{section.6}{}}
+\@writefile{toc}{\contentsline {paragraph}{Where the error is.}{13}{section*.45}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{What can be checked automatically.}{14}{section*.46}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces Automatic checks of the final system's test answers ($n{=}200$). Agreement rates are over the questions whose reference contains an article or a law identifier; grounding is over the answers that contain numbers.}}{14}{table.caption.47}\protected@file@percent }
+\newlabel{tab:checks}{{15}{14}{Automatic checks of the final system's test answers ($n{=}200$). Agreement rates are over the questions whose reference contains an article or a law identifier; grounding is over the answers that contain numbers}{table.caption.47}{}}
+\@writefile{toc}{\contentsline {paragraph}{Headroom.}{14}{section*.48}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Why DPO on self-samples works here.}{14}{section*.49}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Deployment and Demonstration}{14}{section.7}\protected@file@percent }
+\newlabel{sec:deploy}{{7}{14}{Deployment and Demonstration}{section.7}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {16}{\ignorespaces Measured behaviour through the HTTP API (dev questions, greedy, $k{=}5$, 2 shots).}}{14}{table.caption.50}\protected@file@percent }
+\newlabel{tab:lat}{{16}{14}{Measured behaviour through the HTTP API (dev questions, greedy, $k{=}5$, 2 shots)}{table.caption.50}{}}
+\@writefile{toc}{\contentsline {paragraph}{Demonstration.}{15}{section*.51}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Capacity under concurrent load and GPU layout}{15}{subsection.7.1}\protected@file@percent }
+\newlabel{sec:capacity}{{7.1}{15}{Capacity under concurrent load and GPU layout}{subsection.7.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {17}{\ignorespaces Closed-loop sweep (dev questions, $n$ users, $30$\,s per level). req/s = completed requests per second; latencies are end-to-end seconds.}}{15}{table.caption.52}\protected@file@percent }
+\newlabel{tab:capacity}{{17}{15}{Closed-loop sweep (dev questions, $n$ users, $30$\,s per level). req/s = completed requests per second; latencies are end-to-end seconds}{table.caption.52}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Throughput and $p_{95}$ latency versus concurrent users; the dotted line is the $10$\,s target.}}{16}{figure.caption.53}\protected@file@percent }
+\newlabel{fig:capacity}{{5}{16}{Throughput and $p_{95}$ latency versus concurrent users; the dotted line is the $10$\,s target}{figure.caption.53}{}}
+\@writefile{toc}{\contentsline {paragraph}{Maximum concurrency.}{16}{section*.54}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Bursts.}{16}{section*.55}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Engine settings.}{16}{section*.56}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {18}{\ignorespaces vLLM settings on one card (A), requests/s and $p_{95}$ latency (s) at $16$ and $32$ concurrent users. $^\dagger $64 sequences, 16k batched tokens, prefix caching on.}}{16}{table.caption.57}\protected@file@percent }
+\newlabel{tab:flags}{{18}{16}{vLLM settings on one card (A), requests/s and $p_{95}$ latency (s) at $16$ and $32$ concurrent users. $^\dagger $64 sequences, 16k batched tokens, prefix caching on}{table.caption.57}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Limitations and Threats to Validity}{16}{section.8}\protected@file@percent }
+\newlabel{sec:limits}{{8}{16}{Limitations and Threats to Validity}{section.8}{}}
 \citation{selfrag}
 \citation{crag}
 \citation{selfcorrect}
@@ -189,32 +187,33 @@
 \citation{contextual}
 \citation{latechunk}
 \citation{densex}
-\@writefile{toc}{\contentsline {section}{\numberline {9}Future Work}{18}{section.9}\protected@file@percent }
-\newlabel{sec:future}{{9}{18}{Future Work}{section.9}{}}
-\@writefile{toc}{\contentsline {paragraph}{Checker with feedback to retrieval, reranking and generation.}{18}{section*.60}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Chunking beyond one chunk per article.}{18}{section*.61}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {9}Future Work}{17}{section.9}\protected@file@percent }
+\newlabel{sec:future}{{9}{17}{Future Work}{section.9}{}}
+\@writefile{toc}{\contentsline {paragraph}{Checker with feedback to retrieval, reranking and generation.}{17}{section*.58}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Chunking beyond one chunk per article.}{18}{section*.59}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {10}Conclusion}{18}{section.10}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {A}Earlier test-split evaluations}{19}{section.A}\protected@file@percent }
-\newlabel{app:test}{{A}{19}{Earlier test-split evaluations}{section.A}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {19}{\ignorespaces Test ROUGE-L{} ($n{=}200$) of configurations evaluated before the final one (2-shot unless noted; all $k{=}5$ unless noted).}}{19}{table.caption.63}\protected@file@percent }
-\newlabel{tab:testold}{{19}{19}{Test \rl {} ($n{=}200$) of configurations evaluated before the final one (2-shot unless noted; all $k{=}5$ unless noted)}{table.caption.63}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {A}Earlier test-split evaluations}{18}{section.A}\protected@file@percent }
+\newlabel{app:test}{{A}{18}{Earlier test-split evaluations}{section.A}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {19}{\ignorespaces Test ROUGE-L{} ($n{=}200$) of configurations evaluated before the final one (2-shot unless noted; all $k{=}5$ unless noted).}}{18}{table.caption.61}\protected@file@percent }
+\newlabel{tab:testold}{{19}{18}{Test \rl {} ($n{=}200$) of configurations evaluated before the final one (2-shot unless noted; all $k{=}5$ unless noted)}{table.caption.61}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {B}Worked examples, from easy to hard}{19}{section.B}\protected@file@percent }
 \newlabel{app:examples}{{B}{19}{Worked examples, from easy to hard}{section.B}{}}
-\@writefile{toc}{\contentsline {paragraph}{Example 1 (qid 460) --- ROUGE-L{} 0.996.}{19}{section*.64}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 2 (qid 459) --- ROUGE-L{} 0.945.}{20}{section*.65}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 3 (qid 1865) --- ROUGE-L{} 0.899.}{20}{section*.66}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 4 (qid 1136) --- ROUGE-L{} 0.820.}{20}{section*.67}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 5 (qid 2213) --- ROUGE-L{} 0.751.}{20}{section*.68}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 6 (qid 1941) --- ROUGE-L{} 0.677.}{21}{section*.69}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 7 (qid 2178) --- ROUGE-L{} 0.627.}{21}{section*.70}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 8 (qid 2366) --- ROUGE-L{} 0.582.}{21}{section*.71}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 9 (qid 2339) --- ROUGE-L{} 0.501.}{22}{section*.72}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 10 (qid 2412) --- ROUGE-L{} 0.408.}{22}{section*.73}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 11 (qid 2085) --- ROUGE-L{} 0.288.}{22}{section*.74}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 1 (qid 460) --- ROUGE-L{} 0.996.}{19}{section*.62}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 2 (qid 459) --- ROUGE-L{} 0.945.}{19}{section*.63}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 3 (qid 1865) --- ROUGE-L{} 0.899.}{19}{section*.64}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 4 (qid 1136) --- ROUGE-L{} 0.820.}{20}{section*.65}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 5 (qid 2213) --- ROUGE-L{} 0.751.}{20}{section*.66}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 6 (qid 1941) --- ROUGE-L{} 0.677.}{20}{section*.67}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 7 (qid 2178) --- ROUGE-L{} 0.627.}{21}{section*.68}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 8 (qid 2366) --- ROUGE-L{} 0.582.}{21}{section*.69}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 9 (qid 2339) --- ROUGE-L{} 0.501.}{21}{section*.70}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 10 (qid 2412) --- ROUGE-L{} 0.408.}{22}{section*.71}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 11 (qid 2085) --- ROUGE-L{} 0.288.}{22}{section*.72}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 12 (qid 572) --- ROUGE-L{} 0.063.}{22}{section*.73}\protected@file@percent }
 \citation{wsp}
-\@writefile{toc}{\contentsline {paragraph}{Example 12 (qid 572) --- ROUGE-L{} 0.063.}{23}{section*.75}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {C}Experiments that did not work, in detail}{23}{section.C}\protected@file@percent }
 \newlabel{app:failed}{{C}{23}{Experiments that did not work, in detail}{section.C}{}}
+\@writefile{toc}{\contentsline {paragraph}{At a glance.}{23}{table.caption.75}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {C.1}Letting an agent edit the weights}{23}{subsection.C.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Set-up.}{23}{section*.76}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Findings that held.}{23}{section*.77}\protected@file@percent }

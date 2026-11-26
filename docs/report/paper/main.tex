@@ -431,38 +431,52 @@ Semantic $1000$ & \multicolumn{4}{c}{index build did not complete (memory)}\\
 \paragraph{Passage order and LLM re-ranking (exploratory).} As an upper bound on better retrieval, GLM-5.3 and DeepSeek-V4 re-ranked the top-10 articles of the dev questions (dev text only; an exploratory ceiling, not part of the system). They raise \dieu{}@1 by $+.14$ and $+.10$ over the fine-tuned reranker (paired 95\% intervals exclude 0) while \dieu{}@5 is unchanged. Feeding the final model the re-ranked passages gives $.6654$ and $.6637$ against $.6637$: no gain. The model is sensitive to order (reversed $.615$, shuffled $.646$) but not to a better order, consistent with the oracle and fine-tuned reranker results above.
 \paragraph{Seed sensitivity.} Three SFT seeds on the full data give $.6325$, $.603$ and $.613$ (mean $.616$, standard deviation $.015$), so the reported chain starts from the best of three SFT runs and the final $.6637$ depends on that choice. Repeating the two DPO rounds from the second best SFT seed (the one with $.613$) reproduces the first-round gain ($.640$, $+.027$) but not the second ($.634$): the robust effect of on-policy DPO is about $+.02$ to $+.03$ over its SFT model, and the additional benefit of the second round is not confirmed.
 
-\subsection{Replication on a PiSSA generator and new pair constructions}\label{sec:pissa}
-A later round of experiments (2026-11-26) repeated the post-training recipe on a better supervised starting point and tested three ways of changing the preference pairs. \textbf{Selection note:} these runs were compared on dev \emph{and} test; test is therefore no longer untouched for this subsection and the pooled column ($n{=}500$, dev$+$test, disjoint questions) is the figure to read.
-\paragraph{Supervised variants.} Among LoRA variants on the same data (three epochs), PiSSA initialisation was best on dev ($.6414$ against rsLoRA $.6319$, full fine-tuning $.6304$, rank-64 LoRA $.6301$, plain rank-32 $.6202$); DoRA diverged to NaN. We call the PiSSA checkpoint $V_p$ (dev $.6414$, test $.6307$). Training on a data variant that guarantees the gold article in context (k$\,3$--$15$, full gold) was not better.
-\paragraph{Iterated DPO from $V_p$.} Table~\ref{tab:pissa} lists the chains. Round~1 reproduces across two seeds ($.6493$ and $.6544$ dev). Round~2 reached the highest numbers of the project ($.6743/.6782$ dev, $.6435/.6472$ test) but a complete chain with another seed, from the round-1 samples onward, gave $.6586/.6299$: the second-round gain depends on which samples round~1 produced and the spread between chains ($\approx.016$) is as large as the effect. Pooled over dev and test no chain differs from $\mathrm{dpo}_{a2}$ by more than the interval (\ci{-.022}{+.005} to \ci{-.007}{+.020}). Round~3 again degrades ($.6453/.6166$, answer length ratio $1.11$, $-.022$ pooled), consistent with Figure~\ref{fig:dpo}.
-\paragraph{Pair construction.} Chosen answers were shorter than the rejected ones by more than $20\%$ in $45$--$55\%$ of the standard pairs and rejected answers were $1.45$--$1.71\times$ the reference length, so DPO learns ``shorter'' (the share of under-quoting answers on dev rose from $44$ to $52$). A mixed set (a random $700$ of the $1{,}043$ standard pairs, $323$ real pairs balanced over both length directions and same-length harder pairs from the existing $n{=}8$ samples, and $300$ synthetic truncation and extension negatives, shuffled with a fixed seed) is stable across seeds (pooled $.6553$ and $.6561$, spread $.0008$) but no better than the plain recipe. Adding $129$ pairs whose chosen answer is the gold reference (tail and middle questions without a pair, $0$ overlap with dev/test checked by identifier, question text and answer text) is significantly worse ($-.019$ \ci{-.033}{-.004}): off-policy chosen answers lower the group that retrieves and cites correctly ($.741\to.716$) and raise answers that cite nothing ($3\to8$ of $300$). Pairs must stay on-policy. Adding $143$ pairs that set a sample citing a gold article against one citing only other articles (the ``right law, wrong article'' failure) leaves pooled \rl{} at the level of the plain recipe ($.6602$; second seed $.6553$) and the targeted group moved by $+.011$ in one seed and $-.031$ in the other ($22$ dev questions), i.e.\ by noise; MBR-8 on top adds $+.004$/$+.005$ (dev/test). Replacing the second DPO round by supervised fine-tuning on the model's own best sample per question (length $.8$--$1.3\times$ the reference, \rl{}$\ge.55$) is also worse ($.6408$ pooled): the rejected examples carry the useful signal, and without them the share of correctly cited answers falls ($.752\to.730$ on dev).
+\subsection{Later experiments: a PiSSA generator and new training pairs}\label{sec:pissa}
+\textbf{In short.} We asked whether a better supervised starting point or better preference pairs could lift the system above $\mathrm{dpo}_{a2}$. The answer is no: every sound variant ends at a pooled \rl{} of $.655$--$.662$, and whole training chains that differ only in the random seed already differ by up to $.016$. \textbf{Selection note:} these runs were compared on dev \emph{and} test, so test is not untouched for this subsection; read the pooled column ($n{=}500$, dev$+$test, disjoint questions).
+
 \begin{table}[H]
 \centering
-\caption{Post-training from the PiSSA generator $V_p$ (greedy, 2 shots; \rl{}). Pooled = dev$+$test ($n{=}500$); the interval is a paired bootstrap against $\mathrm{dpo}_{a2}$.}\label{tab:pissa}
+\caption{Post-training from the PiSSA generator $V_p$ (greedy, 2 shots, \rl{}). Pooled = dev$+$test; interval = paired bootstrap against $\mathrm{dpo}_{a2}$. Round~2 always starts from the round-1 model.}\label{tab:pissa}
 \footnotesize\setlength{\tabcolsep}{3pt}
 \begin{tabular}{@{}lcccl@{}}
 \toprule
 System & Dev & Test & Pooled & vs.\ $\mathrm{dpo}_{a2}$\\
 \midrule
-$\mathrm{dpo}_{a2}$ (v3b, reference) & .6637 & .6433 & .6556 & --\\
+\multicolumn{5}{@{}l}{\emph{Reference and starting points}}\\
+$\mathrm{dpo}_{a2}$ (previous best, v3b) & .6637 & .6433 & .6556 & --\\
 $V_p$ (PiSSA SFT) & .6414 & .6307 & -- & --\\
-$V_p$ + DPO round 1 (seed A / seed B) & .6493 / .6544 & .6226 / .6263 & -- & --\\
-round 2, chain 1 (two seeds) & .6743 / .6782 & .6435 / .6472 & .6620 / -- & $+.006$ \ci{-.007}{+.020} / --\\
-round 2, chain 2 (from scratch, other seed) & .6586 & .6299 & .6471 & $-.009$ \ci{-.022}{+.005}\\
-round 3 (from chain 1) & .6453 & .6166 & .6338 & $-.022$ \ci{-.035}{-.009}\\
-round 2, mixed pairs (two seeds) & .6642 / .6663 & .6418 / .6410 & .6553 / .6561 & $-.000$ / $+.001$\\
-round 2, mixed pairs $+$ gold-chosen pairs & .6363 & .6376 & .6368 & $-.019$ \ci{-.033}{-.004}\\
-round 2, standard $+$ $143$ cite-contrast pairs & .6728 & .6413 & .6602 & $+.005$ \ci{-.008}{+.018}\\
-round 2, $n{=}16$ samples per prompt ($1{,}197$ pairs) & .6589 & .6475 & .6544 & $-.001$ \ci{-.015}{+.012}\\
-round 2, cite-contrast, second seed & .6653 & .6403 & .6553 & $-.000$ \ci{-.014}{+.013}\\
-round 2, cite-contrast, MBR-8 & .6767 & .6465 & .6646 & $+.009$ \ci{-.004}{+.023}\\
-round 2 replaced by rejection-sampling SFT (own best of $8$, $921$ rows) & .6546 & .6200 & .6408 & $-.015$ \ci{-.029}{-.000}\\
+$V_p$ + DPO round 1 (two seeds) & .6493 / .6544 & .6226 / .6263 & -- & --\\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Round 2, standard pairs (the plain recipe)}}\\
+chain 1 (two seeds) & .6743 / .6782 & .6435 / .6472 & .6620 / -- & $+.006$ \ci{-.007}{+.020} / --\\
+chain 2 (all steps repeated, other seed) & .6586 & .6299 & .6471 & $-.009$ \ci{-.022}{+.005}\\
+round 3 (after chain 1) & .6453 & .6166 & .6338 & $-.022$ \ci{-.035}{-.009}\\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Round 2, other pair sets}}\\
+mixed pairs (two seeds) & .6642 / .6663 & .6418 / .6410 & .6553 / .6561 & $-.000$ / $+.001$\\
+mixed $+$ $129$ gold-chosen pairs & .6363 & .6376 & .6368 & $-.019$ \ci{-.033}{-.004}\\
+standard $+$ $143$ cite-contrast pairs (two seeds) & .6728 / .6653 & .6413 / .6403 & .6602 / .6553 & $+.005$ / $-.000$\\
+\quad same, MBR-8 (first seed) & .6767 & .6465 & .6646 & $+.009$ \ci{-.004}{+.023}\\
+$n{=}16$ samples per prompt ($1{,}197$ pairs) & .6589 & .6475 & .6544 & $-.001$ \ci{-.015}{+.012}\\
+SFT on own best sample ($921$ rows) instead of DPO & .6546 & .6200 & .6408 & $-.015$ \ci{-.029}{-.000}\\
 \bottomrule
 \end{tabular}
 \end{table}
-\paragraph{Other attempts that did not help.} Continued pre-training on $209$M tokens of legal text (LoRA $r{=}64$, one epoch) raised closed-book cloze accuracy by $15$ points but not \rl{}. Weight averaging of two DPO seeds, a wider context (more passages) and full-article context gave no gain. A weight-space search in the style of \cite{wsp} (an LLM agent edits weights directly, with a budget of $50$ forward requests, paired standard errors and a head guard set) found no edit above two standard errors in its first $22$ requests; the best candidate, a $+2$ bias on the end-of-turn logit, changed \rl{} by $+.004\pm.005$ on held-out feedback questions. The search is still running and is reported only as exploratory.
+
+\paragraph{What the table shows.}
+\begin{itemize}[leftmargin=*]
+\item \textbf{PiSSA helps the supervised model, not the final one.} Among LoRA variants PiSSA was best on dev ($.6414$; rsLoRA $.6319$, full fine-tuning $.6304$, rank 64 $.6301$, plain rank 32 $.6202$; DoRA diverged). After two DPO rounds the gain over the earlier recipe is inside the noise.
+\item \textbf{Chains are noisy.} The best chain ($.6743/.6782$ dev) was not reproduced when every step was repeated with another seed ($.6586$); the spread between chains ($\approx.016$) is as large as the gain, so no single chain can be called better.
+\item \textbf{A third round hurts.} Dev falls to $.6453$ and answers grow to $1.11\times$ the reference length, as in Figure~\ref{fig:dpo}.
+\item \textbf{DPO learns ``shorter''.} In $45$--$55\%$ of the standard pairs the chosen answer is more than $20\%$ shorter than the rejected one, and under-quoting answers on dev rose from $44$ to $52$. A set that balances both length directions (real pairs from the samples plus truncated and extended copies) is stable across seeds (pooled $.6553$ and $.6561$) but not better.
+\item \textbf{Pairs must stay on-policy.} Using the reference as the chosen answer for $129$ hard questions lowers the share of correctly cited answers ($.741\to.716$) and raises answers citing nothing ($3\to8$ of $300$): $-.019$. Fine-tuning on the model's own best sample instead of using pairs also loses ($-.015$): the rejected examples carry the signal.
+\item \textbf{Targeting the right failure did not help either.} Pairs that contrast a sample citing the gold article with one citing only other articles moved the targeted group by $+.011$ in one seed and $-.031$ in the other ($22$ dev questions), i.e.\ noise. Doubling the samples per question ($n{=}16$) changed nothing. MBR-8 adds $+.004$/$+.005$ on top.
+\end{itemize}
+
+\paragraph{Other attempts that did not help.} Continued pre-training on $209$M tokens of legal text (LoRA rank 64, one epoch) raised closed-book cloze accuracy by $15$ points but not \rl{}. Averaging the weights of two DPO seeds, a wider context and full-article context gave no gain. Two searches with an agent that edits weights directly in the style of \cite{wsp} (a budget of $50$ forward requests, paired standard errors, a guard set of easy questions) found no edit above two standard errors (Appendix~\ref{app:failed}).
 
 \paragraph{Final configuration, pre-declared.} Because dev is part of the training data of the last model, the configuration was fixed before the run and the test set is scored once per model: supervised fine-tuning on train and dev (PiSSA, rank $32$, three epochs), a first DPO round on $8$ on-policy samples with the standard pairs, a second round with the mixed pair set, then greedy decoding and MBR-8 on test. Two chains (seeds $1$ and $2$) are trained in parallel; the first is the pre-declared headline and the second a replicate. The result is not part of this version of the report.
+
 \subsection{Negative and null results}\label{sec:negative}
 \begin{table}[H]
 \centering
@@ -649,6 +663,27 @@ Twelve test questions are shown, evenly spread over the \rl{} range of the final
 
 \section{Experiments that did not work, in detail}\label{app:failed}
 This appendix records the attempts of the last experimental round that moved nothing, with the numbers that ended each line of work, so that nobody has to repeat them. All scores are \rl{}; ``fb'' is the feedback set (train-split questions, never dev or test).
+
+\paragraph{At a glance.}
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}p{4.2cm}p{4.6cm}p{5.7cm}@{}}
+\toprule
+Attempt & Result (\rl{}) & Why it did not work\\
+\midrule
+Agent edits weights (two searches, $42$ requests) & best $+.004\pm.005$ (stop-token bias); every other edit $\le+.002$ or negative & Remaining loss differs question by question; a global weight change cannot target it\\
+Perfect retrieval (gold passage injected) & dev $.6743\to.6815$ ($+.007$) & Missed questions are intrinsically hard: $.46$ even with the gold passage, against $.72$ for hits\\
+Where retrieval misses & $90.5\%$ hit; $6.8\%$ lost to reranker/cut or a sibling article; $1.5\%$ law missing from corpus & Little room left in retrieval\\
+Quote completion by rules & $-.002$ to $-.006$ & The reference also quotes only part of a list\\
+Clause hint (lexical) & hint right at rank one $21\%$, model alone $52\%$ & The model chooses the khoản better than the hint\\
+Gold answers as DPO chosen & $-.019$ & Off-policy text hurts the correctly cited group\\
+Own best-of-8 SFT instead of DPO & $-.015$ & No rejected examples, so no contrast\\
+Cite-contrast pairs, $n{=}16$ samples, balanced-length pairs & $-.001$ to $+.005$ & Inside the seed spread\\
+Continued pre-training (209M tokens) & cloze $+15$ points, \rl{} unchanged & Extent and style, not knowledge, limit the score\\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Letting an agent edit the weights}
 \paragraph{Set-up.} Following the idea of \cite{wsp}, a language-model agent was given a loaded copy of the best DPO checkpoint and the right to overwrite any tensor with code it wrote itself, but no gradient step. It could look at the model only through a metered tool: $50$ generation or teacher-forcing requests (one request may carry many questions), and at most $300$ small Python analyses. The feedback set held $300$ questions from the tail and middle groups ($150$ for searching, $150$ fresh for confirming) and $100$ from the head group as a guard; an edit was to be kept only if it beat its paired standard error twice on the fresh questions without hurting the guard. Two searches ran side by side on two GPUs.

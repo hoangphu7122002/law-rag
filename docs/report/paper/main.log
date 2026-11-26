@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (MiKTeX 22.1) (preloaded format=xelatex 2026.10.7)  26 NOV 2026 21:59
+This is XeTeX, Version 3.141592653-2.6-0.999993 (MiKTeX 22.1) (preloaded format=xelatex 2026.10.7)  26 NOV 2026 22:00
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1199,36 +1199,31 @@ cmm/m/it/10 :\OT1/cmr/m/n/10 603$ \TU/TimesNewRoman(0)/m/n/10 / $\OML/cmm/m/it/
 [10]
 
 [11]
-Overfull \hbox (35.54991pt too wide) in paragraph at lines 443--462
- [][] 
- []
-
-
 
 [12]
-Underfull \hbox (badness 10000) in paragraph at lines 474--474
+Underfull \hbox (badness 10000) in paragraph at lines 488--488
 []|\TU/TimesNewRoman(0)/m/n/10.95 ReAct agent [[]] with
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 474--474
+Underfull \hbox (badness 10000) in paragraph at lines 488--488
 \TU/TimesNewRoman(0)/m/n/10.95 4 tools (search, article
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 474--474
+Underfull \hbox (badness 10000) in paragraph at lines 488--488
 []|\TU/TimesNewRoman(0)/m/n/10.95 dev_clean $\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/
 10.95 537$ \TU/TimesNewRoman(0)/m/n/10.95 (trained 2B),
  []
 
 
-Underfull \hbox (badness 1735) in paragraph at lines 474--474
+Underfull \hbox (badness 1735) in paragraph at lines 488--488
 \OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.95 574$ \TU/TimesNewRoman(0)/m/n/10.95 wit
 h question-seeded search;
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 474--474
+Underfull \hbox (badness 10000) in paragraph at lines 488--488
 \TU/TimesNewRoman(0)/m/n/10.95 RAG+SFT $\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.95
  633$\TU/TimesNewRoman(0)/m/n/10.95 /$\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.95 6
 34$\TU/TimesNewRoman(0)/m/n/10.95 ; $\OMS/cmsy/m/n/10.95 ^^@\OT1/cmr/m/n/10.95 
@@ -1236,31 +1231,31 @@ Underfull \hbox (badness 10000) in paragraph at lines 474--474
  []
 
 
-Underfull \hbox (badness 1242) in paragraph at lines 474--475
+Underfull \hbox (badness 1242) in paragraph at lines 488--489
 []|\TU/TimesNewRoman(0)/m/n/10.95 Own queries find the gold ar-
  []
 
 
-Underfull \hbox (badness 4726) in paragraph at lines 474--475
+Underfull \hbox (badness 4726) in paragraph at lines 488--489
 \TU/TimesNewRoman(0)/m/n/10.95 ticle in $\OT1/cmr/m/n/10.95 66$\TU/TimesNewRoma
 n(0)/m/n/10.95 –$\OT1/cmr/m/n/10.95 72[]$ \TU/TimesNewRoman(0)/m/n/10.95 of que
 stions
  []
 
 
-Underfull \hbox (badness 5652) in paragraph at lines 474--475
+Underfull \hbox (badness 5652) in paragraph at lines 488--489
 \TU/TimesNewRoman(0)/m/n/10.95 (ROUGE-L $\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.9
 5 65$ \TU/TimesNewRoman(0)/m/n/10.95 vs $\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.9
 5 32$ \TU/TimesNewRoman(0)/m/n/10.95 when
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 481--481
+Underfull \hbox (badness 10000) in paragraph at lines 495--495
 []|\TU/TimesNewRoman(0)/m/n/10.95 Continued pre-training
  []
 
 
-Underfull \hbox (badness 1292) in paragraph at lines 481--481
+Underfull \hbox (badness 1292) in paragraph at lines 495--495
 []|\TU/TimesNewRoman(0)/m/n/10.95 cloze $\OT1/cmr/m/n/10.95 +15$ \TU/TimesNewRo
 man(0)/m/n/10.95 points, ROUGE-L un-
  []
@@ -1270,17 +1265,17 @@ man(0)/m/n/10.95 points, ROUGE-L un-
 [13]
 
 [14]
+Package pgfplots info on input line 576: Using 'lua backend=false' for axis: xm
+ode=log unsupported (yet).
+Package pgfplots info on input line 581: Using 'lua backend=false' for axis: xm
+ode=log unsupported (yet).
+
 
 [15]
-Package pgfplots info on input line 562: Using 'lua backend=false' for axis: xm
-ode=log unsupported (yet).
-Package pgfplots info on input line 567: Using 'lua backend=false' for axis: xm
-ode=log unsupported (yet).
-
 
 [16]
 ! Undefined control sequence.
-l.601 ...shable from another within that spread.\n
+l.615 ...shable from another within that spread.\n
                                                   \item \textbf{Test-set his...
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
@@ -1290,24 +1285,58 @@ and I'll forget about whatever was undefined.
 
 
 
-[17]
+[17] (appendix_examples.tex
 
-[18] (appendix_examples.tex
+[18]
 
 [19]
 
 [20]
 
-[21]
+[21])
 
-[22])
-Underfull \hbox (badness 1067) in paragraph at lines 664--664
+[22]
+Underfull \hbox (badness 10000) in paragraph at lines 675--675
+[]|\TU/TimesNewRoman(0)/m/n/10 Agent edits weights (two
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 677--677
+[]|$\OT1/cmr/m/n/10 90\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 5[]$ \TU/TimesNewRoman(
+0)/m/n/10 hit; $\OT1/cmr/m/n/10 6\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 8[]$ \TU/Tim
+esNewRoman(0)/m/n/10 lost to
+ []
+
+
+Underfull \hbox (badness 7925) in paragraph at lines 677--677
+\TU/TimesNewRoman(0)/m/n/10 reranker/cut or a sibling ar-
+ []
+
+
+Underfull \hbox (badness 1810) in paragraph at lines 677--677
+\TU/TimesNewRoman(0)/m/n/10 ticle; $\OT1/cmr/m/n/10 1\OML/cmm/m/it/10 :\OT1/cmr
+/m/n/10 5[]$ \TU/TimesNewRoman(0)/m/n/10 law missing from
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 682--682
+[]|\TU/TimesNewRoman(0)/m/n/10 Cite-contrast pairs, $\OML/cmm/m/it/10 n[]\OT1/c
+mr/m/n/10 16$
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 682--682
+\TU/TimesNewRoman(0)/m/n/10 samples, balanced-length
+ []
+
+
+Underfull \hbox (badness 1067) in paragraph at lines 699--699
 \TU/TimesNewRoman(0)/m/n/10.95 put along (gold $\OMS/cmsy/m/n/10.95 ^^@$ \TU/Ti
 mesNewRoman(0)/m/n/10.95 own answer) hidden
  []
 
 
-Overfull \hbox (11.00754pt too wide) in paragraph at lines 660--673
+Overfull \hbox (11.00754pt too wide) in paragraph at lines 695--708
  [][] 
  []
 
@@ -1317,7 +1346,7 @@ Overfull \hbox (11.00754pt too wide) in paragraph at lines 660--673
 
 [24]
 ! Undefined control sequence.
-l.687 ...riment was stopped before any training.\n
+l.722 ...riment was stopped before any training.\n
                                                   \item \textbf{Weights as a...
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
@@ -1326,7 +1355,7 @@ spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 696--697
+Underfull \hbox (badness 10000) in paragraph at lines 731--732
 []\TU/TimesNewRoman(0)/m/n/10 J.Hu et al. Exploring weight-space programming: c
 apabilities, generalization, and limitations.
  []
@@ -1334,7 +1363,7 @@ apabilities, generalization, and limitations.
 
 
 [25]
-Underfull \hbox (badness 2689) in paragraph at lines 724--725
+Underfull \hbox (badness 2689) in paragraph at lines 759--760
 []\TU/TimesNewRoman(0)/m/n/10 DeepSeek-AI. DeepSeek-R1: incentivizing reasoning
  capability in LLMs via reinforcement learning.
  []
@@ -1343,7 +1372,7 @@ Underfull \hbox (badness 2689) in paragraph at lines 724--725
 
 [26]
 LaTeX Font Info:    Font shape `TU/Menlo(0)/m/n' will be
-(Font)              scaled to size 8.80005pt on input line 733.
+(Font)              scaled to size 8.80005pt on input line 768.
 
 
 [27] (main.aux)
@@ -1356,15 +1385,15 @@ L3 programming layer <2026-03-20>
 LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: E0458B60A1883256A0D26C9DB1074B21;6411.
+(rerunfilecheck)             Checksum: BC62D3EA1263F6881BFFC2038EDD4A48;6411.
  ) 
 Here is how much of TeX's memory you used:
  36530 strings out of 402809
  884394 string characters out of 5440814
- 1468382 words of memory out of 5000000
+ 1465747 words of memory out of 5000000
  64887 multiletter control sequences out of 15000+600000
  637862 words of font info for 122 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 99i,18n,108p,1835b,2517s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 99i,18n,108p,1650b,2517s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main.xdv (27 pages, 955308 bytes).
+Output written on main.xdv (27 pages, 956320 bytes).
