@@ -475,7 +475,23 @@ SFT on own best sample ($921$ rows) instead of DPO & .6546 & .6200 & .6408 & $-.
 
 \paragraph{Other attempts that did not help.} Continued pre-training on $209$M tokens of legal text (LoRA rank 64, one epoch) raised closed-book cloze accuracy by $15$ points but not \rl{}. Averaging the weights of two DPO seeds, a wider context and full-article context gave no gain. Two searches with an agent that edits weights directly in the style of \cite{wsp} (a budget of $50$ forward requests, paired standard errors, a guard set of easy questions) found no edit above two standard errors (Appendix~\ref{app:failed}).
 
-\paragraph{Final configuration, pre-declared.} Because dev is part of the training data of the last model, the configuration was fixed before the run and the test set is scored once per model: supervised fine-tuning on train and dev (PiSSA, rank $32$, three epochs), a first DPO round on $8$ on-policy samples with the standard pairs, a second round with the mixed pair set, then greedy decoding and MBR-8 on test. A single chain (seed $1$) is trained; no replicate was run, so the earlier seed spread of up to $.016$ applies to the number it reports. The result is not part of this version of the report.
+\paragraph{Final configuration, pre-declared.} Because dev is part of the training data of the last model, the configuration was fixed before the run and the test set is scored once per model: supervised fine-tuning on train and dev (PiSSA, rank $32$, three epochs), a first DPO round on $8$ on-policy samples with the standard pairs, a second round with the mixed pair set, then greedy decoding and MBR-8 on test. A single chain (seed $1$) is trained; no replicate was run, so the earlier seed spread of up to $.016$ applies to the number it reports. Test was already used to compare the PiSSA recipes above, so this number is not an untouched estimate either.
+
+\begin{table}[H]
+\centering\small
+\caption{Pre-declared final chain on test ($n{=}200$, one run each), next to the reported system.}\label{tab:finalchain}
+\begin{tabular}{lccccc}
+\toprule
+Model and decoding & Cosine & Jaccard & Token overlap & BLEU-1 & \rl{} \\
+\midrule
+Final chain (train+dev), greedy & .919 & .675 & .729 & .586 & .640 \\
+Final chain (train+dev), MBR-8 & .921 & .681 & .718 & .579 & .646 \\
+Reported system, greedy & .916 & .673 & .734 & .582 & .643 \\
+Reported system, MBR-8 & .918 & .681 & .728 & .587 & .652 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\noindent Adding dev to the training data does not move test: both differences ($-.003$ greedy, $-.006$ MBR-8) are well inside the seed spread, so the reported system stays the first recipe.
 
 \subsection{Negative and null results}\label{sec:negative}
 \begin{table}[H]
