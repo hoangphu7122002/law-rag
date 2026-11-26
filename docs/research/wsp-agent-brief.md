@@ -1,5 +1,5 @@
 # Weight-space programming agent — brief (follows arXiv 2611.09382, Hu et al. 2026)
-Goal: raise ROUGE-L of the generator on tail/mid questions by EDITING WEIGHTS directly WHILE KEEPING HEAD questions (already good) from getting worse. Base = `data/models/dpo_Vp_A2` (dev .6743, len ratio .96, quote extent / which-khoản ambiguity is the bottleneck: reference answers quote the right provision, model under/over-quotes or cites another Điều).
+Goal: raise ROUGE-L of the generator on tail/mid questions by EDITING WEIGHTS directly WHILE KEEPING HEAD questions (already good) from getting worse; improving HEAD as well is a welcome bonus (an edit that lifts head and does not hurt tail/mid is also a keeper). Report tail/mid and head deltas separately. Base = `data/models/dpo_Vp_A2` (dev .6743, len ratio .96, quote extent / which-khoản ambiguity is the bottleneck: reference answers quote the right provision, model under/over-quotes or cites another Điều).
 Box: `ssh app@100.101.115.108`, repo `~/phunguyen/law_rag`, `PYTHONPATH=src .venv/bin/python`, one GPU. Original checkpoint is never modified.
 
 ## Rules (paper-faithful, relaxed where the user asked)
