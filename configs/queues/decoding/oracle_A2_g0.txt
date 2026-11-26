@@ -1,0 +1,5 @@
+# Retrieval ceiling for the best PiSSA DPO model: dev with a gold passage injected at rank 1 when top-k misses it (retrieve.oracle=true), compared with dpo_Vp_A2 dev run 2e66c86a (.6743); tail/mid split via tailmid_report. GPU0.
+serve /home/app/phunguyen/law_rag/data/models/dpo_Vp_A2 --gpu 0 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_Vp_A2 --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set retrieve.oracle=true
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
+do tmux kill-session -t lawrag-llm-g0
