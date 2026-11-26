@@ -106,3 +106,22 @@ def best_of_n_row(row: dict, min_rouge: float = 0.55, lo: float = 0.8, hi: float
     if not ok:
         return None
     return {"qid": row["qid"], "prompt": row["prompt"], "completion": max(ok, key=lambda x: x[0])[1]}
+
+
+def contrast_pair(row: dict, min_margin: float = 0.05) -> dict | None:
+    """Cite-contrast pair for the 'right law, wrong article' failure: chosen = the best-ROUGE sample that cites a Điều of the reference, rejected = the worst-ROUGE sample that
+    cites Điều numbers but none of the reference's (ROUGE margin >= min_margin). None for refusals, references without a Điều, or when either side is missing."""
+    from evaluate.faithfulness import dieu_numbers
+    ref = row["reference"]
+    gold = dieu_numbers(ref)
+    if is_refusal(ref) or not gold:
+        return None
+    scored = [(rouge_l_score(c, ref), c, dieu_numbers(c)) for c in dict.fromkeys(row["cands"])]
+    right = [s for s in scored if s[2] & gold]
+    wrong = [s for s in scored if s[2] and not (s[2] & gold)]
+    if not right or not wrong:
+        return None
+    best, worst = max(right, key=lambda s: s[0]), min(wrong, key=lambda s: s[0])
+    if best[0] - worst[0] < min_margin:
+        return None
+    return {"qid": row["qid"], "prompt": row["prompt"], "chosen": best[1], "rejected": worst[1], "margin": round(best[0] - worst[0], 4), "source": "cite_contrast"}

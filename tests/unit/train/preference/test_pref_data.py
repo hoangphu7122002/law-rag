@@ -111,3 +111,16 @@ def test_best_of_n_row_picks_the_highest_rouge_sample_inside_the_length_band_and
     assert out == {"qid": 3, "prompt": "p", "completion": good}
     assert best_of_n_row({**row, "cands": [short]}, min_rouge=0.55) is None
     assert best_of_n_row({**row, "reference": "Tôi không thể trả lời câu hỏi này."}, min_rouge=0.55) is None
+
+
+def test_contrast_pair_sets_a_candidate_citing_the_gold_dieu_against_one_citing_other_dieu():
+    from train.preference.pref_data import contrast_pair
+    ref = "Căn cứ theo khoản 2 Điều 17 Thông tư X như sau:\nNội dung điều mười bảy rất cụ thể về quy định này."
+    right = "Căn cứ theo khoản 2 Điều 17 Thông tư X như sau:\nNội dung điều mười bảy rất cụ thể."
+    wrong = "Căn cứ theo khoản 1 Điều 18 Thông tư X như sau:\nNội dung điều mười tám cũng khá cụ thể về quy định này."
+    row = {"qid": 5, "prompt": "p", "reference": ref, "cands": [wrong, right]}
+    p = contrast_pair(row, min_margin=0.05)
+    assert p["chosen"] == right and p["rejected"] == wrong and p["source"] == "cite_contrast" and p["margin"] >= 0.05
+    assert contrast_pair({**row, "cands": [right]}, 0.05) is None                       # nothing to contrast with
+    assert contrast_pair({**row, "reference": "Tôi không thể trả lời."}, 0.05) is None   # refusal reference
+    assert contrast_pair({**row, "reference": "Nội dung không nêu điều nào."}, 0.05) is None   # reference cites no Điều
