@@ -52,5 +52,5 @@ while True:
             text = buf.getvalue() + f"\n[analyses left: {left}]"
         except Exception:
             text = buf.getvalue() + traceback.format_exc()[-4000:]
-        o.write_text(text[-20000:])
+        o.write_text(text)
     time.sleep(0.5)
