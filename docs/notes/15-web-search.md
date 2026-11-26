@@ -49,9 +49,9 @@ Guard (test-first): `generate.web.cost_per_query` (Hobby 0, Builder 0.005) and `
 "budget reached" error, cached queries still work.
 
 ## Runs queued (2026-11-19 18:51), RAW Qwen3.5-2B, dev_clean (166), TinyFish Builder
-- `configs/queues/tools_web_g0.txt` (GPU0): T2 (search_law, get_article, web_search) then T3 (+ kg_related); web allow-list vbpl.vn, luatvietnam.vn, thuvienphapluat.vn, vanban.chinhphu.vn;
+- `configs/queues/react/tools_web_g0.txt` (GPU0): T2 (search_law, get_article, web_search) then T3 (+ kg_related); web allow-list vbpl.vn, luatvietnam.vn, thuvienphapluat.vn, vanban.chinhphu.vn;
   150/min, `cost_per_query` 0.005, **`max_cost_usd` 6** (cap over all runs sharing data/cache/web.sqlite), leak filter on.
-- `configs/queues/tools_kg_g1.txt` (GPU1): T1 (search_law, get_article, kg_related), no web.
+- `configs/queues/react/tools_kg_g1.txt` (GPU1): T1 (search_law, get_article, kg_related), no web.
 - Both start after queue-1119-180219 (T0 + no-tool control + no-initial-passages), which waits for the four GRPO configs → expected overnight.
 - API key: file `/home/app/phunguyen/law_rag_secrets/tinyfish.key` (mode 600, outside the repo; the box account is shared with the datamate team) read via `generate.web.key_file`; never in configs / command lines.
 
