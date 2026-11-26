@@ -1,0 +1,10 @@
+# resume: dev/test eval of dpo_Vp_A2m (training done 13:55; the wait pattern matched dpo-VpA2ms2, so the first queue stalled)
+serve /home/app/phunguyen/law_rag/data/models/dpo_Vp_A2m --gpu 0 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_Vp_A2m --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
+do tmux kill-session -t lawrag-llm-g0
+do sleep 90
+serve /home/app/phunguyen/law_rag/data/models/dpo_Vp_A2m --gpu 0 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_Vp_A2m --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
+do tmux kill-session -t lawrag-llm-g0
