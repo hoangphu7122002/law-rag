@@ -1,0 +1,11 @@
+# Findings: expanding context when first retrieval misses (from subagent; summaries only, numbers NOT verified against full papers)
+
+- HyDE on Brazilian legal precedents: Recall@1 0.086 -> 0.345 vs plain dense; HyDE + BM25 only matched BM25 alone; one LLM call per query.
+- COLIEE: LLM implicit-concept + query-rewrite ensemble beat top teams in 2022/2023 (https://arxiv.org/html/2410.12154v1). GuRE trained rewriter (US precedents, not statutes) https://arxiv.org/html/2505.12950. Statute QA multi-query/sub-question splitting https://arxiv.org/html/2605.24454v1. Takeaway: rewriting helps the lay-question vs statute-wording gap; fuse with the original query (RRF), do not replace it.
+- Entity-constrained retrieval (law number/name in question): no paper found; near-free regex + search inside that document; needs fallback to unfiltered search; needs our own ablation.
+- Citation-graph / KG expansion (strongest recall evidence): Indonesian ITE Law RAG, hybrid RRF + citation-graph expansion recall 0.948, full-hit 0.875, with a quantity-matched RRF control (CEUR Vol-4312 paper26 or Vol-4174 paper4, unclear which). German statutes one-hop cross-reference expansion, graph covers 90.3% of ground-truth citations https://arxiv.org/html/2505.02164v1. LEGO GraphRAG https://arxiv.org/pdf/2609.27009. Vietnamese 3-tier system with KG expansion last tier https://arxiv.org/pdf/2602.23371 (match unverified). One-hop expansion needs no LLM call; depends on edge quality (cross-references, amended-by, guided-by).
+- Neighbor / parent-child chunks, larger k: no quantified legal evidence found. Check recall@50 vs recall@5 first: if gold is already in top-50, the reranker/top-5 cutoff is the problem, not retrieval.
+- Vietnamese legal retrieval background: BKAI bi-encoder https://arxiv.org/html/2412.00657v1; FPT DRiLL (VLSP 2025) hybrid + cross-encoder, first stage good for recall https://preview.aclanthology.org/anlp-naacl/2025.vlsp-1.20.pdf; improved RRF https://arxiv.org/abs/2409.13699.
+- Web fallback: not searched; prior = noisy for statute text, outdated versions risk; use only when no article scores above a threshold.
+
+Suggested order (cheapest first): diagnose top-50 vs top-5 miss; entity filter; multi-query/HyDE + RRF; one-hop KG/cross-reference expansion + neighbors then rerank the union; web last.
