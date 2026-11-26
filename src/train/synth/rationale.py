@@ -3,7 +3,7 @@ leads to that answer as if the answer were unknown; the training row is  prompt 
 
     to_think_prompt(prompt)            non-thinking prompt (ends in an empty think block) -> prompt that opens a thinking turn
     rationale_request(prompt, ref)     the user message for the rationaliser
-    valid_rationale(text, ref)         length, no leak of the answer key, and no Điều the reference does not cite
+    valid_rationale(text, ref)         length, no leak of the answer key, and names every Điều the reference cites
     assemble(row, rationale)           the thinking SFT row
 """
 import re
@@ -34,7 +34,7 @@ def valid_rationale(text: str, reference: str) -> bool:
     t = text.strip()
     if not (MIN_CHARS <= len(t) <= MAX_CHARS) or LEAK.search(t):
         return False
-    return dieu_numbers(t) <= (dieu_numbers(reference) or dieu_numbers(t))
+    return dieu_numbers(reference) <= dieu_numbers(t)   # names every cited Điều; others may appear (the request asks to rule out near misses)
 
 
 def assemble(row: dict, rationale: str) -> dict:

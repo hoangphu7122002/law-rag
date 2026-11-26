@@ -8,7 +8,7 @@ VLLM=/home/app/phunguyen/vllm_env/bin/vllm
 mkdir -p data/runs/spec data/runs/logs
 run_one() {   # name, extra args
   local name=$1; shift
-  local args; args=$(printf "%q " "$@")   # keep the JSON quotes of --speculative-config through the tmux command string
+  local args=""; [ $# -gt 0 ] && args=$(printf "%q " "$@")   # keep the JSON quotes of --speculative-config through tmux; no args -> nothing (printf %q of nothing gives '')
   tmux kill-session -t $S 2>/dev/null; sleep 15
   tmux new -d -s $S "VLLM_USE_FLASHINFER_SAMPLER=0 VLLM_CACHE_ROOT=$PWD/.cache/vllm FLASHINFER_WORKSPACE_BASE=$PWD/.cache/flashinfer TMPDIR=$PWD/.cache/tmp CUDA_VISIBLE_DEVICES=$GPU HF_HOME=/home/app/phunguyen/hf $VLLM serve $MODEL --host 127.0.0.1 --port $PORT --seed 0 --gpu-memory-utilization 0.45 --dtype bfloat16 --max-model-len 32768 --enable-prefix-caching --max-num-seqs 64 --max-num-batched-tokens 16384 $args 2>&1 | tee data/runs/logs/$S-$name.log"
   for i in $(seq 1 120); do curl -sf localhost:$PORT/v1/models >/dev/null && break; sleep 5; done

@@ -25,6 +25,13 @@ def test_valid_rationale_rejects_answer_leaks_wrong_articles_and_bad_lengths():
     assert not valid_rationale(ok * 30, REF)                                        # too long
 
 
+def test_valid_rationale_allows_ruling_out_other_articles_but_must_name_the_cited_one():
+    # the request asks why near-miss articles are NOT chosen, so they may be named, as long as the reference's Điều is named too
+    elim = "Câu hỏi hỏi mức phạt. Điều 18 nói về thủ tục nên không phù hợp; khoản 1 Điều 17 nêu đúng mức phạt, nên trích khoản này."
+    assert valid_rationale(elim, REF)
+    assert not valid_rationale("Câu hỏi hỏi mức phạt. Điều 18 nói về thủ tục; vì vậy cần trích nguyên văn khoản đó để trả lời đầy đủ.", REF)
+
+
 def test_rationale_request_shows_context_question_and_reference_and_forbids_mentioning_it():
     msg = rationale_request(PROMPT, REF)
     assert "Phạt bao nhiêu?" in msg and "Phạt 100.000 đồng." in msg and "không nhắc" in msg.lower()

@@ -1,0 +1,13 @@
+# Thinking SFT, take 2 (Nov 27). Take 1 kept 1/1683 rows: blind 9B thoughts are English, run past max-tokens; the rationale filter also rejected every rationale that ruled out
+# another Điều (fixed: it must name the cited Điều, others allowed). Data: q35_T = 9B rationalisations (shown the reference, Vietnamese, 3-6 sentences), --rationalise-only.
+# Then SFT PiSSA r32 3 epochs and a dev eval with thinking on, vs V_pissa (non-thinking SFT, dev .6414). GPU1, after the spec-decoding bench.
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-thinkgen2"
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-specab"
+wait ! tmux ls 2>/dev/null | grep -q "spec-g1"
+sh sftT2 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft/sft_lora.py --data data/train/q35_T --base Qwen/Qwen3.5-2B --out /home/app/phunguyen/law_rag/data/models/q35_T_pissa --init-lora pissa --epochs 3 --max-length 12288 --batch 1 --accum 16 --seed 1 > data/runs/logs/sftT2.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-sftT2"
+do sleep 60
+serve /home/app/phunguyen/law_rag/data/models/q35_T_pissa --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_T_pissa --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set generate.thinking=true --set generate.think_tokens=1536
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1

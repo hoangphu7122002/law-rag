@@ -21,6 +21,7 @@ ap.add_argument("--conc", type=int, default=48)
 ap.add_argument("--max-tokens", type=int, default=2200)
 ap.add_argument("--min-rouge", type=float, default=0.5)
 ap.add_argument("--limit", type=int, default=0)
+ap.add_argument("--rationalise-only", action="store_true", help="skip pass 1: blind 9B thoughts come out in English, run past max-tokens and are almost never kept (Nov 27 run: 1 of 1683)")
 ap.add_argument("--no-rationalise", action="store_true", help="skip pass 2 (9B writes a short rationale, shown the reference, for rows pass 1 could not solve)")
 a = ap.parse_args()
 
@@ -60,7 +61,7 @@ for split in ("train", "val"):
     rows = [json.loads(line) for line in open(Path(a.src) / f"{split}.jsonl", encoding="utf-8")]
     rows = rows[:a.limit] if a.limit else rows
     with ThreadPoolExecutor(a.conc) as ex:
-        res = list(ex.map(sample, rows))
+        res = [None] * len(rows) if a.rationalise_only else list(ex.map(sample, rows))
     if not a.no_rationalise:
         todo = [row for row, r in zip(rows, res) if r is None]
         with ThreadPoolExecutor(a.conc) as ex:

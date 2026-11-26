@@ -1,0 +1,3 @@
+# After the rationalise-only thinking data is written, stop the 9B on GPU0 so GPU0 can go back to Triton.
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-thinkgen2"
+do tmux kill-session -t lawrag-llm-g0
