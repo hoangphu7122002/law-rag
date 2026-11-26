@@ -1,0 +1,16 @@
+# (1) weight soup of the two dpo_a2 seeds (soup_a2 = mean(dpo_a2, dpo_a2s2)): dev + test, vs dpo_a2 .6637/.6433 and dpo_a2s2 .6623/.6377; (2) MBR8 (A6_mbr, shots 2) of dpo_Vp_A2 dev + test (dpo_a2+MBR8: dev .6721 / test .6521). The third DPO round is postponed until disk space is decided. GPU1, after the seed queue.
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1126-110748"
+do sleep 60
+serve /home/app/phunguyen/law_rag/data/models/soup_a2 --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/soup_a2 --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/soup_a2 --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1
+do sleep 90
+serve /home/app/phunguyen/law_rag/data/models/dpo_Vp_A2 --gpu 1 --share 0.45
+configs/exp/A6_mbr.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_Vp_A2 --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbr.*-g1"
+configs/exp/A6_mbr.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_Vp_A2 --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbr.*-g1"
+do tmux kill-session -t lawrag-llm-g1
