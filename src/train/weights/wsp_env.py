@@ -42,7 +42,7 @@ def paired_se(diffs: list[float]) -> float:
 
 
 class Env:
-    def __init__(self, base: str, feedback: str, workdir: str, forward_budget: int = 50, analysis_budget: int = 300, device: str = "cuda", batch: int = 8):
+    def __init__(self, base: str, feedback: str, workdir: str, forward_budget: int = 50, analysis_budget: int = 300, device: str = "cuda", batch: int = 16):
         import torch
         from transformers import AutoConfig, AutoModelForCausalLM, AutoModelForImageTextToText, AutoTokenizer
         self.base, self.device, self.batch = base, device, batch
@@ -81,27 +81,33 @@ class Env:
         return outs
 
     def generate(self, rows, weights: str = "edited", max_new_tokens: int = 400) -> dict:
+        """One G request. Answers of the ORIGINAL weights are cached per (row, max_new_tokens) for the life of the kernel, so "both"/"original" only generate the
+        uncached rows and "both" costs about one generation pass of the edited model."""
         from evaluate.metrics import rouge_l_score
         idx = list(rows)
         left = self.forward.spend()
+        cache = self.__dict__.setdefault("_orig_cache", {})
         res = {}
-        edited = {k: v.detach().cpu().clone() for k, v in self.model.state_dict().items()} if weights != "edited" else None
-        for name in (["original", "edited"] if weights == "both" else [weights]):
-            if name == "original":
+        if weights in ("original", "both"):
+            todo = [j for j in idx if (j, max_new_tokens) not in cache]
+            if todo:
+                edited = {k: v.detach().cpu().clone() for k, v in self.model.state_dict().items()}
                 self.model.load_state_dict(self.original)
-            elif edited is not None:
+                for j, a in zip(todo, self._generate(todo, max_new_tokens)):
+                    cache[(j, max_new_tokens)] = a
                 self.model.load_state_dict(edited)
-            ans = self._generate(idx, max_new_tokens)
-            res[name] = {"answers": ans,
-                         "rouge_l": [rouge_l_score(a, self.rows[j]["reference"]) for a, j in zip(ans, idx)],
-                         "len_ratio": [len(a) / max(len(self.rows[j]["reference"]), 1) for a, j in zip(ans, idx)]}
-        if edited is not None:
-            self.model.load_state_dict(edited)
+            res["original"] = [cache[(j, max_new_tokens)] for j in idx]
+        if weights in ("edited", "both"):
+            res["edited"] = self._generate(idx, max_new_tokens)
         out = {"n": len(idx), "forward_left": left}
-        for name, r in res.items():
-            out[name] = {"rouge_l": round(statistics.mean(r["rouge_l"]), 4), "len_ratio": round(statistics.mean(r["len_ratio"]), 3), "per_item": r}
+        scored = {}
+        for name, ans in res.items():
+            r = [rouge_l_score(a, self.rows[j]["reference"]) for a, j in zip(ans, idx)]
+            ln = [len(a) / max(len(self.rows[j]["reference"]), 1) for a, j in zip(ans, idx)]
+            scored[name] = r
+            out[name] = {"rouge_l": round(statistics.mean(r), 4), "len_ratio": round(statistics.mean(ln), 3), "per_item": {"answers": ans, "rouge_l": r, "len_ratio": ln}}
         if weights == "both":
-            d = [e - o for e, o in zip(res["edited"]["rouge_l"], res["original"]["rouge_l"])]
+            d = [e - o for e, o in zip(scored["edited"], scored["original"])]
             out["paired_diff"] = {"mean": round(statistics.mean(d), 4), "se": round(paired_se(d), 4), "rescued": sum(x > 0.1 for x in d), "regressed": sum(x < -0.1 for x in d)}
         return out
 
