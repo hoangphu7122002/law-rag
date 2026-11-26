@@ -1,0 +1,7 @@
+# MBR8 (A6_mbr, shots 2) of dpo_Vp_A2c (greedy dev .6728 / test .6413) dev + test; compare with MBR8 of dpo_Vp_A2 (dev .6822 / test .6446). GPU0.
+serve /home/app/phunguyen/law_rag/data/models/dpo_Vp_A2c --gpu 0 --share 0.45
+configs/exp/A6_mbr.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_Vp_A2c --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbr.*-g0"
+configs/exp/A6_mbr.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_Vp_A2c --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbr.*-g0"
+do tmux kill-session -t lawrag-llm-g0
