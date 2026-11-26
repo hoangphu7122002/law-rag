@@ -5,7 +5,7 @@ train prompts (never dev/test), under a hard budget of generation evals. The age
     env = Env("data/models/dpo_Vp_A2", feedback="data/wsp/feedback.jsonl", workdir="data/wsp/run1", budget=50)
     env.baseline()                       # counts as 1 eval
     sd = env.model.state_dict()          # edit in place, e.g. with torch.no_grad(): p.add_(...)
-    env.eval(n=60)                       # greedy generation on the first n feedback prompts -> dict(rouge_l, len_ratio, n, left)
+    env.eval(n=60, start=0)              # greedy generation on feedback rows start..start+n -> dict(rouge_l, len_ratio, n, left)
     env.save("data/wsp/run1/ckpt_a")     # writes a serve-able model dir
 """
 import json
@@ -47,12 +47,12 @@ class Env:
     def reset(self) -> None:
         self.model.load_state_dict(self.original)
 
-    def eval(self, n: int = 60, max_new_tokens: int = 400) -> dict:
+    def eval(self, n: int = 60, start: int = 0, max_new_tokens: int = 400) -> dict:
         import torch
         from evaluate.metrics import rouge_l_score
         left = self.budget.spend()
         scores, ratios = [], []
-        for r in self.rows[:n]:
+        for r in self.rows[start:start + n]:
             ids = self.tok(r["prompt"], return_tensors="pt", add_special_tokens=False).to(self.device)
             with torch.no_grad():
                 out = self.model.generate(**ids, max_new_tokens=max_new_tokens, do_sample=False)
