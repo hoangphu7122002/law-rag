@@ -1,14 +1,21 @@
-"""Weight-space-programming environment for an LLM agent (cf. arXiv 2611.09382): load a model, edit its weights in Python, measure ROUGE-L on a FEEDBACK set of
-train prompts (never dev/test), under a hard budget of generation evals. The agent only ever sees feedback-set numbers; dev is checked by us afterwards.
+"""Weight-space-programming environment for an LLM agent, following arXiv 2611.09382 (Hu et al., 2026): the agent edits the weights of a model directly (no gradients,
+no training), sees the target ONLY through a budgeted forward tool, and diagnoses before it edits.
+
+Forward tool (50 successful requests per search, a request may hold many prompts):
+  G  generation  env.generate(rows, weights="edited"|"original"|"both")  -> per-item ROUGE-L / length ratio and, for "both", the paired difference with its standard error
+  TF teacher-forced env.tf(rows, texts=None, topk=0, hidden_layers=(), mlp_layers=()) -> conditional log-probs of the continuation, top-k tokens, hidden states, MLP
+     activations (no task score). Teacher forcing on the gold answer is the default continuation.
+Python analyses (<= 300 per search): run in a persistent kernel by the agent; the harness counts `env.analysis()` calls and the brief caps them.
+Original checkpoint stays unchanged: env.original (CPU copy) is never modified; env.reset() restores it; env.n_changed() counts differing bf16 values.
+Rows are train-split feedback prompts (tail/mid), never dev/test. Sampling deviation from the paper: greedy, no thinking (our task has no reasoning trace), so the only
+noise is across questions (paired SE).
 
     from train.weights.wsp_env import Env
-    env = Env("data/models/dpo_Vp_A2", feedback="data/wsp/feedback.jsonl", workdir="data/wsp/run1", budget=50)
-    env.baseline()                       # counts as 1 eval
-    sd = env.model.state_dict()          # edit in place, e.g. with torch.no_grad(): p.add_(...)
-    env.eval(n=60, start=0)              # greedy generation on feedback rows start..start+n -> dict(rouge_l, len_ratio, n, left)
-    env.save("data/wsp/run1/ckpt_a")     # writes a serve-able model dir
+    env = Env("data/models/dpo_Vp_A2", "data/wsp/feedback.jsonl", "data/wsp/run1")
+    env.generate(range(0, 64), weights="original")
 """
 import json
+import math
 import statistics
 from pathlib import Path
 
@@ -25,58 +32,125 @@ class Budget:
 
     def spend(self) -> int:
         if self.used >= self.total:
-            raise RuntimeError(f"eval budget exhausted ({self.total})")
+            raise RuntimeError(f"budget exhausted ({self.total})")
         self.path.write_text(str(self.used + 1))
         return self.total - self.used
 
 
+def paired_se(diffs: list[float]) -> float:
+    return statistics.stdev(diffs) / math.sqrt(len(diffs)) if len(diffs) > 1 else float("nan")
+
+
 class Env:
-    def __init__(self, base: str, feedback: str, workdir: str, budget: int = 50, device: str = "cuda"):
+    def __init__(self, base: str, feedback: str, workdir: str, forward_budget: int = 50, analysis_budget: int = 300, device: str = "cuda", batch: int = 8):
         import torch
         from transformers import AutoConfig, AutoModelForCausalLM, AutoModelForImageTextToText, AutoTokenizer
-        self.base, self.device = base, device
+        self.base, self.device, self.batch = base, device, batch
         self.work = Path(workdir)
         self.work.mkdir(parents=True, exist_ok=True)
-        self.budget = Budget(self.work / "budget.txt", budget)
+        self.forward = Budget(self.work / "forward_budget.txt", forward_budget)
+        self.analyses = Budget(self.work / "analysis_budget.txt", analysis_budget)
         self.rows = [json.loads(line) for line in open(feedback, encoding="utf-8")]
         self.tok = AutoTokenizer.from_pretrained(base)
+        self.tok.padding_side = "left"
         Model = AutoModelForImageTextToText if hasattr(AutoConfig.from_pretrained(base), "vision_config") else AutoModelForCausalLM
         self.model = Model.from_pretrained(base, dtype=torch.bfloat16, attn_implementation="sdpa").to(device).eval()
-        self.original = {k: v.detach().cpu().clone() for k, v in self.model.state_dict().items()}   # for env.reset()
+        self.original = {k: v.detach().cpu().clone() for k, v in self.model.state_dict().items()}
+
+    # ---- bookkeeping
+    def analysis(self) -> int:
+        """Call once per Python analysis step; returns the analyses left."""
+        return self.analyses.spend()
 
     def reset(self) -> None:
         self.model.load_state_dict(self.original)
 
-    def eval(self, n: int = 60, start: int = 0, max_new_tokens: int = 400) -> dict:
+    def n_changed(self) -> int:
+        return sum(int((v.cpu() != self.original[k]).sum()) for k, v in self.model.state_dict().items())
+
+    # ---- G: generation
+    def _generate(self, idx: list[int], max_new_tokens: int) -> list[str]:
         import torch
+        outs = []
+        for i in range(0, len(idx), self.batch):
+            part = [self.rows[j]["prompt"] for j in idx[i:i + self.batch]]
+            enc = self.tok(part, return_tensors="pt", padding=True, add_special_tokens=False).to(self.device)
+            with torch.no_grad():
+                out = self.model.generate(**enc, max_new_tokens=max_new_tokens, do_sample=False)
+            outs += [self.tok.decode(o[enc["input_ids"].shape[1]:], skip_special_tokens=True).strip() for o in out]
+        return outs
+
+    def generate(self, rows, weights: str = "edited", max_new_tokens: int = 400) -> dict:
         from evaluate.metrics import rouge_l_score
-        left = self.budget.spend()
-        scores, ratios = [], []
-        for r in self.rows[start:start + n]:
-            ids = self.tok(r["prompt"], return_tensors="pt", add_special_tokens=False).to(self.device)
-            with torch.no_grad():
-                out = self.model.generate(**ids, max_new_tokens=max_new_tokens, do_sample=False)
-            ans = self.tok.decode(out[0, ids["input_ids"].shape[1]:], skip_special_tokens=True).strip()
-            scores.append(rouge_l_score(ans, r["reference"]))
-            ratios.append(len(ans) / max(len(r["reference"]), 1))
-        return {"rouge_l": round(statistics.mean(scores), 4), "len_ratio": round(statistics.mean(ratios), 3), "n": len(scores), "evals_left": left}
+        idx = list(rows)
+        left = self.forward.spend()
+        res = {}
+        edited = {k: v.detach().cpu().clone() for k, v in self.model.state_dict().items()} if weights != "edited" else None
+        for name in (["original", "edited"] if weights == "both" else [weights]):
+            if name == "original":
+                self.model.load_state_dict(self.original)
+            elif edited is not None:
+                self.model.load_state_dict(edited)
+            ans = self._generate(idx, max_new_tokens)
+            res[name] = {"answers": ans,
+                         "rouge_l": [rouge_l_score(a, self.rows[j]["reference"]) for a, j in zip(ans, idx)],
+                         "len_ratio": [len(a) / max(len(self.rows[j]["reference"]), 1) for a, j in zip(ans, idx)]}
+        if edited is not None:
+            self.model.load_state_dict(edited)
+        out = {"n": len(idx), "forward_left": left}
+        for name, r in res.items():
+            out[name] = {"rouge_l": round(statistics.mean(r["rouge_l"]), 4), "len_ratio": round(statistics.mean(r["len_ratio"]), 3), "per_item": r}
+        if weights == "both":
+            d = [e - o for e, o in zip(res["edited"]["rouge_l"], res["original"]["rouge_l"])]
+            out["paired_diff"] = {"mean": round(statistics.mean(d), 4), "se": round(paired_se(d), 4), "rescued": sum(x > 0.1 for x in d), "regressed": sum(x < -0.1 for x in d)}
+        return out
 
-    def baseline(self, n: int = 60) -> dict:
-        self.reset()
-        return self.eval(n)
-
-    def logprob(self, n: int = 60) -> float:
-        """Mean per-token log-prob of the gold answer given the prompt (teacher forcing; free, does not use the budget)."""
+    # ---- TF: teacher forcing
+    def tf(self, rows, texts: list[str] | None = None, topk: int = 0, hidden_layers=(), mlp_layers=()) -> dict:
+        """Teacher-forced scoring of a continuation per prompt (default: the gold answer; or `texts`, one per row). Returns mean/ per-token log-probs, optional top-k
+        tokens and hidden states (residual after the given layers) / MLP outputs at the continuation positions. One forward request in total."""
         import torch
-        tot = []
-        for r in self.rows[:n]:
-            p = self.tok(r["prompt"], add_special_tokens=False)["input_ids"]
-            g = self.tok(r["reference"] + "<|im_end|>", add_special_tokens=False)["input_ids"]
-            x = torch.tensor([p + g], device=self.device)
-            with torch.no_grad():
-                lp = torch.log_softmax(self.model(x).logits[0, len(p) - 1:-1].float(), -1)
-            tot.append(lp.gather(1, torch.tensor(g, device=self.device)[:, None]).mean().item())
-        return round(statistics.mean(tot), 4)
+        idx = list(rows)
+        left = self.forward.spend()
+        layers = self._layers()
+        hooks, mlp_cache = [], {}
+        for L in mlp_layers:
+            hooks.append(layers[L].mlp.register_forward_hook(lambda m, i, o, L=L: mlp_cache.__setitem__(L, o[0].detach().float().cpu())))
+        out = []
+        try:
+            for n, j in enumerate(idx):
+                p = self.tok(self.rows[j]["prompt"], add_special_tokens=False)["input_ids"]
+                g = self.tok((texts[n] if texts else self.rows[j]["reference"]) + "<|im_end|>", add_special_tokens=False)["input_ids"]
+                x = torch.tensor([p + g], device=self.device)
+                with torch.no_grad():
+                    o = self.model(x, output_hidden_states=bool(hidden_layers))
+                lp = torch.log_softmax(o.logits[0, len(p) - 1:-1].float(), -1)
+                tl = lp.gather(1, torch.tensor(g, device=self.device)[:, None])[:, 0]
+                item = {"mean_logprob": round(tl.mean().item(), 4), "token_logprobs": tl.cpu().tolist(), "tokens": self.tok.convert_ids_to_tokens(g)}
+                if topk:
+                    v, ix = lp.topk(topk, -1)
+                    item["topk"] = [[(self.tok.convert_ids_to_tokens([t])[0], round(s, 3)) for t, s in zip(r, vv)] for r, vv in zip(ix.cpu().tolist(), v.cpu().tolist())]
+                if hidden_layers:
+                    item["hidden"] = {L: o.hidden_states[L + 1][0, len(p):].float().cpu() for L in hidden_layers}
+                if mlp_layers:
+                    item["mlp"] = {L: mlp_cache[L][len(p):] for L in mlp_layers}
+                out.append(item)
+        finally:
+            for h in hooks:
+                h.remove()
+        return {"items": out, "forward_left": left}
+
+    def _layers(self):
+        m = self.model
+        for path in ("model.language_model.layers", "model.layers", "language_model.model.layers"):
+            obj = m
+            try:
+                for a in path.split("."):
+                    obj = getattr(obj, a)
+                return obj
+            except AttributeError:
+                continue
+        raise RuntimeError("cannot find transformer layers")
 
     def save(self, out: str) -> None:
         import shutil
