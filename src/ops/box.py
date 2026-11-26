@@ -21,7 +21,7 @@ TOOLS_MIN_RAM_GB = 50   # the tools endpoint (index + docstore, cap 44 GB) is st
 MIN_RAM_GB, MIN_DISK_GB, MAX_RAM_GB = 14, 20, 46   # an index build of 1M chunks peaks above 32 GB (OOM-killed at 32, 2026-11-21); 62 GB box shared with others, the guard still needs 14 GB free
 MAX_RUNS = 3  # LLM-bound runs on cached retrieval are light; never queue two index builds side by side
 LABEL = "com.lawrag.autosync"  # launchd agent on the Mac
-CODE_EXCLUDES = [".git", ".venv", ".rl_env", ".cache", "data", "__pycache__", ".pytest_cache", ".ruff_cache"]
+CODE_EXCLUDES = [".git", ".venv", ".rl_env", ".cache", "/data", "__pycache__", ".pytest_cache", ".ruff_cache"]
 
 
 class RemoteBox:
