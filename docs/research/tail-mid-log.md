@@ -52,3 +52,7 @@ D3c rsLoRA: chunks (k=5) .6258 | 203 (whole articles of the top-5 chunks) .6123 
 ## SFT from CPT, data D3 (cptD3_pissa), 2026-11-26 08:25
 best-val dev .5987 / test .5603; last dev .6200 / test .5824 — clearly worse than no-CPT D3c PiSSA (.6225-.6320 / .5987-.6252). CPT (209M tokens) hurts ROUGE-L here; CPT closed as a negative result.
 ## dpo_a2 re-eval under today's pipeline: dev .6637 / test .6433 (identical to CHANGELOG) => best model so far; pipeline comparable.
+
+## DPO on V_pissa and extent-aware control, 2026-11-26 09:45 (rouge_l)
+- dpo_vb_ext (v3b + extent-aware pairs, round 1; same cands as dpo_a): dev .6526 / test .6298. dpo_a (standard pairs, round 1): dev .6514/.6543 (CHANGELOG). => no gain from the khoản/length reward in round 1 on v3b.
+- dpo_Vp_A (V_pissa + standard pairs, 1175 pairs, round 1): dev **.6493** (V_pissa .6414, +.008) / test **.6226** (V_pissa .6307, -.008). Comparable with dpo_a round 1 (.6514-.6543 dev); dpo_a2 needed round 2 to reach .6637/.6433. Round 2 from dpo_Vp_A queued on GPU1 (queue dpoVp2_g1: sample n=8, pairs, DPO, dev/test); dpo_Vp_B (extent-aware pairs) training on GPU0.
