@@ -18,3 +18,8 @@
 - spec A/B: base rerun failed (empty-args quoting bug, fixed in spec_ab.sh); ngram3/5 compare against base.json from 22:34.
 - 03:02: thinkgen2 done: 1147/1683 train, 133/188 val (all rationalised). sftT2 started 03:00 on GPU1. Spec A/B done (CHANGELOG Step 38): conc1 1.5-2.4x, conc16 0.52-0.95x; only 11-15/40 identical answers. GPU0 -> Triton (L40S_FREE gpus=0 hours=5) 03:03.
 - 03:50: THINKING take 2 dev (A5_v3b__8154e554, q35_T_pissa, thinking on, think_tokens 1536, shots 2; config verified): rougeL .5852 vs V_pissa .6414 (-.056); cosine .879. Clearly worse -> no ReAct-with-thinking. Caveat: q35_T has 1147 train rows (68% of q35_C; learning curve predicts ~-.01 for that). Diagnostic queued: same model, thinking off (dev).
+
+## 04:20 thinking-off diagnostic (A5_v3b__403959fb; config verified: q35_T_pissa, dev, thinking false)
+- rouge_l .6050 (cosine .895), vs thinking-on .5852 and V_pissa .6414.
+- Both causes contribute: the rationale-trained model is weaker by itself (−.036; about −.01 of that is expected from 1147 vs 1683 rows), and thinking at inference costs a further −.020.
+- Conclusion: thinking SFT take 2 does not help; no more training started. Next steps left to the user. GPU1 now runs only embed/rerank.
