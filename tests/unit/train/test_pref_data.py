@@ -34,3 +34,25 @@ def test_cite_weight_changes_which_candidate_wins():
     right_short = "Căn cứ Điều 5 quy định mức phạt tiền."
     p = build_pairs([row([other_article, right_short, BAD])], min_margin=0.05, cite_weight=0.9)
     assert p and p[0]["chosen"] == right_short
+
+
+def test_extent_bonus_rewards_matching_khoan_and_a_length_close_to_the_reference():
+    from train.pref_data import extent_bonus
+    ref = "Căn cứ theo khoản 2 Điều 17 Thông tư X như sau: " + "nội dung " * 50
+    ok = "Theo khoản 2 Điều 17 Thông tư X: " + "nội dung " * 50
+    too_long = "Theo Điều 17 Thông tư X: " + "nội dung " * 200
+    no_khoan = "Theo Điều 17 Thông tư X: " + "nội dung " * 50
+    assert extent_bonus(ok, ref, 0.15, 0.15) == 0.3
+    assert extent_bonus(too_long, ref, 0.15, 0.15) == 0.0
+    assert extent_bonus(no_khoan, ref, 0.15, 0.15) == 0.15      # length fine, khoản missing
+    assert extent_bonus(no_khoan, "Căn cứ Điều 5 Luật Y: " + "nội dung " * 50, 0.15, 0.15) == 0.3   # the reference names no khoản: nothing to match
+
+
+def test_build_pairs_with_extent_weights_prefers_the_candidate_with_the_right_extent():
+    from train.pref_data import build_pairs
+    ref = "Căn cứ theo khoản 2 Điều 17 Thông tư X như sau: " + "nội dung " * 50
+    short_wrong = "Theo Điều 17 Thông tư X: nội dung"
+    good = "Theo khoản 2 Điều 17 Thông tư X như sau: " + "nội dung " * 50
+    rows = [{"qid": 1, "prompt": "p", "reference": ref, "cands": [short_wrong, good]}]
+    p = build_pairs(rows, min_margin=0.05, khoan_weight=0.15, length_weight=0.15)
+    assert p and p[0]["chosen"] == good and p[0]["rejected"] == short_wrong
