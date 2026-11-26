@@ -35,3 +35,13 @@ for qid in sorted(dev & final.keys()):
     if f"Điều {gd}" in clause_hint(qa[qid]["question"], ps, top=3):
         dieu_hits += 1
 print(json.dumps({"questions_with_named_khoan": n, "gold_khoan_present_in_context_units": inpass, "top1": hits[1], "top2": hits[2], "top3": hits[3], "top3_dieu_level": dieu_hits}))
+
+import sys
+if len(sys.argv) > 1:   # model's own pick: does the answer name the gold khoản?
+    own = 0
+    for line in open(sys.argv[1] + "/predictions.jsonl", encoding="utf-8"):
+        r = json.loads(line)
+        m = REF.search(qa[r["qid"]]["answer"])
+        if r["qid"] in dev and m and f"khoản {m.group(1)} Điều {m.group(2)}" in r["answer"]:
+            own += 1
+    print(json.dumps({"model_answer_names_gold_khoan": own, "of": n}))

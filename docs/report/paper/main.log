@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (MiKTeX 22.1) (preloaded format=xelatex 2026.10.7)  26 NOV 2026 21:07
+This is XeTeX, Version 3.141592653-2.6-0.999993 (MiKTeX 22.1) (preloaded format=xelatex 2026.10.7)  26 NOV 2026 21:50
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1304,14 +1304,24 @@ Overfull \hbox (11.00754pt too wide) in paragraph at lines 659--672
 
 
 [23]
+! Undefined control sequence.
+l.685 ...riment was stopped before any training.\n
+                                                  \item \textbf{Weights as a...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+
+[24]
 Underfull \hbox (badness 10000) in paragraph at lines 694--695
 []\TU/TimesNewRoman(0)/m/n/10 J.Hu et al. Exploring weight-space programming: c
 apabilities, generalization, and limitations.
  []
 
 
-
-[24]
 Underfull \hbox (badness 2689) in paragraph at lines 722--723
 []\TU/TimesNewRoman(0)/m/n/10 DeepSeek-AI. DeepSeek-R1: incentivizing reasoning
  capability in LLMs via reinforcement learning.
@@ -1341,4 +1351,4 @@ Here is how much of TeX's memory you used:
  1348 hyphenation exceptions out of 8191
  99i,18n,108p,1835b,2517s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main.xdv (26 pages, 934168 bytes).
+Output written on main.xdv (26 pages, 938580 bytes).
