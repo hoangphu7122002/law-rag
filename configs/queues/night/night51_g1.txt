@@ -6,7 +6,7 @@ wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pref-sample-a"
 do tmux kill-session -t lawrag-llm-g1
 sh pairs-a cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/train/build_pairs.py data/train/pref_dpoa/cands.jsonl data/train/pref_dpoa/pairs.jsonl --min-margin 0.1 > data/runs/logs/pairs-a.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pairs-a"
-sh dpo-a2 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/dpo.py --pairs data/train/pref_dpoa/pairs.jsonl --base data/models/dpo_a --out data/models/dpo_a2 --lr 2e-5 --beta 0.1 > data/runs/logs/dpo-a2.log 2>&1
+sh dpo-a2 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/preference/dpo.py --pairs data/train/pref_dpoa/pairs.jsonl --base data/models/dpo_a --out data/models/dpo_a2 --lr 2e-5 --beta 0.1 > data/runs/logs/dpo-a2.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo-a2"
 serve /home/app/phunguyen/law_rag/data/models/dpo_a2 --gpu 1 --share 0.45
 configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_a2 --set backend.base_url=http://localhost:8001/v1 --set generate.shots=2

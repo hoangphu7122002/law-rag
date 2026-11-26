@@ -1,5 +1,5 @@
 # 6-epoch SFT (best val-loss checkpoint kept): tests whether 3 epochs cut the runs short (B/C best val was at the last step). GPU1 lane: C6_s1.
-sh train-q35C6_s1 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/q35_C --base Qwen/Qwen3.5-2B --out data/models/q35_C6_s1 --epochs 6 --max-length 12288 --batch 1 --accum 16 --seed 1 > data/runs/logs/train-q35C6_s1.log 2>&1
+sh train-q35C6_s1 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft/sft_lora.py --data data/train/q35_C --base Qwen/Qwen3.5-2B --out data/models/q35_C6_s1 --epochs 6 --max-length 12288 --batch 1 --accum 16 --seed 1 > data/runs/logs/train-q35C6_s1.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-train-q35C6_s1"
 serve /home/app/phunguyen/law_rag/data/models/q35_C6_s1 --gpu 1 --share 0.45
 configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_C6_s1 --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2

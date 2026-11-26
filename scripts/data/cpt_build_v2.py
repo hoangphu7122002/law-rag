@@ -16,8 +16,8 @@ import shutil
 import time
 from pathlib import Path
 
-from train import synth_gen as sg
-from train.cpt_clean import Dedup, chunk_doc, mask_pii, normalize, quality, strip_html
+from train.synth import synth_gen as sg
+from train.cpt.cpt_clean import Dedup, chunk_doc, mask_pii, normalize, quality, strip_html
 
 CPT = 3.4   # chars per token (measured on our data)
 LAW_TYPES = {"Luật", "Bộ luật", "Nghị định", "Thông tư", "Pháp lệnh", "Nghị quyết"}

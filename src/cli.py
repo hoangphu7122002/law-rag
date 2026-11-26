@@ -5,7 +5,7 @@
     python -m cli run <exp.yaml> --retrieval-only --set retrieve.k=20  # doc@k / Điều@k only, no LLM
     python -m cli score data/runs/<run>                       # (re)score a run dir
     python -m cli retrieval data/runs/<run>                    # doc@k / Điều@k of the retrieved passages
-    python -m cli sft-data configs/exp/A3_Q3.yaml --name q35_v0     # SFT rows (src/train/sft_data.py)
+    python -m cli sft-data configs/exp/A3_Q3.yaml --name q35_v0     # SFT rows (src/train/sft/sft_data.py)
     python -m cli kg-build                                    # legal KG -> data/kg/kg.sqlite
     python -m cli compare data/runs/<a> data/runs/<b> [--metric rouge_l]
     python -m cli box <action> [...]                     # remote GPU box (src/ops/box.py), see `cli box -h`
@@ -45,7 +45,7 @@ def main() -> None:
     d.add_argument("--full-gold", action="store_true", help="with --guarantee: every gold article in the context in FULL (a chunk is replaced by the whole article, all missing gold articles are added)")
     d.add_argument("--max-tokens", type=int, default=0, help="rows longer than this many tokens lose non-gold passages from the tail (trainer max_length must be >= this)")
     d.add_argument("--limit", type=int, default=0, help="smoke test: only the first N train questions and N synthetic rows")
-    d.add_argument("--extra", default="", help="synthetic QA jsonl (train.synth_gen) added as training questions")
+    d.add_argument("--extra", default="", help="synthetic QA jsonl (train.synth.synth_gen) added as training questions")
     d.add_argument("--teacher", default="", help="jsonl {qid, answer}: verified teacher answers as a second row per train question")
     d.add_argument("--all-gold", action="store_true", help="with --oracle: inject EVERY missing gold article, not just one")
     d.add_argument("--drop-gold", type=float, default=0.0, help="p of replacing the gold passages of a train row by non-gold ones (retrieval miss, reference kept)")
@@ -116,7 +116,7 @@ def main() -> None:
         ExtraData().download(args.names)
     elif args.cmd == "sft-data":
         from config import load
-        from train.sft_data import SFTData
+        from train.sft.sft_data import SFTData
 
         kr = tuple(int(x) for x in args.k_range.split(",")) if args.k_range else None
         SFTData(load(args.exp, args.set), args.name, tuple(args.splits.split(",")), kr, args.oracle,
@@ -132,7 +132,7 @@ def main() -> None:
         print(f"{len(store.pool)} shots -> {args.out}")
     elif args.cmd == "rerank-data":
         from config import load
-        from train.rerank_data import RerankData
+        from train.retrieval.rerank_data import RerankData
 
         RerankData(load(args.exp, args.set), args.name, zalo=not args.no_zalo).build()
     elif args.cmd == "run":

@@ -1,8 +1,8 @@
-"""LoRA SFT on prompt / completion rows (src/train/sft_data.py), loss on the completion only; then merge and save a
+"""LoRA SFT on prompt / completion rows (src/train/sft/sft_data.py), loss on the completion only; then merge and save a
 plain checkpoint that vLLM serves like the base model. Self-contained (torch, transformers, peft, trl, datasets) so
 it runs in the box's training env:
 
-    python src/train/sft_lora.py --data data/train/q35_v0 --base Qwen/Qwen3.5-2B --out data/models/q35_v0
+    python src/train/sft/sft_lora.py --data data/train/q35_v0 --base Qwen/Qwen3.5-2B --out data/models/q35_v0
 
 Hyper-parameters follow datamate's SFT runs (r 32, alpha 32, dropout 0.05, all linear, lr 1e-4; 5 epochs, best val-loss checkpoint).
 Multimodal bases (Qwen3.5): LoRA on the language model only; the vision tower is untouched and saved as is.

@@ -11,7 +11,7 @@ from pathlib import Path
 
 import polars as pl
 
-from train.repair_run import done_qids, plan, run_repairs, select_items
+from train.react.repair_run import done_qids, plan, run_repairs, select_items
 
 VIBE = os.path.expanduser("~/.claude/skills/vibe/vibe_call.py")
 

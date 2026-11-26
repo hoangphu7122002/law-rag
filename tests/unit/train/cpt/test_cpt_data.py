@@ -1,4 +1,4 @@
-from train.cpt_data import docs_text, pack
+from train.cpt.cpt_data import docs_text, pack
 
 
 def test_pack_concatenates_documents_with_eos_and_cuts_fixed_length_sequences():

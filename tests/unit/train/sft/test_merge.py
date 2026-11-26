@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from train.merge import soup, task_arithmetic
+from train.sft.merge import soup, task_arithmetic
 
 
 def sd(a, b, step=1):

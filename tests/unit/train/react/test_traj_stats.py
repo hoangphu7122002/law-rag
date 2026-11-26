@@ -1,7 +1,7 @@
 import json
 
-from train.react_data import grade
-from train.traj_stats import coverage, should_stop, summarize
+from train.react.react_data import grade
+from train.react.traj_stats import coverage, should_stop, summarize
 
 REF = "Theo Điều 5 Thông tư 50/2024/TT-NHNN, mức lãi suất là 1%."
 GOOD = REF

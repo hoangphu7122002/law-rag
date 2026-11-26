@@ -4,7 +4,7 @@ Item = law title + "Điều N <heading>" + the article text up to a number (in a
 tasks used (paraphrase / QA / summary / raw text), so a gain means the fact was learned, not a template. Report groups separately: articles the CPT
 saw in augmented form (train) vs. gold articles of dev/test (raw text only, no augmentation).
 
-    PYTHONPATH=src python -m train.cpt_probe --model data/models/q35_cpt_lora --base Qwen/Qwen3.5-2B --articles data/cpt/articles.jsonl
+    PYTHONPATH=src python -m train.cpt.cpt_probe --model data/models/q35_cpt_lora --base Qwen/Qwen3.5-2B --articles data/cpt/articles.jsonl
 """
 import argparse
 import json
@@ -58,7 +58,7 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", default="data/cpt/probe.json")
     a = ap.parse_args()
-    from train import synth_gen as sg
+    from train.synth import synth_gen as sg
 
     excluded, _, _ = sg.load_eval_filters(a.processed)
     norm = lambda k: f"{k.split('#')[0].upper()}#{k.split('#')[1].lower()}"   # noqa: E731

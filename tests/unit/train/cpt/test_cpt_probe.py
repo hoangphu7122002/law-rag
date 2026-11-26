@@ -1,4 +1,4 @@
-from train.cpt_probe import make_items, score
+from train.cpt.cpt_probe import make_items, score
 
 ART = {"key": "49/2005/QH11#13", "title": "Luật Các công cụ chuyển nhượng số 49/2005/QH11",
        "text": "Điều 13. Mất công cụ chuyển nhượng\n1. Khi công cụ bị mất, người thụ hưởng phải thông báo bằng văn bản.\n2. Thời hạn thông báo là 30 ngày kể từ ngày mất."}

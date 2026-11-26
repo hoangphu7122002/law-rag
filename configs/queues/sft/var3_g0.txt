@@ -1,5 +1,5 @@
 # lr 2e-5 on the C data (LoRA r32, seed 1, 3 epochs), GPU0 lane. Compare with C seed 1 (lr 1e-4: val .3640, rougeL .6202).
-sh train-q35V_lr2e5 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/q35_C --base Qwen/Qwen3.5-2B --out data/models/q35_V_lr2e5 --lr 2e-5 --epochs 3 --max-length 12288 --batch 1 --accum 16 --seed 1 > data/runs/logs/train-q35V_lr2e5.log 2>&1
+sh train-q35V_lr2e5 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft/sft_lora.py --data data/train/q35_C --base Qwen/Qwen3.5-2B --out data/models/q35_V_lr2e5 --lr 2e-5 --epochs 3 --max-length 12288 --batch 1 --accum 16 --seed 1 > data/runs/logs/train-q35V_lr2e5.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-train-q35V_lr2e5"
 serve /home/app/phunguyen/law_rag/data/models/q35_V_lr2e5 --gpu 0 --share 0.45
 configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_V_lr2e5 --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2

@@ -1,4 +1,4 @@
-from train.grpo import filter_long, score
+from train.preference.grpo import filter_long, score
 
 REF = "Theo Điều 5 quy định về mức phạt tiền đối với hành vi vi phạm hành chính trong lĩnh vực ngân hàng."
 PROMPT = "ngữ cảnh khác hoàn toàn"

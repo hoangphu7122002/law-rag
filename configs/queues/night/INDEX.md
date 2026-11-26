@@ -42,7 +42,7 @@ Launch: `PYTHONPATH=src python -m cli box queue configs/queues/night/<file> --pa
 | `night41_g1.txt` | GPU1: react_g1 (tools used in 100% of questions, but its own search queries found the gold Dieu in only 66%: rougeL .651 when found, .315 when missed). Inference-side fix: every search_law call also retrieves with the original que |
 | `night42_g1.txt` | GPU1: react_g1 + search_with_question with thinking ON (dev_clean only). Question: does a thought before the tool call raise the gold-Dieu hit rate (66-72%)? Compare with .5739 (thinking off). |
 | `night43_g1.txt` | GPU1: generator ceiling. v3b + 2 shots, 8 candidates (greedy + 7 x T0.7) per dev question; greedy / MBR / best-of-n vs reference. No training. |
-| `night44_g1.txt` | GPU1: DPO candidates. v3b samples (greedy + 7 x T0.7) on its own train prompts (refusal rows skipped); pairs built later by src/train/pref_data.py. |
+| `night44_g1.txt` | GPU1: DPO candidates. v3b samples (greedy + 7 x T0.7) on its own train prompts (refusal rows skipped); pairs built later by src/train/preference/pref_data.py. |
 | `night45_g1.txt` | GPU1: DPO smoke (16 pairs, 5 steps) on v3b. |
 | `night46_g1.txt` | GPU1: DPO A (lr 2e-5, beta 0.1, 1 epoch, 1211 pairs from v3b own samples) -> eval greedy then MBR8 on dev300 (compare with C1: A5_v3b__177b2411 greedy, A6_mbrv3b__544aee20 MBR). |
 | `night47_g1.txt` | GPU1: latency + FP8 for the DPO A model (alone on the GPU, concurrency 1 = per-question latency). dpo_a_bf16 / dpo_a_fp8 are symlinks of dpo_a (distinct run keys). Same weights; fp8 = vLLM --quantization fp8. |

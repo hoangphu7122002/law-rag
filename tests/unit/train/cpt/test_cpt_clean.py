@@ -1,4 +1,4 @@
-from train.cpt_clean import Dedup, chunk_doc, mask_pii, normalize, quality, strip_html
+from train.cpt.cpt_clean import Dedup, chunk_doc, mask_pii, normalize, quality, strip_html
 
 
 def test_strip_html_keeps_block_structure_and_drops_scripts_and_entities():

@@ -1,6 +1,6 @@
 # Night GPU0: SFT Qwen3.5-2B -> dev evals k5/k10 -> reranker data + fine-tune -> retrieval eval (dev)
 do tmux kill-session -t lawrag-llm-g0 && sleep 20
-sh train-q35 /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/q35_v0 --base Qwen/Qwen3.5-2B --out data/models/q35_v0
+sh train-q35 /home/app/phunguyen/train_env/bin/python src/train/sft/sft_lora.py --data data/train/q35_v0 --base Qwen/Qwen3.5-2B --out data/models/q35_v0
 serve /home/app/phunguyen/law_rag/data/models/q35_v0 --gpu 0
 configs/exp/A4_q35_off.yaml --set backend.base_url=http://localhost:8000/v1
 configs/exp/A4_q35_on.yaml --set backend.base_url=http://localhost:8000/v1
@@ -10,7 +10,7 @@ do tmux kill-session -t lawrag-llm-g0 && sleep 20
 configs/exp/A2e_dedup.yaml --retrieval-only --set rerank.model=null --set retrieve.k=50 --set split=train
 configs/exp/A2e_dedup.yaml --retrieval-only --set rerank.model=null --set retrieve.k=50 --set split=dev
 sh rrdata .venv/bin/python -m cli rerank-data configs/exp/A2e_dedup.yaml --name rr_v0
-sh rr-smoke .venv/bin/python src/train/rerank_ft.py --data data/train/rr_v0 --base AITeamVN/Vietnamese_Reranker --out data/models/rr_smoke --limit 64 --batch 8
-sh rr-train .venv/bin/python src/train/rerank_ft.py --data data/train/rr_v0 --base AITeamVN/Vietnamese_Reranker --out data/models/rr_v0
+sh rr-smoke .venv/bin/python src/train/retrieval/rerank_ft.py --data data/train/rr_v0 --base AITeamVN/Vietnamese_Reranker --out data/models/rr_smoke --limit 64 --batch 8
+sh rr-train .venv/bin/python src/train/retrieval/rerank_ft.py --data data/train/rr_v0 --base AITeamVN/Vietnamese_Reranker --out data/models/rr_v0
 configs/exp/A2e_dedup.yaml --retrieval-only --set rerank.engine=local
 configs/exp/A2e_dedup.yaml --retrieval-only --set rerank.engine=local --set rerank.model=data/models/rr_v0

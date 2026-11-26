@@ -1,7 +1,7 @@
-"""LoRA SFT of the ReAct student on its own good trajectories (src/train/react_build.py, datamate S1), loss on the ASSISTANT turns only
+"""LoRA SFT of the ReAct student on its own good trajectories (src/train/react/react_build.py, datamate S1), loss on the ASSISTANT turns only
 (content + tool calls + the closing <|im_end|>); system, user and tool-result text is masked. Self-contained in the box's training env:
 
-    PYTHONPATH=src python -m train.react_sft --data data/train/react_s1 --base Qwen/Qwen3.5-2B --out data/models/react_s1
+    PYTHONPATH=src python -m train.react.react_sft --data data/train/react_s1 --base Qwen/Qwen3.5-2B --out data/models/react_s1
 
 Rows: {"qid", "messages" (OpenAI style, full conversation), "tools" (tool specs)}; rendered with the base's chat template, non-thinking mode.
 """
@@ -62,8 +62,8 @@ def build_examples(rows: list[dict], tokenizer, max_length: int | None = None) -
 
 
 def _sft_lora():
-    """complete_config lives in sft_lora.py (same folder); loaded by path so this works as a script and as a module."""
-    spec = importlib.util.spec_from_file_location("sft_lora", Path(__file__).with_name("sft_lora.py"))
+    """complete_config lives in train/sft/sft_lora.py; loaded by path so this works as a script and as a module."""
+    spec = importlib.util.spec_from_file_location("sft_lora", Path(__file__).resolve().parents[1] / "sft" / "sft_lora.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod

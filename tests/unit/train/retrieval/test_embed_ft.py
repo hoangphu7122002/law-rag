@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from train.embed_ft import VARIANTS, load_groups, variant_args
+from train.retrieval.embed_ft import VARIANTS, load_groups, variant_args
 
 
 def write(tmp_path, rows):
@@ -50,7 +50,7 @@ def test_variant_args_rejects_unknown_name():
 
 def test_interpolation_moves_from_base_to_tuned_weights():
     import numpy as np
-    from train.embed_ft import interpolate
+    from train.retrieval.embed_ft import interpolate
 
     base, tuned = {"w": np.array([0.0, 4.0]), "step": 3}, {"w": np.array([2.0, 0.0]), "step": 9}
     assert interpolate(base, tuned, 0.0)["w"].tolist() == [0.0, 4.0]
@@ -61,7 +61,7 @@ def test_interpolation_moves_from_base_to_tuned_weights():
 
 def test_interpolation_rejects_mismatched_weights():
     import numpy as np
-    from train.embed_ft import interpolate
+    from train.retrieval.embed_ft import interpolate
 
     with pytest.raises(ValueError):
         interpolate({"a": np.zeros(1)}, {"b": np.zeros(1)}, 0.5)

@@ -1,4 +1,4 @@
-"""Modal job: fine-tune AITeamVN embedder variants (src/train/embed_ft.py) in parallel and score each on the dev pool (src/evaluate/embed_bench.py).
+"""Modal job: fine-tune AITeamVN embedder variants (src/train/retrieval/embed_ft.py) in parallel and score each on the dev pool (src/evaluate/embed_bench.py).
 
     modal volume put law-rag-embed-data data/runs/rr_v0_train.jsonl /rr_v0_train.jsonl      # groups (course train + Zalo, decontaminated)
     modal run --detach src/ops/modal_embed_ft.py --variants lora32,lora8,full [--limit 64]   # one L40S container per variant, ~$2/h each

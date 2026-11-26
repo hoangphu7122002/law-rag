@@ -1,7 +1,7 @@
 import random
 
 from records import Passage
-from train.ctx_mix import drop_gold, inject_all, maybe_shuffle, missing_gold
+from train.sft.ctx_mix import drop_gold, inject_all, maybe_shuffle, missing_gold
 
 
 def P(pid):
@@ -61,7 +61,7 @@ def test_drop_gold_without_spare_removes_but_keeps_one_passage():
 
 
 def test_ensure_gold_pulls_missing_gold_articles_from_a_lookup_and_keeps_rank_one():
-    from train.ctx_mix import ensure_gold
+    from train.sft.ctx_mix import ensure_gold
 
     store = {"g#1": P("g#1"), "h#2": P("h#2")}
     ctx = [P("r1"), P("r2"), P("r3"), P("r4")]
@@ -71,14 +71,14 @@ def test_ensure_gold_pulls_missing_gold_articles_from_a_lookup_and_keeps_rank_on
 
 
 def test_ensure_gold_leaves_a_context_that_already_has_the_gold_alone():
-    from train.ctx_mix import ensure_gold
+    from train.sft.ctx_mix import ensure_gold
 
     ctx = [P("r1"), P("g#1")]
     assert ensure_gold(ctx, {"g#1"}, KEY, lambda k: None, random.Random(0)) == ctx
 
 
 def test_answerable_context_returns_none_when_the_gold_cannot_be_put_in():
-    from train.ctx_mix import answerable_context
+    from train.sft.ctx_mix import answerable_context
 
     has = lambda ps: any(p.pid.startswith("g") for p in ps)   # noqa: E731
     ctx = [P("r1"), P("r2")]
@@ -89,7 +89,7 @@ def test_answerable_context_returns_none_when_the_gold_cannot_be_put_in():
 
 
 def test_fit_budget_drops_non_gold_passages_from_the_tail_and_never_the_gold():
-    from train.ctx_mix import fit_budget
+    from train.sft.ctx_mix import fit_budget
 
     ctx = [P("r1"), P("g#1"), P("r3"), P("r4"), P("r5")]
     size = lambda p: 10   # noqa: E731
@@ -101,7 +101,7 @@ def test_fit_budget_drops_non_gold_passages_from_the_tail_and_never_the_gold():
 
 
 def test_full_gold_replaces_a_chunk_of_a_gold_article_by_the_whole_article_and_drops_its_other_chunks():
-    from train.ctx_mix import full_gold
+    from train.sft.ctx_mix import full_gold
 
     ctx = [P("r1"), P("g#1"), P("r3"), P("g#1")]            # two chunks of the same gold article
     whole = {"g#1": Passage(pid="WHOLE", doc="d", text="g#1")}
@@ -110,7 +110,7 @@ def test_full_gold_replaces_a_chunk_of_a_gold_article_by_the_whole_article_and_d
 
 
 def test_full_gold_puts_every_missing_gold_into_non_gold_slots_and_never_overwrites_a_gold_passage_or_rank_one():
-    from train.ctx_mix import full_gold
+    from train.sft.ctx_mix import full_gold
 
     store = {k: Passage(pid=k, doc="d", text=k) for k in ("g#1", "g#2", "g#3")}
     for seed in range(20):
@@ -122,7 +122,7 @@ def test_full_gold_puts_every_missing_gold_into_non_gold_slots_and_never_overwri
 
 
 def test_full_gold_grows_the_context_when_there_are_more_gold_articles_than_slots():
-    from train.ctx_mix import full_gold
+    from train.sft.ctx_mix import full_gold
 
     store = {k: Passage(pid=k, doc="d", text=k) for k in ("g#1", "g#2", "g#3", "g#4")}
     ctx = [P("r1"), P("r2")]
@@ -131,7 +131,7 @@ def test_full_gold_grows_the_context_when_there_are_more_gold_articles_than_slot
 
 
 def test_place_gold_randomly_moves_gold_to_random_positions_and_keeps_the_non_gold_order():
-    from train.ctx_mix import place_gold_randomly
+    from train.sft.ctx_mix import place_gold_randomly
 
     is_gold = lambda p: p.pid.startswith("g")   # noqa: E731
     ctx = [P("g1"), P("r2"), P("r3"), P("g4"), P("r5"), P("r6")]

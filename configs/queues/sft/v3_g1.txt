@@ -2,7 +2,7 @@
 # gold injection (p .7) and no-answer rows (unrelated context -> refusal, p .08). From the BASE model, v0-style hyper-parameters.
 wait ! tmux has-session -t lawrag-queue-1119-065951 2>/dev/null
 sh sftdata-q35v3 uv run python -m cli sft-data configs/exp/A3_Q3.yaml --name q35_v3 --k-range 3,10 --oracle 0.7 --shots 0,1,2,3 --refuse 0.08
-sh train-q35v3 /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/q35_v3 --base Qwen/Qwen3.5-2B --out data/models/q35_v3 --epochs 3 --max-length 12288 --batch 1 --accum 16
+sh train-q35v3 /home/app/phunguyen/train_env/bin/python src/train/sft/sft_lora.py --data data/train/q35_v3 --base Qwen/Qwen3.5-2B --out data/models/q35_v3 --epochs 3 --max-length 12288 --batch 1 --accum 16
 serve /home/app/phunguyen/law_rag/data/models/q35_v3 --gpu 1
 configs/exp/A4_q35_off.yaml --set backend.base_url=http://localhost:8001/v1 --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v3 --set generate.shots=2
 configs/exp/A4_q35_off.yaml --set backend.base_url=http://localhost:8001/v1 --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v3 --set generate.shots=2 --set retrieve.k=10

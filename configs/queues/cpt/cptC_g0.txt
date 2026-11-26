@@ -1,6 +1,6 @@
 # SFT FROM the CPT v2 model with PiSSA on data q35_C (q35_cptC_pissa); best-val and last-epoch dev+test. Waits for cpt_report.json. Compare with V_pissa (dev .6414 / test .6307) = effect of CPT; C vs D3 on the same CPT base = effect of data.
 wait test -f /home/app/phunguyen/law_rag/data/models/q35_cpt_v2/cpt_report.json
-sh train-q35cptC_pissa cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/q35_C --base /home/app/phunguyen/law_rag/data/models/q35_cpt_v2 --out data/models/q35_cptC_pissa --init-lora pissa_niter_16 --epochs 3 --max-length 12288 --batch 1 --accum 16 --seed 1 --save-last --keep-ckpt > data/runs/logs/train-q35cptC_pissa.log 2>&1
+sh train-q35cptC_pissa cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft/sft_lora.py --data data/train/q35_C --base /home/app/phunguyen/law_rag/data/models/q35_cpt_v2 --out data/models/q35_cptC_pissa --init-lora pissa_niter_16 --epochs 3 --max-length 12288 --batch 1 --accum 16 --seed 1 --save-last --keep-ckpt > data/runs/logs/train-q35cptC_pissa.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-train-q35cptC_pissa"
 serve /home/app/phunguyen/law_rag/data/models/q35_cptC_pissa --gpu 0 --share 0.45
 configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_cptC_pissa --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2

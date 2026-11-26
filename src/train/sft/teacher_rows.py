@@ -1,8 +1,8 @@
 """Verified teacher answers as extra SFT rows (a second answer per train question).
 
-    PYTHONPATH=src python -m train.teacher_rows --runs data/runs/<run>/predictions.jsonl ... --out data/teacher_rows.jsonl
+    PYTHONPATH=src python -m train.sft.teacher_rows --runs data/runs/<run>/predictions.jsonl ... --out data/teacher_rows.jsonl
 
-A run answer is kept when it is GOOD (ROUGE-L >= .6 against the course reference AND it cites a gold Điều, train.react_data.grade) and is not a copy
+A run answer is kept when it is GOOD (ROUGE-L >= .6 against the course reference AND it cites a gold Điều, train.react.react_data.grade) and is not a copy
 of the reference; across runs the best ROUGE-L per question wins. The teacher never saw the reference (pass 1 = profile + top-5).
 """
 import argparse
@@ -26,8 +26,8 @@ def select_teacher_rows(runs: list[dict], reference_of, gold_dieu_of, grade, exc
 def main() -> None:
     import polars as pl
 
-    from train.react_build import gold_dieu
-    from train.react_data import grade
+    from train.react.react_build import gold_dieu
+    from train.react.react_data import grade
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", nargs="+", required=True, help="predictions.jsonl of teacher runs on train")

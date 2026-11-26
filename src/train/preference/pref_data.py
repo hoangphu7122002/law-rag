@@ -1,12 +1,12 @@
 """Preference pairs for DPO from the model's own samples: per train prompt, chosen = the candidate with the highest reward, rejected =
-the lowest, same reward as GRPO (src/train/grpo.py `score`: rougeL / overlap / citation, copy and length penalties).
+the lowest, same reward as GRPO (src/train/preference/grpo.py `score`: rougeL / overlap / citation, copy and length penalties).
 
     rows: {"qid", "prompt", "reference", "cands": [str, ...]}   ->   pairs: {"qid", "prompt", "chosen", "rejected", "margin"}
 Rows whose reference is a refusal are skipped (the SFT refusal rows already teach that); pairs closer than `min_margin` carry no signal.
 """
 import re
 
-from train.grpo import is_refusal, score
+from train.preference.grpo import is_refusal, score
 
 KHOAN = re.compile(r"kho[aả]n\s+(\d+)", re.I)
 

@@ -1,4 +1,4 @@
-from train.cpt_mix import mix, take
+from train.cpt.cpt_mix import mix, take
 
 
 def test_take_stops_at_the_token_budget_and_is_deterministic():
@@ -30,7 +30,7 @@ def test_mix_shuffles_documents_so_sources_are_interleaved():
 def test_mix_np_packs_numpy_documents_into_a_uint32_matrix_with_eos_and_reports_tokens():
     import numpy as np
 
-    from train.cpt_mix import mix_np
+    from train.cpt.cpt_mix import mix_np
     src = {"a": [np.full(30, 1, dtype=np.uint32)], "b": [np.full(30, 2, dtype=np.uint32), np.full(30, 2, dtype=np.uint32)]}
     arr, stats = mix_np(src, {"a": 30, "b": 60}, seq_len=20, eos=0, seed=0)
     assert arr.dtype == np.uint32 and arr.shape[1] == 20 and stats == {"a": 30, "b": 60}
@@ -40,7 +40,7 @@ def test_mix_np_packs_numpy_documents_into_a_uint32_matrix_with_eos_and_reports_
 def test_npy_dataset_returns_labels_equal_to_input_ids(tmp_path):
     import numpy as np
 
-    from train.cpt_mix import NpyDataset
+    from train.cpt.cpt_mix import NpyDataset
     np.save(tmp_path / "m.npy", np.arange(40, dtype=np.uint32).reshape(2, 20))
     ds = NpyDataset(str(tmp_path / "m.npy"), start=1, stop=2)
     assert len(ds) == 1 and ds[0]["input_ids"].tolist() == list(range(20, 40)) and ds[0]["labels"].tolist() == list(range(20, 40))

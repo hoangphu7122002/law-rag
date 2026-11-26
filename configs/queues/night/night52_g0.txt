@@ -6,7 +6,7 @@ wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pref-sample-q"
 do tmux kill-session -t lawrag-llm-g0
 sh pairs-q cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/train/build_pairs.py data/train/pref_q25/cands.jsonl data/train/pref_q25/pairs.jsonl --min-margin 0.1 > data/runs/logs/pairs-q.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pairs-q"
-sh dpo-q25 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/dpo.py --pairs data/train/pref_q25/pairs.jsonl --base data/models/q25_v3b --out data/models/q25_dpo --lr 2e-5 --beta 0.1 > data/runs/logs/dpo-q25.log 2>&1
+sh dpo-q25 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/preference/dpo.py --pairs data/train/pref_q25/pairs.jsonl --base data/models/q25_v3b --out data/models/q25_dpo --lr 2e-5 --beta 0.1 > data/runs/logs/dpo-q25.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo-q25"
 serve /home/app/phunguyen/law_rag/data/models/q25_dpo --gpu 0 --share 0.45
 configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q25_dpo --set generate.params_b=3.09 --set backend.base_url=http://localhost:8000/v1 --set generate.shots=2

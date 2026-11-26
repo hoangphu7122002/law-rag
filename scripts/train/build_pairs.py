@@ -7,7 +7,7 @@ import json
 from functools import partial
 from multiprocessing import Pool
 
-from train.pref_data import build_pairs
+from train.preference.pref_data import build_pairs
 
 
 def one(min_margin: float, cite_weight: float, khoan_weight: float, length_weight: float, row: dict) -> list[dict]:

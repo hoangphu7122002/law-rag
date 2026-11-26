@@ -2,8 +2,8 @@
 from collections import Counter, defaultdict
 from statistics import mean
 
-from train.react_build import n_tool_calls
-from train.react_data import _seen
+from train.react.react_build import n_tool_calls
+from train.react.react_data import _seen
 
 CHARS_PER_TOKEN = 3.5
 

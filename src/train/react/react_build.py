@@ -1,6 +1,6 @@
 """S1 data for the ReAct student (docs/notes/16-react-training.md): the student's own GOOD trajectories (rejection sampling).
 
-    PYTHONPATH=src python -m train.react_build --runs <run>/trajectories.jsonl ... --out data/train/react_s1 --tools search_law,get_article
+    PYTHONPATH=src python -m train.react.react_build --runs <run>/trajectories.jsonl ... --out data/train/react_s1 --tools search_law,get_article
 
 Pure helpers: select_s1 (filter + best per question) and stats. main() wires the QA set, decontamination, and gold Điều.
 """
@@ -103,7 +103,7 @@ def main() -> None:
     from corpus.qa import QASet
     from evaluate.retrieval_eval import RetrievalEval
     from generate.react import ALL_TOOLS
-    from train.react_data import grade
+    from train.react.react_data import grade
 
     train, report = Decontam().filter(QASet().load("train"))
     gold = RetrievalEval().gold

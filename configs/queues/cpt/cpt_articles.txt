@@ -1,2 +1,2 @@
 # CPT augmentation input: one jsonl line per law article (CPU, loads the docstore; same laws.jsonl rebuilt deterministically).
-sh cpt-articles cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m train.cpt_data --out data/cpt/laws.jsonl --articles-out data/cpt/articles.jsonl --base Qwen/Qwen3.5-2B > data/runs/logs/cpt-articles.log 2>&1
+sh cpt-articles cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m train.cpt.cpt_data --out data/cpt/laws.jsonl --articles-out data/cpt/articles.jsonl --base Qwen/Qwen3.5-2B > data/runs/logs/cpt-articles.log 2>&1

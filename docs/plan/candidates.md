@@ -16,7 +16,7 @@ Not yet measured: C1 on test (do ONCE at the end, "test-informed"); latency per 
 Known better-in-parts, not yet combined: RL cosine (c3f greedy .6343 vs v0 .6026, +.032 CI .019..045) and v3b shots; GRPO from v3b is the next stacking experiment.
 
 ## C2 (provisional) — C1 with the weight-merged generator arith_v3b_c3f_a1  (run A6_mbrv3b__8f86afd5, 2026-11-20 05:28)
-Same pipeline as C1, generator = task arithmetic v3b + 1.0·(c3f − v0) (src/train/merge.py arith, alpha 1; v3b SFT + the RL cosine delta), 2 shots, MBR8 (T 0.7).
+Same pipeline as C1, generator = task arithmetic v3b + 1.0·(c3f − v0) (src/train/sft/merge.py arith, alpha 1; v3b SFT + the RL cosine delta), 2 shots, MBR8 (T 0.7).
 dev300 rougeL **.6668** (C1 .6575). Paired bootstrap vs C1 MBR8: dev300 +.009 [-.004, +.022]; **dev_clean +.017 [+.001, +.035]; dev_strict +.021 [+.0005, +.043]** (both lower bounds > 0, barely).
 Greedy (2 shots): .6516 vs C1 greedy .6325 (dev300 +.019 [+.006, +.034]; clean/strict CIs span 0).
 Caveats: lower bounds are ~0, and ~10 variants were compared overnight (multiple comparisons) → treat as a lead, confirm with a second seed / the final train+dev retrain before replacing C1. Not run on test.

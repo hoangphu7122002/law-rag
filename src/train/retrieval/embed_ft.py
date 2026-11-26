@@ -3,7 +3,7 @@
 Groups = data/train/rr_v0/train.jsonl rows {"query", "pos": [text], "neg": [text x7]} (course train + Zalo, decontaminated vs test).
 Loss = MultipleNegativesRanking (in-batch + the group's hard negatives), via CachedMNRL so the effective batch is large on one GPU.
 `VARIANTS` = the grid we compare; each is LoRA (peft, merged after training) or full fine-tune.
-Runs inside Modal (src/ops/modal_embed_ft.py) or anywhere with a GPU:  python src/train/embed_ft.py --variant lora32 --data ... --pool ...
+Runs inside Modal (src/ops/modal_embed_ft.py) or anywhere with a GPU:  python src/train/retrieval/embed_ft.py --variant lora32 --data ... --pool ...
 """
 import json
 import random

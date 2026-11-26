@@ -1,5 +1,5 @@
 # SFT hyper-parameter A/B on the v0 data (datamate H200 branch): r32 alpha64 dropout0 lr2e-4, 2 epochs, val every 30 steps
-sh train-q35h /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/q35_v0 --base Qwen/Qwen3.5-2B --out data/models/q35_h --epochs 2 --alpha 64 --dropout 0 --lr 2e-4
+sh train-q35h /home/app/phunguyen/train_env/bin/python src/train/sft/sft_lora.py --data data/train/q35_v0 --base Qwen/Qwen3.5-2B --out data/models/q35_h --epochs 2 --alpha 64 --dropout 0 --lr 2e-4
 serve /home/app/phunguyen/law_rag/data/models/q35_h --gpu 0 --share 0.45
 configs/exp/A4_q35_off.yaml --set backend.base_url=http://localhost:8000/v1 --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_h
 wait ! tmux has-session -t lawrag-run-A4_q35_off-_home_app_phunguyen_law_rag_data_models_q35_h 2>/dev/null

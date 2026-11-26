@@ -1,6 +1,6 @@
-"""Fine-tune the cross-encoder reranker on src/train/rerank_data.py groups (sentence-transformers CrossEncoderTrainer).
+"""Fine-tune the cross-encoder reranker on src/train/retrieval/rerank_data.py groups (sentence-transformers CrossEncoderTrainer).
 
-    python src/train/rerank_ft.py --data data/train/rr_v0 --base AITeamVN/Vietnamese_Reranker --out data/models/rr_v0
+    python src/train/retrieval/rerank_ft.py --data data/train/rr_v0 --base AITeamVN/Vietnamese_Reranker --out data/models/rr_v0
 
 Loss: binary cross-entropy on (query, passage) pairs, 1 positive : N hard negatives (pos_weight = N).
 Val: CrossEncoderRerankingEvaluator on decontaminated dev (rerank the real dense candidates; MRR@10 / NDCG@10);

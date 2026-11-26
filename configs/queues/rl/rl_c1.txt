@@ -1,5 +1,5 @@
 # GRPO config c1 from v0 (merged), 50 steps x 4 prompts x 8 gens; then dev eval k5 (shots 0) — compare v0 .6026 on dev
-sh grpo-c1 /home/app/phunguyen/train_env/bin/python src/train/grpo.py --data data/train/q35_v0 --base /home/app/phunguyen/law_rag/data/models/q35_v0 --out data/models/rl_c1 --steps 50 --lr 1e-5 --gens 8 --batch 1 --accum 4 --max-completion 1024 
+sh grpo-c1 /home/app/phunguyen/train_env/bin/python src/train/preference/grpo.py --data data/train/q35_v0 --base /home/app/phunguyen/law_rag/data/models/q35_v0 --out data/models/rl_c1 --steps 50 --lr 1e-5 --gens 8 --batch 1 --accum 4 --max-completion 1024 
 serve /home/app/phunguyen/law_rag/data/models/rl_c1 --gpu 1 --share 0.45
 configs/exp/A4_q35_off.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c1 --set backend.base_url=http://localhost:8001/v1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A4_q35_off"

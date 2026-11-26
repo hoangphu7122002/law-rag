@@ -17,7 +17,7 @@ from generate.prompt import Prompt
 from evaluate.retrieval_eval import RetrievalEval
 from generate.shots import ShotStore
 from retrieve import Retrieval
-from train.ctx_mix import answerable_context, drop_gold, fit_budget, full_gold, place_gold_randomly, inject_all, maybe_shuffle, missing_gold
+from train.sft.ctx_mix import answerable_context, drop_gold, fit_budget, full_gold, place_gold_randomly, inject_all, maybe_shuffle, missing_gold
 
 OUT = Path("data/train")
 REFUSALS = [
@@ -40,9 +40,9 @@ class SFTData:
         self.cfg, self.name, self.splits = cfg, name, splits   # final model: splits=("train", "dev")
         self.k_range, self.oracle, self.rng = k_range, oracle, random.Random(seed)
         self.shots, self.refuse = shots, refuse
-        self.shuffle, self.all_gold, self.drop_gold_p = shuffle, all_gold, drop_gold_p   # context mixing (train.ctx_mix)
+        self.shuffle, self.all_gold, self.drop_gold_p = shuffle, all_gold, drop_gold_p   # context mixing (train.sft.ctx_mix)
         # guarantee: every non-refusal row has a gold article in its context (fetched from the corpus when retrieval missed it);
-        # rows whose gold is unknown or not in the corpus are dropped, not trained on. extra: synthetic QA jsonl (train.synth_gen);
+        # rows whose gold is unknown or not in the corpus are dropped, not trained on. extra: synthetic QA jsonl (train.synth.synth_gen);
         # teacher: jsonl {"qid", "answer"} of verified good teacher answers for train questions (a second answer per question).
         self.guarantee, self.extra, self.teacher = guarantee, extra, teacher
         self.full_gold = full_gold_articles   # with guarantee: every gold article in the context in FULL (whole article, all of them)
@@ -166,7 +166,7 @@ class SFTData:
         self.stats[path.stem] = {"with_gold": n, "gold_in_context": gold_in, "injected": injected, "refusal_rows": refused, "skipped": skipped}
 
     def _extra_questions(self) -> list:
-        """Synthetic QA (train.synth_gen output) as training questions; their gold = the articles they were written from."""
+        """Synthetic QA (train.synth.synth_gen output) as training questions; their gold = the articles they were written from."""
         if not self.extra:
             return []
         from corpus.gold import Gold

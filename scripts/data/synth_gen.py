@@ -1,4 +1,4 @@
-"""Synthetic Q/A generation with a teacher LLM (DeepSeek-V4 flash via vibe_call.py). See src/train/synth_gen.py.
+"""Synthetic Q/A generation with a teacher LLM (DeepSeek-V4 flash via vibe_call.py). See src/train/synth/synth_gen.py.
 
     PYTHONPATH=src python3 scripts/data/synth_gen.py --dry-run
     PYTHONPATH=src python3 scripts/data/synth_gen.py --n-items 2000 --max-calls 50   # resumable: finished batch ids are skipped
@@ -10,7 +10,7 @@ import sys
 import time
 from pathlib import Path
 
-from train import synth_gen as sg
+from train.synth import synth_gen as sg
 
 
 def parse_mix(s: str) -> dict:

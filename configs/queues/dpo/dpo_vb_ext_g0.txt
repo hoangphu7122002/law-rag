@@ -1,7 +1,7 @@
 # Controlled test of the extent-aware reward on the SAME samples that made dpo_a (v3b cands, round 1; dpo_a dev .6514/.6543 with standard pairs): pairs with +.15 khoản match, +.15 length band -> DPO from q35_v3b (lr 2e-5, beta .1, default max-length) -> dev + test. GPU0.
 sh pairs-vbext cd /home/app/phunguyen/law_rag && PYTHONPATH=src .venv/bin/python scripts/train/build_pairs.py data/train/pref_v3b/cands.jsonl data/train/pref_v3b/pairs_ext.jsonl --min-margin 0.1 --khoan-weight 0.15 --length-weight 0.15 > data/runs/logs/pairs-vbext.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pairs-vbext"
-sh dpo-vbext cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/dpo.py --pairs data/train/pref_v3b/pairs_ext.jsonl --base /home/app/phunguyen/law_rag/data/models/q35_v3b --out /home/app/phunguyen/law_rag/data/models/dpo_vb_ext --lr 2e-5 --beta 0.1 > data/runs/logs/dpo-vbext.log 2>&1
+sh dpo-vbext cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/preference/dpo.py --pairs data/train/pref_v3b/pairs_ext.jsonl --base /home/app/phunguyen/law_rag/data/models/q35_v3b --out /home/app/phunguyen/law_rag/data/models/dpo_vb_ext --lr 2e-5 --beta 0.1 > data/runs/logs/dpo-vbext.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo-vbext"
 do sleep 60
 serve /home/app/phunguyen/law_rag/data/models/dpo_vb_ext --gpu 0 --share 0.45

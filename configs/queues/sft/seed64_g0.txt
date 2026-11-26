@@ -1,5 +1,5 @@
 # Seed variance of the full-data v3b recipe: a third SFT seed (555) on 100% of train, dev300 greedy 2 shots (seeds 1: .6325, 777: .603). Model deleted after its eval.
-sh train-lc_f100_s555 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/q35_v3b --base Qwen/Qwen3.5-2B --out data/models/lc_f100_s555 --epochs 3 --max-length 12288 --batch 1 --accum 16 --seed 555 > data/runs/logs/train-lc_f100_s555.log 2>&1
+sh train-lc_f100_s555 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft/sft_lora.py --data data/train/q35_v3b --base Qwen/Qwen3.5-2B --out data/models/lc_f100_s555 --epochs 3 --max-length 12288 --batch 1 --accum 16 --seed 555 > data/runs/logs/train-lc_f100_s555.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-train-lc_f100_s555"
 serve /home/app/phunguyen/law_rag/data/models/lc_f100_s555 --gpu 0 --share 0.45
 configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/lc_f100_s555 --set backend.base_url=http://localhost:8000/v1 --set generate.shots=2

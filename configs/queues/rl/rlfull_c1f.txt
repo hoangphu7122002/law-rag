@@ -1,6 +1,6 @@
 # GRPO FULL (c1f): 300 steps x 4 prompts x 8 gens (~83% of train), vLLM colocate in .rl_env, from merged v0; then dev greedy + MBR8 on dev
 do sleep 30
-sh grpo-c1f /home/app/phunguyen/law_rag/.rl_env/bin/python src/train/grpo.py --data data/train/q35_v0 --base /home/app/phunguyen/law_rag/data/models/q35_v0 --out data/models/rl_c1f --steps 300 --lr 1e-5 --gens 8 --batch 1 --accum 4 --max-completion 1024 --use-vllm 
+sh grpo-c1f /home/app/phunguyen/law_rag/.rl_env/bin/python src/train/preference/grpo.py --data data/train/q35_v0 --base /home/app/phunguyen/law_rag/data/models/q35_v0 --out data/models/rl_c1f --steps 300 --lr 1e-5 --gens 8 --batch 1 --accum 4 --max-completion 1024 --use-vllm 
 serve /home/app/phunguyen/law_rag/data/models/rl_c1f --gpu 1 --share 0.45
 configs/exp/A4_q35_off.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c1f --set backend.base_url=http://localhost:8001/v1
 configs/exp/A6_mbr.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/rl_c1f --set backend.base_url=http://localhost:8001/v1

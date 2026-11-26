@@ -1,6 +1,6 @@
-"""DPO on top of an SFT checkpoint with the model's own best-vs-worst samples (src/train/pref_data.py pairs).
+"""DPO on top of an SFT checkpoint with the model's own best-vs-worst samples (src/train/preference/pref_data.py pairs).
 
-    python src/train/dpo.py --pairs data/train/pref_v3b/pairs.jsonl --base data/models/q35_v3b --out data/models/q35_dpo0 [--limit 16]
+    python src/train/preference/dpo.py --pairs data/train/pref_v3b/pairs.jsonl --base data/models/q35_v3b --out data/models/q35_dpo0 [--limit 16]
 
 LoRA on the policy, the reference = the same weights with the adapter off (no second model in memory). Output = merged weights, same as grpo.py.
 """

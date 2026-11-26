@@ -3,7 +3,7 @@
 Sources (token budgets are per epoch): raw laws, DeepSeek augmentation (paraphrase / QA / summary), external open-licence laws, general Vietnamese
 replay (fineweb-2), SFT rows replay. Every document gets an EOS, documents of all sources are shuffled together, then cut into seq_len sequences.
 
-    PYTHONPATH=src python -m train.cpt_mix --out data/cpt/mix.jsonl
+    PYTHONPATH=src python -m train.cpt.cpt_mix --out data/cpt/mix.jsonl
 """
 import argparse
 import json
@@ -26,7 +26,7 @@ def take(docs: list[list[int]], budget: int, seed: int) -> list[list[int]]:
 
 def mix(sources: dict[str, list[list[int]]], budgets: dict[str, int], seq_len: int, eos: int, seed: int):
     """-> (sequences of exactly seq_len, {source: tokens taken})."""
-    from train.cpt_data import pack
+    from train.cpt.cpt_data import pack
 
     docs, stats = [], {}
     for k, ds in sources.items():
@@ -81,7 +81,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="Qwen/Qwen3.5-2B")
     ap.add_argument("--seq-len", type=int, default=2048)
-    ap.add_argument("--raw", default="data/cpt/laws.jsonl", help="packed ids of the raw laws (train.cpt_data)")
+    ap.add_argument("--raw", default="data/cpt/laws.jsonl", help="packed ids of the raw laws (train.cpt.cpt_data)")
     ap.add_argument("--aug", nargs="+", default=["data/cpt/aug_dedup.jsonl", "data/cpt/aug_multi.jsonl"])
     ap.add_argument("--ext", default="data/cpt/ext_v3.jsonl")
     ap.add_argument("--sft", default="data/train/q35_D3/train.jsonl")

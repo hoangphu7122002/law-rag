@@ -20,9 +20,9 @@ Not worth now: RL over passage selection, synthetic QA per Điều, hard-negativ
 | # | Topic | Read first | Time | Do in law-rag |
 |---|---|---|---|---|
 | 1 | Transformers + LoRA/PEFT | HF LLM course; PEFT quicktour; smol-course | 10 h | load Qwen3.5-2B, inspect chat template/tokens, LoRA, save/merge/compare |
-| 2 | SFT with TRL | TRL sft_trainer docs | 8 h | completion-only vs full-sequence loss, check label mask (src/train/sft_lora.py, react_sft.py) |
+| 2 | SFT with TRL | TRL sft_trainer docs | 8 h | completion-only vs full-sequence loss, check label mask (src/train/sft/sft_lora.py, react_sft.py) |
 | 3 | Preference tuning | DPO paper 2305.18290; TRL dpo/kto docs; SimPO 2405.14734 | 10 h | idea #5 on MBR candidates |
-| 4 | GRPO | DeepSeekMath 2402.03300; R1 2501.12948; TRL grpo_trainer; Open-R1 blog | 14 h | read src/train/grpo.py reward `score`, unit-test it, rerun a small GRPO |
+| 4 | GRPO | DeepSeekMath 2402.03300; R1 2501.12948; TRL grpo_trainer; Open-R1 blog | 14 h | read src/train/preference/grpo.py reward `score`, unit-test it, rerun a small GRPO |
 | 5 | Distillation / on-policy | Thinking Machines "On-Policy Distillation" blog; GKD 2306.13649; TRL gkd/gold docs | 10 h | docs/research/on-policy-distill/findings.md; Haiku gives no logits -> open teacher (Qwen3.5-9B) |
 | 6 | RAG + retrieval + rerank | LlamaIndex local starter; BEIR 2104.08663; MTEB 2210.07316; sbert.net training | 16 h | measure Recall@k/nDCG separately from generation (src/evaluate), embed-bench |
 | 7 | Serving + efficiency | docs.vllm.ai; speculative decoding 2211.17192; GPTQ 2210.17323; AWQ 2306.00978 | 10 h | idea #7, report p50/p95 per stage |

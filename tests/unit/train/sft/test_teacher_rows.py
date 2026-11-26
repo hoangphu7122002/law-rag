@@ -1,4 +1,4 @@
-from train.teacher_rows import select_teacher_rows
+from train.sft.teacher_rows import select_teacher_rows
 
 
 def grade(answer, reference, gold):

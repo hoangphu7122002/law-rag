@@ -1,4 +1,4 @@
-from train.pref_data import build_pairs
+from train.preference.pref_data import build_pairs
 
 REF = "Căn cứ Điều 5 quy định về mức phạt tiền đối với hành vi vi phạm hành chính trong lĩnh vực ngân hàng."
 GOOD = "Căn cứ Điều 5 quy định về mức phạt tiền đối với hành vi vi phạm hành chính trong lĩnh vực ngân hàng."
@@ -37,7 +37,7 @@ def test_cite_weight_changes_which_candidate_wins():
 
 
 def test_extent_bonus_rewards_matching_khoan_and_a_length_close_to_the_reference():
-    from train.pref_data import extent_bonus
+    from train.preference.pref_data import extent_bonus
     ref = "Căn cứ theo khoản 2 Điều 17 Thông tư X như sau: " + "nội dung " * 50
     ok = "Theo khoản 2 Điều 17 Thông tư X: " + "nội dung " * 50
     too_long = "Theo Điều 17 Thông tư X: " + "nội dung " * 200
@@ -49,7 +49,7 @@ def test_extent_bonus_rewards_matching_khoan_and_a_length_close_to_the_reference
 
 
 def test_build_pairs_with_extent_weights_prefers_the_candidate_with_the_right_extent():
-    from train.pref_data import build_pairs
+    from train.preference.pref_data import build_pairs
     ref = "Căn cứ theo khoản 2 Điều 17 Thông tư X như sau: " + "nội dung " * 50
     short_wrong = "Theo Điều 17 Thông tư X: nội dung"
     good = "Theo khoản 2 Điều 17 Thông tư X như sau: " + "nội dung " * 50

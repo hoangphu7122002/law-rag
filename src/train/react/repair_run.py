@@ -4,8 +4,8 @@ import json
 import time
 from pathlib import Path
 
-from train.react_data import first_bad_step, grade
-from train.react_fix import build_batch_prompt, build_repair_request, parse_batch, to_messages, verify_repair
+from train.react.react_data import first_bad_step, grade
+from train.react.react_fix import build_batch_prompt, build_repair_request, parse_batch, to_messages, verify_repair
 
 RULES = (
     "QUY TẮC (bắt buộc):\n"

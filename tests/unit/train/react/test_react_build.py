@@ -1,7 +1,7 @@
 import json
 
-from train.react_build import select_s1
-from train.react_data import grade
+from train.react.react_build import select_s1
+from train.react.react_data import grade
 
 REF = "Theo Điều 5 Thông tư 50/2024/TT-NHNN, mức lãi suất là 1%."
 GOOD = "Theo Điều 5 Thông tư 50/2024/TT-NHNN, mức lãi suất là 1%."
@@ -49,7 +49,7 @@ def test_keeps_only_the_best_per_question_ties_go_to_fewer_tool_calls():
 
 
 def test_stats_counts_kept_coverage_and_tool_use():
-    from train.react_build import stats
+    from train.react.react_build import stats
 
     rows = [row("q1", tools=["get_article"]), row("q2"), row("q3")]
     allr = rows + [row("q1"), row("q2")]
@@ -61,7 +61,7 @@ def test_stats_counts_kept_coverage_and_tool_use():
 
 
 def test_gold_dieu_takes_the_article_number_of_each_gold_pair():
-    from train.react_build import gold_dieu
+    from train.react.react_build import gold_dieu
 
     assert gold_dieu({"50/2024/TT-NHNN#5", "01/2020/QH14#12a"}) == {"5", "12a"}
     assert gold_dieu(None) == set()
@@ -74,7 +74,7 @@ def gold_row(qid, tool_text, final="Câu trả lời dài dòng của mô hình 
 
 
 def test_rewrite_gold_replaces_the_final_answer_when_the_tools_returned_the_gold_article():
-    from train.react_build import rewrite_gold
+    from train.react.react_build import rewrite_gold
 
     r = gold_row("q1", "[1] (50_2024_TT-NHNN) Thông tư 50/2024\nĐiều 5. Lãi suất là 1%.")
     out = rewrite_gold([r], {"q1": REF}, {"q1": {"50/2024/TT-NHNN#5"}}, {"q1"})
@@ -83,7 +83,7 @@ def test_rewrite_gold_replaces_the_final_answer_when_the_tools_returned_the_gold
 
 
 def test_rewrite_gold_drops_missed_retrieval_no_tool_use_and_unkept_questions():
-    from train.react_build import rewrite_gold
+    from train.react.react_build import rewrite_gold
 
     miss = gold_row("q1", "[1] (99_2020_ND-CP) Nghị định\nĐiều 5. Khác.")
     no_tool = row("q1")

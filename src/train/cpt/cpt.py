@@ -1,8 +1,8 @@
 """Continued pretraining of the answer model on the law text (docs/research: 'pretrain Qwen3.5-2B on the laws our questions are about').
 
-    torchrun --nproc_per_node 2 src/train/cpt.py --data data/cpt/laws.jsonl --base Qwen/Qwen3.5-2B --out data/models/q35_cpt [--lora-r 64] [--full]
-Both GPUs, data parallel. Plain next-token loss on packed sequences (train.cpt_data); a small held-out slice reports the loss. The result is a
-merged bf16 model, the starting point of the normal SFT (src/train/sft_lora.py --base <out>).
+    torchrun --nproc_per_node 2 src/train/cpt/cpt.py --data data/cpt/laws.jsonl --base Qwen/Qwen3.5-2B --out data/models/q35_cpt [--lora-r 64] [--full]
+Both GPUs, data parallel. Plain next-token loss on packed sequences (train.cpt.cpt_data); a small held-out slice reports the loss. The result is a
+merged bf16 model, the starting point of the normal SFT (src/train/sft/sft_lora.py --base <out>).
 """
 import argparse
 import json
@@ -29,10 +29,10 @@ def main() -> None:
     from peft import LoraConfig, get_peft_model
     from transformers import AutoConfig, AutoModelForCausalLM, AutoModelForImageTextToText, Trainer, TrainingArguments, default_data_collator
 
-    from train.sft_lora import complete_config
+    from train.sft.sft_lora import complete_config
 
-    if a.data.endswith(".npy"):   # train.cpt_mix: [n, seq_len] uint32 matrix, memory-mapped
-        from train.cpt_mix import NpyDataset
+    if a.data.endswith(".npy"):   # train.cpt.cpt_mix: [n, seq_len] uint32 matrix, memory-mapped
+        from train.cpt.cpt_mix import NpyDataset
 
         import numpy as np
 

@@ -1,6 +1,6 @@
 import json
 
-from train.repair_run import RULES, estimate_tokens, run_repairs, select_items
+from train.react.repair_run import RULES, estimate_tokens, run_repairs, select_items
 
 REF = "Căn cứ theo Điều 5 Thông tư 50/2024/TT-NHNN, ngân hàng phải lưu trữ hồ sơ giao dịch trong thời hạn mười năm kể từ ngày kết thúc giao dịch như sau: hồ sơ gốc."
 ARTICLE = "Điều 5. Lưu trữ hồ sơ\nNgân hàng lưu trữ hồ sơ giao dịch mười năm."
@@ -76,7 +76,7 @@ def test_rejected_with_reason_and_missing(tmp_path):
 def test_resume_via_done_and_files_appended(tmp_path):
     rows = [traj("a"), traj("b")]
     go(tmp_path, rows[:1], make_teacher())
-    from train.repair_run import done_qids
+    from train.react.repair_run import done_qids
     assert done_qids(tmp_path / "ok.jsonl", tmp_path / "rej.jsonl") == {"a"}
     t = make_teacher()
     go(tmp_path, rows, t, done=done_qids(tmp_path / "ok.jsonl"))

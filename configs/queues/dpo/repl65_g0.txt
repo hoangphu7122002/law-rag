@@ -5,7 +5,7 @@ wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pref-sample-s5a"
 do tmux kill-session -t lawrag-llm-g0
 sh pairs-s5a cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/train/build_pairs.py data/train/pref_s5a/cands.jsonl data/train/pref_s5a/pairs.jsonl --min-margin 0.1 > data/runs/logs/pairs-s5a.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pairs-s5a"
-sh dpo-dpo_s5r1 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/dpo.py --pairs data/train/pref_s5a/pairs.jsonl --base data/models/lc_f100_s555 --out data/models/dpo_s5r1 --lr 2e-5 --beta 0.1 > data/runs/logs/dpo-dpo_s5r1.log 2>&1
+sh dpo-dpo_s5r1 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/preference/dpo.py --pairs data/train/pref_s5a/pairs.jsonl --base data/models/lc_f100_s555 --out data/models/dpo_s5r1 --lr 2e-5 --beta 0.1 > data/runs/logs/dpo-dpo_s5r1.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo-dpo_s5r1"
 serve /home/app/phunguyen/law_rag/data/models/dpo_s5r1 --gpu 0 --share 0.45
 configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_s5r1 --set backend.base_url=http://localhost:8000/v1 --set generate.shots=2
@@ -16,7 +16,7 @@ wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pref-sample-s5b"
 do tmux kill-session -t lawrag-llm-g0
 sh pairs-s5b cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/train/build_pairs.py data/train/pref_s5b/cands.jsonl data/train/pref_s5b/pairs.jsonl --min-margin 0.1 > data/runs/logs/pairs-s5b.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pairs-s5b"
-sh dpo-dpo_s5r2 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/dpo.py --pairs data/train/pref_s5b/pairs.jsonl --base data/models/dpo_s5r1 --out data/models/dpo_s5r2 --lr 2e-5 --beta 0.1 > data/runs/logs/dpo-dpo_s5r2.log 2>&1
+sh dpo-dpo_s5r2 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/preference/dpo.py --pairs data/train/pref_s5b/pairs.jsonl --base data/models/dpo_s5r1 --out data/models/dpo_s5r2 --lr 2e-5 --beta 0.1 > data/runs/logs/dpo-dpo_s5r2.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo-dpo_s5r2"
 serve /home/app/phunguyen/law_rag/data/models/dpo_s5r2 --gpu 0 --share 0.45
 configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_s5r2 --set backend.base_url=http://localhost:8000/v1 --set generate.shots=2

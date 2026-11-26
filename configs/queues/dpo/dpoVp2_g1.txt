@@ -5,7 +5,7 @@ wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pref-Vp2"
 do tmux kill-session -t lawrag-llm-g1
 sh pairs-Vp2 cd /home/app/phunguyen/law_rag && PYTHONPATH=src .venv/bin/python scripts/train/build_pairs.py data/train/pref_Vp2/cands.jsonl data/train/pref_Vp2/pairs.jsonl --min-margin 0.1 > data/runs/logs/pairs-Vp2.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pairs-Vp2"
-sh dpo-Vp2 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/dpo.py --pairs data/train/pref_Vp2/pairs.jsonl --base /home/app/phunguyen/law_rag/data/models/dpo_Vp_A --out /home/app/phunguyen/law_rag/data/models/dpo_Vp_A2 --lr 2e-5 --beta 0.1 --max-length 12288 > data/runs/logs/dpo-Vp2.log 2>&1
+sh dpo-Vp2 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/preference/dpo.py --pairs data/train/pref_Vp2/pairs.jsonl --base /home/app/phunguyen/law_rag/data/models/dpo_Vp_A --out /home/app/phunguyen/law_rag/data/models/dpo_Vp_A2 --lr 2e-5 --beta 0.1 --max-length 12288 > data/runs/logs/dpo-Vp2.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo-Vp2"
 do sleep 90
 serve /home/app/phunguyen/law_rag/data/models/dpo_Vp_A2 --gpu 1 --share 0.45

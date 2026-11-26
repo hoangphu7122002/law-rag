@@ -53,21 +53,21 @@ make run EXP=configs/exp/A2e_dedup.yaml
 python -m cli retrieval data/runs/<run>          # doc@k / Điều@k / MRR   (PYTHONPATH=src)
 # 3.3 supervised fine-tuning data + training (decontaminated; recipe "v3b": k in [3,10], gold injection 0.7, 0-3 shots, 20% refusal rows)
 PYTHONPATH=src python -m cli sft-data configs/exp/A3_Q3.yaml --name q35_v3b --k-range 3,10 --oracle 0.7 --shots 0,1,2,3 --refuse 0.2
-python src/train/sft_lora.py --data data/train/q35_v3b --base Qwen/Qwen3.5-2B --out data/models/q35_v3b --epochs 3 --max-length 12288 --batch 1 --accum 16
+python src/train/sft/sft_lora.py --data data/train/q35_v3b --base Qwen/Qwen3.5-2B --out data/models/q35_v3b --epochs 3 --max-length 12288 --batch 1 --accum 16
 # 3.4 evaluate a model (serve it with vLLM first; shots=2 must be explicit)
 make run EXP=configs/exp/A5_v3b.yaml ARGS="--set generate.model=data/models/q35_v3b --set generate.shots=2"
 make run EXP=configs/exp/A6_mbrv3b.yaml ARGS="--set generate.model=data/models/q35_v3b --set generate.shots=2"   # MBR-8
 # 3.5 on-policy DPO (round 1; round 2 repeats it from the round-1 model)
 python scripts/train/pref_sample.py --data data/train/q35_v3b --out data/train/pref_v3b/cands.jsonl --model data/models/q35_v3b --base-url http://localhost:8001/v1
 PYTHONPATH=src python scripts/train/build_pairs.py data/train/pref_v3b/cands.jsonl data/train/pref_v3b/pairs.jsonl --min-margin 0.1
-python src/train/dpo.py --pairs data/train/pref_v3b/pairs.jsonl --base data/models/q35_v3b --out data/models/dpo_a --lr 2e-5 --beta 0.1
+python src/train/preference/dpo.py --pairs data/train/pref_v3b/pairs.jsonl --base data/models/q35_v3b --out data/models/dpo_a --lr 2e-5 --beta 0.1
 #   round 2: pref_sample with --model data/models/dpo_a (same train prompts) -> build_pairs -> dpo.py --base data/models/dpo_a --out data/models/dpo_a2
 # 3.6 significance: paired bootstrap between two runs
 make compare A=data/runs/<run_a> B=data/runs/<run_b> METRIC=rouge_l
 ```
 Training scripts need the `train` extra (`uv sync --extra train`, or a separate environment with torch, TRL and PEFT); on the L40S box they run in a dedicated environment. Typical cost on one L40S:
 SFT ≈ 1.3 h, one DPO round ≈ 35 min (+ 25 min sampling), one 300-question dev evaluation ≈ 5 min greedy / 12 min MBR-8. Weights are not in git (≈4.6 GB each); rebuild them with 3.3 + 3.5, or ask the authors.
-GRPO (`src/train/grpo.py`), weight merging (`src/train/merge.py`), reranker / embedder fine-tuning and the ReAct agent are documented in the report and the notes under `docs/notes/`.
+GRPO (`src/train/preference/grpo.py`), weight merging (`src/train/sft/merge.py`), reranker / embedder fine-tuning and the ReAct agent are documented in the report and the notes under `docs/notes/`.
 
 ## 4. Running the QA service (container)
 

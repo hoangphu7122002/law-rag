@@ -1,6 +1,6 @@
 import json
 
-from train.react_sft import assistant_spans
+from train.react.react_sft import assistant_spans
 
 
 def render(msgs, add_generation_prompt=False):
@@ -65,7 +65,7 @@ class FakeTokenizer:
 
 
 def test_build_examples_labels_only_assistant_tokens_and_parses_tool_arguments_for_the_template():
-    from train.react_sft import build_examples
+    from train.react.react_sft import build_examples
 
     msgs = [{"role": "system", "content": "SYS"}, {"role": "user", "content": "QUESTION"},
             {"role": "assistant", "content": "", "tool_calls": [{"id": "c0", "type": "function", "function": {"name": "get_article", "arguments": json.dumps({"dieu": 5})}}]},
@@ -84,7 +84,7 @@ def test_build_examples_labels_only_assistant_tokens_and_parses_tool_arguments_f
 
 
 def test_build_examples_skips_rows_longer_than_max_length_instead_of_truncating():
-    from train.react_sft import build_examples
+    from train.react.react_sft import build_examples
 
     short = {"qid": "a", "messages": convo(("system", "S"), ("user", "Q"), ("assistant", "A")), "tools": []}
     long = {"qid": "b", "messages": convo(("system", "S"), ("user", "Q " * 50), ("assistant", "A")), "tools": []}

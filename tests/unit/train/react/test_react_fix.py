@@ -1,6 +1,6 @@
 import json
 
-from train.react_fix import parse_repair
+from train.react.react_fix import parse_repair
 
 GOOD = {"actions": [{"tool": "get_article", "law": "50/2024/TT-NHNN", "dieu": 5}], "answer": "Căn cứ Điều 5 quy định X."}
 
@@ -25,7 +25,7 @@ def test_parse_rejects_invalid():
 
 
 def test_parse_batch_by_id_skips_invalid_items():
-    from train.react_fix import parse_batch
+    from train.react.react_fix import parse_batch
 
     text = "Kết quả:\n```json\n" + json.dumps([{"id": "q1", **GOOD}, {"id": "q2", "actions": [{"tool": "x"}], "answer": "a"}, {"id": 3, **GOOD}]) + "\n```"
     out = parse_batch(text)
@@ -46,7 +46,7 @@ def fake_grade(answer, reference, gold_dieu):
 
 
 def verify(repair, **kw):
-    from train.react_fix import verify_repair
+    from train.react.react_fix import verify_repair
 
     return verify_repair(repair, REF, {"5"}, kw.pop("run_tool", fake_tool), kw.pop("grade", fake_grade), **kw)
 
@@ -75,7 +75,7 @@ def test_verify_gold_must_be_whole_number_heading():
 
 
 def test_copy_share_threshold_and_short_answers():
-    from train.react_fix import copy_share
+    from train.react.react_fix import copy_share
 
     assert copy_share("ngắn quá", REF) == 0.0
     assert copy_share(REF, REF) == 1.0
@@ -93,7 +93,7 @@ PREFIX = [
 
 
 def test_build_repair_request_contents():
-    from train.react_fix import build_repair_request
+    from train.react.react_fix import build_repair_request
 
     p = build_repair_request(PREFIX, REF, {"5"}, "50/2024/TT-NHNN", bad_step=2)
     assert "Hồ sơ giao dịch lưu bao lâu?" in p and REF in p and "50/2024/TT-NHNN" in p and "Điều 5" in p
@@ -103,7 +103,7 @@ def test_build_repair_request_contents():
 
 
 def test_build_batch_prompt_numbers_items():
-    from train.react_fix import build_batch_prompt
+    from train.react.react_fix import build_batch_prompt
 
     p = build_batch_prompt(["AAA", "BBB"])
     assert "AAA" in p and "BBB" in p and '"id"' in p
@@ -111,8 +111,8 @@ def test_build_batch_prompt_numbers_items():
 
 
 def test_to_messages_roundtrip_to_rows():
-    from train.react_data import to_turn_rows
-    from train.react_fix import to_messages
+    from train.react.react_data import to_turn_rows
+    from train.react.react_fix import to_messages
 
     repair = {"actions": GOOD["actions"], "answer": GOOD["answer"]}
     out = to_messages(PREFIX[:2], repair, [ARTICLE])
@@ -127,7 +127,7 @@ def test_to_messages_roundtrip_to_rows():
 
 
 def test_to_messages_no_actions_and_unique_ids():
-    from train.react_fix import to_messages
+    from train.react.react_fix import to_messages
 
     two = {"actions": [{"tool": "search_law", "query": "a"}, {"tool": "search_law", "query": "b"}], "answer": "ok"}
     out = to_messages(PREFIX[:2], two, ["r1", "r2"])

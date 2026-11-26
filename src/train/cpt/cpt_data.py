@@ -1,6 +1,6 @@
 """Continued-pretraining data: the text of the laws our questions are about, packed into fixed-length token sequences.
 
-    PYTHONPATH=src python -m train.cpt_data --out data/cpt/laws.jsonl --base Qwen/Qwen3.5-2B [--seq-len 2048] [--limit N]
+    PYTHONPATH=src python -m train.cpt.cpt_data --out data/cpt/laws.jsonl --base Qwen/Qwen3.5-2B [--seq-len 2048] [--limit N]
 
 Wanted laws = every document cited by a train / dev / test question (gold.parquet docs); their text comes from the index nodes (the same corpus the
 retriever reads, so nothing outside the knowledge base is used). Pure helpers: docs_text, pack.
@@ -65,7 +65,7 @@ def main() -> None:
     ap.add_argument("--base", default="Qwen/Qwen3.5-2B")
     ap.add_argument("--seq-len", type=int, default=2048)
     ap.add_argument("--limit", type=int, default=0, help="smoke test: only N documents")
-    ap.add_argument("--articles-out", default="", help="also write one jsonl line per article ({key, title, text}) for the augmentation step (train.cpt_synth)")
+    ap.add_argument("--articles-out", default="", help="also write one jsonl line per article ({key, title, text}) for the augmentation step (train.cpt.cpt_synth)")
     a = ap.parse_args()
     wanted = {d for r in pl.read_parquet("data/processed/gold.parquet").iter_rows(named=True) for d in (r["docs"] or ())}
     store = IndexStore(load("configs/exp/A5_v3b.yaml"))

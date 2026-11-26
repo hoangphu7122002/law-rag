@@ -41,10 +41,10 @@ Neutral by design (no "use the newer law": refuted). Used only in the teacher ro
 - Layer 2, LLM fallback: one short extraction call returning strict JSON {laws:[{number|name}], dieu:[], type, flags, key_terms}. Validation: schema, type from the fixed vocabulary, a law number must match law_key and exist in the store or KG else it is dropped (no invented numbers), result marked unverified; cached by question hash. Model: a SMALL one (user): the 2B (Qwen3.5-2B base or the student) both in the teacher rollouts and at agent inference, JSON-constrained decoding (vLLM structured outputs, to verify in the installed version); never the 9B, never an external API. If the raw 2B extracts badly, distil it from DeepSeek labels on train questions (cheap, questions only). The LLM sees the question only, never a reference.
 - Measure: fallback rate; law extraction precision (a law named in the question vs the gold law of the reference); share of questions with any specific field; profile on / off ablation in the agent. Question rewriting stays out of the scored one-shot system; key_terms may feed search_law in the agent (ablated).
 
-## Stage 2 - grading (src/train/react_data.py)
+## Stage 2 - grading (src/train/react/react_data.py)
 - Good = ROUGE-L >= .6 vs reference and cites a gold Dieu (S1). Others = wrong. Expected usable ~13 % for an untrained model (datamate), so most rows go to repair.
 
-## Stage 3 - DeepSeek repair (src/train/react_fix.py, teacher = deepseekflash instead of Haiku)
+## Stage 3 - DeepSeek repair (src/train/react/react_fix.py, teacher = deepseekflash instead of Haiku)
 - Batches of ~20 repair requests per call (the 8.4k-token Vibe overhead is paid once per batch), pacing a few calls per minute; strict JSON (<= 2 tool calls + final answer) from the first bad step; keep a repair only if re-running its tool call returns the gold Dieu, the answer grades ok and the 13-gram copy share vs the reference <= .5; answer must follow the reference template ("Can cu theo Dieu X <Luat> ... nhu sau:" + verbatim quote).
 - Questions still failing after one repair are dropped, not retried more than once.
 
@@ -92,7 +92,7 @@ Prior numbers: raw 9B teacher on dev .47-.49 (not above SFT 2B), trained 2B ReAc
 
 ## Approach 2 - the 2B core agent (what it is and how it is trained)
 - Agent = one-shot plus optional tool calls: the prompt carries the retrieval profile + top-5 context; most questions are answered in one turn (as the one-shot model does), tool calls only when the context lacks the gold. So the agent must not be worse than the one-shot model on questions that need no tool.
-- Training rows (multi-turn, loss on assistant turns only, src/train/react_sft.py): (a) one-shot rows in agent format (reference answers, all data tricks: shuffle, inject-all, absent rate, template opener) so direct answering stays strong; (b) tool trajectories S1 (9B good) and S2 (DeepSeek-repaired) for questions where the gold Dieu is not in the initial context; (c) refusal / "context is enough, do not search" rows so the agent does not over-call.
+- Training rows (multi-turn, loss on assistant turns only, src/train/react/react_sft.py): (a) one-shot rows in agent format (reference answers, all data tricks: shuffle, inject-all, absent rate, template opener) so direct answering stays strong; (b) tool trajectories S1 (9B good) and S2 (DeepSeek-repaired) for questions where the gold Dieu is not in the initial context; (c) refusal / "context is enough, do not search" rows so the agent does not over-call.
 - Configs (2 seeds each): A one-shot v3b (existing), B one-shot + tricks, C B + absent, D one-shot + teacher rows, **E agent SFT = rows (a)+(b)+(c)**, F = E + DPO / multi-turn GRPO if E improves. Compared with the best one-shot on dev300 (paired bootstrap), split by whether the gold Dieu is in the initial top-5; both approaches are reported whatever the outcome.
 - Known risks: trained 2B ReAct was .537 / .574 vs one-shot .633 (dev_clean); datamate: a loop SFT on 1,764 trajectories scored below one-shot; <= 3B students do not always profit from large-teacher data. Mitigation: mixed rows so direct answering is kept, profile + initial context, teacher repairs minimal and verified. Latency (turns) and tool-call rate reported.
 

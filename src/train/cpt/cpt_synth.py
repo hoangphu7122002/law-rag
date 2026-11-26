@@ -10,7 +10,7 @@ import json
 import re
 from dataclasses import dataclass
 
-from train.synth_gen import grams, norm, parse_json_list
+from train.synth.synth_gen import grams, norm, parse_json_list
 
 NUM = re.compile(r"\d+(?:[.,]\d+)*")
 KINDS = ("paraphrase", "qa_fwd", "qa_rev", "summary")

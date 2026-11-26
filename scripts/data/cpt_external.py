@@ -9,7 +9,7 @@ import argparse
 import json
 from pathlib import Path
 
-from train import synth_gen as sg
+from train.synth import synth_gen as sg
 
 LAW_TYPES = {"Luật", "Bộ luật", "Nghị định", "Thông tư", "Pháp lệnh", "Nghị quyết"}
 

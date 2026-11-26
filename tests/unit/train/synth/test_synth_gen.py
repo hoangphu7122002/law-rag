@@ -4,7 +4,7 @@ import random
 import pytest
 
 from corpus.decontam import grams
-from train import synth_gen as sg
+from train.synth import synth_gen as sg
 
 ART = ("Điều 5. Quy định về mức phạt tiền\n1. Tổ chức vi phạm bị phạt tiền từ 10.000.000 đồng đến 20.000.000 đồng "
        "đối với hành vi không niêm yết công khai biểu phí dịch vụ tại địa điểm giao dịch.\n"

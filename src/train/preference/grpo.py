@@ -1,8 +1,8 @@
 """GRPO on top of an SFT checkpoint, verifiable reward vs the course reference answer (no reward model).
 
-    python src/train/grpo.py --data data/train/q35_v0 --base data/models/q35_v0 --out data/models/q35_rl0 [--limit 16]
+    python src/train/preference/grpo.py --data data/train/q35_v0 --base data/models/q35_v0 --out data/models/q35_rl0 [--limit 16]
 
-Prompts = rows of src/train/sft_data.py (`prompt` string with chat template + `completion` = reference). Only rows the SFT
+Prompts = rows of src/train/sft/sft_data.py (`prompt` string with chat template + `completion` = reference). Only rows the SFT
 model answers badly carry gradient; `--hard` keeps the rows whose first rollout scores below that threshold (default: all).
 Reward = .6 rougeL + .2 token overlap + .2 citation (same "Điều N" as the reference) - copy penalty - length penalty;
 refusal-like answers get 0, unless the reference is itself a refusal (no-answer row): then refusal = 1, else 0. Metrics are the course ones (src/evaluate/metrics.py, loaded by path: numpy only).
@@ -19,7 +19,7 @@ DIEU = re.compile(r"điều\s+(\d+)", re.I)
 
 
 def load_metrics():
-    p = Path(__file__).resolve().parents[1] / "evaluate" / "metrics.py"
+    p = Path(__file__).resolve().parents[2] / "evaluate" / "metrics.py"
     spec = importlib.util.spec_from_file_location("metrics", p)
     m = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(m)

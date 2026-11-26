@@ -1,4 +1,4 @@
-sh rr-smoke .venv/bin/python src/train/rerank_ft.py --data data/train/rr_v0 --base AITeamVN/Vietnamese_Reranker --out data/models/rr_smoke --limit 64 --batch 8
-sh rr-train .venv/bin/python src/train/rerank_ft.py --data data/train/rr_v0 --base AITeamVN/Vietnamese_Reranker --out data/models/rr_v0
+sh rr-smoke .venv/bin/python src/train/retrieval/rerank_ft.py --data data/train/rr_v0 --base AITeamVN/Vietnamese_Reranker --out data/models/rr_smoke --limit 64 --batch 8
+sh rr-train .venv/bin/python src/train/retrieval/rerank_ft.py --data data/train/rr_v0 --base AITeamVN/Vietnamese_Reranker --out data/models/rr_v0
 configs/exp/A2e_dedup.yaml --retrieval-only --set rerank.engine=local
 configs/exp/A2e_dedup.yaml --retrieval-only --set rerank.engine=local --set rerank.model=data/models/rr_v0

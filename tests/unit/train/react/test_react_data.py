@@ -1,6 +1,6 @@
 import json
 
-from train.react_data import first_bad_step, grade, to_turn_rows
+from train.react.react_data import first_bad_step, grade, to_turn_rows
 
 GOLD = {("50/2024/TT-NHNN", "5")}
 

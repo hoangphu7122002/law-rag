@@ -7,5 +7,5 @@ Run from the repo root: `PYTHONPATH=src python scripts/train/<file>.py ...` (scr
 | file | what |
 |---|---|
 | `build_pairs.py` | cands.jsonl -> pairs.jsonl (DPO), parallel over rows (the pure-python ROUGE-L is slow). |
-| `pref_sample.py` | Sample candidates for DPO: per train row (src/train/sft_data.py format) one greedy + (n-1) samples at T0.7 from a vLLM endpoint. |
+| `pref_sample.py` | Sample candidates for DPO: per train row (src/train/sft/sft_data.py format) one greedy + (n-1) samples at T0.7 from a vLLM endpoint. |
 | `teacher_repair.py` | Teacher repair of wrong ReAct trajectories (DeepSeek flash via vibe_call.py). |

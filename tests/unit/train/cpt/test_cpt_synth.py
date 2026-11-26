@@ -1,7 +1,7 @@
 import json
 
-from train.cpt_data import articles
-from train.cpt_synth import Article, batches, make_prompt, process, verify_text
+from train.cpt.cpt_data import articles
+from train.cpt.cpt_synth import Article, batches, make_prompt, process, verify_text
 
 ART = Article(key="49/2005/QH11#13", title="Luật Các công cụ chuyển nhượng số 49/2005/QH11",
               text="Điều 13. Mất công cụ chuyển nhượng\n1. Khi công cụ chuyển nhượng bị mất, người thụ hưởng phải thông báo ngay bằng văn bản.\n2. Thời hạn là 30 ngày kể từ ngày mất.")
@@ -71,7 +71,7 @@ def _arts():
 
 
 def test_groups_join_consecutive_articles_of_the_same_law_only():
-    from train.cpt_synth import groups
+    from train.cpt.cpt_synth import groups
     other = Article(key="77/2010/QH12#1", title="Luật Khác", text="Điều 1. x\nnội dung")
     gs = groups([*_arts(), other], size=2)
     assert [g.key for g in gs] == ["49/2005/QH11#13-14", "49/2005/QH11#15"] or [g.key for g in gs][0] == "49/2005/QH11#13-14"
@@ -79,7 +79,7 @@ def test_groups_join_consecutive_articles_of_the_same_law_only():
 
 
 def test_multi_prompt_and_process_keep_valid_multi_article_scenario_and_summary_rows():
-    from train.cpt_synth import groups, make_prompt_multi, process_multi
+    from train.cpt.cpt_synth import groups, make_prompt_multi, process_multi
     g = groups(_arts(), size=3)
     b = batches(g, 1)[0]
     assert "multi_qa" in make_prompt_multi(b) and "scenario" in make_prompt_multi(b) and "49/2005/QH11#13-15" in make_prompt_multi(b)

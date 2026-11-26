@@ -1,7 +1,7 @@
 # SFT v3b: same as v3 but 20 % no-answer rows (user: more no-answer cases) -> compare refusal rate vs rougeL on dev
 wait ! tmux has-session -t lawrag-queue-1119-070721 2>/dev/null
 sh sftdata-q35v3b uv run python -m cli sft-data configs/exp/A3_Q3.yaml --name q35_v3b --k-range 3,10 --oracle 0.7 --shots 0,1,2,3 --refuse 0.2
-sh train-q35v3b /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/q35_v3b --base Qwen/Qwen3.5-2B --out data/models/q35_v3b --epochs 3 --max-length 12288 --batch 1 --accum 16
+sh train-q35v3b /home/app/phunguyen/train_env/bin/python src/train/sft/sft_lora.py --data data/train/q35_v3b --base Qwen/Qwen3.5-2B --out data/models/q35_v3b --epochs 3 --max-length 12288 --batch 1 --accum 16
 serve /home/app/phunguyen/law_rag/data/models/q35_v3b --gpu 0 --share 0.45
 configs/exp/A4_q35_off.yaml --set backend.base_url=http://localhost:8000/v1 --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v3b --set generate.shots=2
 configs/exp/A4_q35_off.yaml --set backend.base_url=http://localhost:8000/v1 --set generate.model=/home/app/phunguyen/law_rag/data/models/q35_v3b --set generate.shots=2 --set retrieve.k=10

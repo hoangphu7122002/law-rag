@@ -1,4 +1,4 @@
-"""CPT augmentation: paraphrases / forward+reverse QA / summaries per law article via DeepSeek (vibe_call.py). See src/train/cpt_synth.py.
+"""CPT augmentation: paraphrases / forward+reverse QA / summaries per law article via DeepSeek (vibe_call.py). See src/train/cpt/cpt_synth.py.
 
     PYTHONPATH=src python3 scripts/data/cpt_synth.py --articles data/cpt/articles.jsonl --dry-run
     PYTHONPATH=src python3 scripts/data/cpt_synth.py --articles data/cpt/articles.jsonl --limit-articles 200 --out data/cpt/aug_pilot.jsonl
@@ -14,8 +14,8 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from train import synth_gen as sg
-from train.cpt_synth import Article, batches, groups, make_prompt, make_prompt_multi, process, process_multi
+from train.synth import synth_gen as sg
+from train.cpt.cpt_synth import Article, batches, groups, make_prompt, make_prompt_multi, process, process_multi
 
 
 def main() -> None:

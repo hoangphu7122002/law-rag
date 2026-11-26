@@ -1,11 +1,11 @@
 # GPU0 (after the SFT seed check): DPO beta ablation, beta .05 and .3 (round 1 from v3b, margin .1, lr 2e-5; reference dpo_a = beta .1 .6543).
 wait ! tmux has-session -t lawrag-queue-1121-000229 2>/dev/null
-sh dpo-b005 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/dpo.py --base data/models/q35_v3b --pairs data/train/pref_v3b/pairs.jsonl --out data/models/dpo_b005 --lr 2e-5 --beta 0.05 > data/runs/logs/dpo-b005.log 2>&1
+sh dpo-b005 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/preference/dpo.py --base data/models/q35_v3b --pairs data/train/pref_v3b/pairs.jsonl --out data/models/dpo_b005 --lr 2e-5 --beta 0.05 > data/runs/logs/dpo-b005.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo-b005"
 serve /home/app/phunguyen/law_rag/data/models/dpo_b005 --gpu 0 --share 0.45
 configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_b005 --set backend.base_url=http://localhost:8000/v1 --set generate.shots=2
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
-sh dpo-b03 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/dpo.py --base data/models/q35_v3b --pairs data/train/pref_v3b/pairs.jsonl --out data/models/dpo_b03 --lr 2e-5 --beta 0.3 > data/runs/logs/dpo-b03.log 2>&1
+sh dpo-b03 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/preference/dpo.py --base data/models/q35_v3b --pairs data/train/pref_v3b/pairs.jsonl --out data/models/dpo_b03 --lr 2e-5 --beta 0.3 > data/runs/logs/dpo-b03.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo-b03"
 serve /home/app/phunguyen/law_rag/data/models/dpo_b03 --gpu 0 --share 0.45
 configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_b03 --set backend.base_url=http://localhost:8000/v1 --set generate.shots=2

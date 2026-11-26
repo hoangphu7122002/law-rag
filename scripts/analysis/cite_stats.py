@@ -8,7 +8,7 @@ import statistics as st
 import sys
 
 from evaluate.metrics import rouge_l_score
-from train.grpo import DIEU
+from train.preference.grpo import DIEU
 
 
 def cite_stats(rows: list[dict]) -> dict:
