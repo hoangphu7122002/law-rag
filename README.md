@@ -1,8 +1,27 @@
-# Vietnamese Law RAG — a sub-4B legal question-answering system
+# law-rag
 
-HCMUT *Large Language Models* course assignment: improve a naive RAG baseline for Vietnamese legal QA with an answering model **under 4B parameters**.
-The final system (Qwen3.5-2B, supervised + two DPO rounds, dense retrieval + cross-encoder rerank over an extended legal corpus) reaches
-**ROUGE-L 0.643 on the 200-question test split with one generation per question (0.652 with MBR-8)**, against 0.171 for the course baseline.
+**Ask a question about Vietnamese law. A 2B model finds the right Điều and answers in the register of a legal reference, quoting the provision.**
+
+[![Last commit](https://img.shields.io/github/last-commit/hoangphu7122002/law-rag)](https://github.com/hoangphu7122002/law-rag/commits/main)
+![Python](https://img.shields.io/badge/python-3.11%2B-3776ab)
+![Generator](https://img.shields.io/badge/generator-Qwen3.5--2B-6a5acd)
+![Test ROUGE-L](https://img.shields.io/badge/test%20ROUGE--L-0.643-2f6fde)
+
+```text
+Q: Kể từ 01/11/2025, trong bao lâu phải nộp báo cáo giao dịch chuyển tiền điện tử
+   phục vụ phòng, chống rửa tiền theo Thông tư 27/2025/TT-NHNN?
+A: Căn cứ theo khoản 2 Điều 9 Thông tư 27/2025/TT-NHNN quy định về thời hạn báo cáo ... như sau:
+   [...] trước 16 giờ ngày làm việc tiếp theo ngay sau ngày phát sinh giao dịch. [...]
+   Sources: 27_2025_TT-NHNN (0.970) · 07_2012_QH13 (0.725) · ...
+   Latency: 2.1 s (retrieve 0.15 · rerank 0.20 · generate 1.79)
+```
+<sub>Q1 of the demo, shortened. It gets the deadline right but cites Điều 9 where the reference cites Điều 10 (ROUGE-L .558): the typical remaining error. All 10 transcripts: [`docs/report/demo.md`](docs/report/demo.md).</sub>
+
+## What and why
+
+This is the RAG assignment of the HCMUT *Large Language Models* course: take a naive RAG baseline for Vietnamese legal QA and make it better, with an answering model **under 4B parameters**.
+
+The reference answers follow a rigid template ("*Căn cứ tại khoản k Điều n ... quy định ...*") and then quote the article almost word for word. So the job is less "know the law" and more "find the right provision, then copy the right amount of it". Every change in this repo was measured against that target with a paired bootstrap, and the ones that did not help are reported too.
 
 | | Cosine | Jaccard | Token overlap | BLEU-1 | ROUGE-L |
 |---|---|---|---|---|---|
@@ -10,89 +29,171 @@ The final system (Qwen3.5-2B, supervised + two DPO rounds, dense retrieval + cro
 | **Final, greedy** (test) | **.916** | **.673** | **.734** | **.582** | **.643** |
 | Final + MBR-8 (test) | .918 | .681 | .728 | .587 | .652 |
 
-* **Report** (scientific write-up, all experiments grouped and analysed): [`docs/report/report.pdf`](docs/report/report.pdf) (LaTeX source: `docs/report/paper/main.tex`).
-* **Demo** transcript on 10 questions through the running service: [`docs/report/demo.md`](docs/report/demo.md).
-* Chronological experiment log: [`docs/CHANGELOG.md`](docs/CHANGELOG.md); compute log: [`docs/ops/compute-log.md`](docs/ops/compute-log.md).
+200 held-out test questions, one generation per question. The full write-up is the [report (PDF)](docs/report/report.pdf).
 
-## 1. Quick start (no GPU, 1 minute)
+## Features
 
-```bash
-uv sync --extra models --extra dev          # Python >= 3.11 (uv: https://docs.astral.sh/uv/)
-make test                                   # unit tests (no data, no models)
-make smoke                                  # whole pipeline on 5 questions: BM25 + a fake LLM
+| Feature | What you get |
+|---|---|
+| **A corpus that has the cited laws** | Course texts plus central-government laws since 2000 and every law the answers cite. Law-hit rate goes from 0.00 to 0.62. |
+| **Per-Điều retrieval** | One passage per article, a Vietnamese dense embedder, then a cross-encoder reranker. |
+| **Supervised register learning** | Qwen3.5-2B fine-tuned on decontaminated pairs, with gold-passage injection, 0–3 nearest-question demonstrations and refusal rows. |
+| **On-policy DPO** | Two rounds on the model's own best-versus-worst samples (ROUGE-L reward). Greedy then matches 8-sample MBR. |
+| **No test leakage** | Training pairs that cite the same (law, Điều) as a test answer, or share a rare 13-gram with one, are dropped. |
+| **Reproducible runs** | One YAML per experiment. Same config, same run directory; runs resume. |
+| **A QA service** | `POST /ask` returns the answer, its sources and timings. Three vLLM endpoints, median 2.6 s end to end on one L40S. |
+| **Refuses when unsure** | No passage above the reranker threshold means "the context does not cover this", not a guess. |
+
+## Quickstart
+
+Run the whole pipeline on 5 questions with BM25 and a fake LLM. No GPU, no data download, about a minute:
+
+```sh
+git clone https://github.com/hoangphu7122002/law-rag.git
+cd law-rag
+uv sync --extra models --extra dev      # Python >= 3.11, https://docs.astral.sh/uv/
+make test                               # unit tests, no data or models
+make smoke                              # end-to-end on 5 questions
 ```
 
-## 2. Data
+For the real thing, put the course files in `data/raw/` (`Dataset.zip`: 16,441 law texts; `res.csv`: 2,745 question/answer rows, both from the course Drive folder "RAG Assignment") and build the data:
 
-Inputs are not in git (`data/` is ignored). Put the course files in `data/raw/`:
-
-| file | what | source |
-|---|---|---|
-| `Dataset.zip` | 16,441 law texts (`export_1/*.txt`) | course Drive folder "RAG Assignment" |
-| `res.csv` | the 2,745 question/reference rows (RES sheet) | same |
-
-```bash
-make data           # unzip the corpus, clean the QA sheet, write the fixed seeded split (test 200 / dev 300 / train 2,245) -> data/processed/
-make vbpl-cited     # extra corpus: central-government laws since 2000 + every law the QA answers cite (HF dataset th1nhng0/vietnamese-legal-documents)
-make web            # cited laws still missing, from public portal sitemaps -> data/processed/web   (polite crawl, rate-limited)
+```sh
+make data           # unzip, clean, fixed seeded split: test 200 / dev 300 / train 2,245
+make vbpl-cited     # extra corpus from the HF dataset th1nhng0/vietnamese-legal-documents
+make web            # cited laws still missing, from public portal sitemaps (rate-limited)
 ```
-The retrieval store may contain full laws; **no model is ever trained on anything tied to the test split**: `src/corpus/decontam.py` drops training pairs that cite the same
-(law, Điều) as a test answer or share a rare 13-gram with one (AGENTS.md, rule 3). Splits: `test` is for reporting, `dev` for choosing settings.
 
-## 3. Reproducing the results
+## How it works
 
-Scripts in `scripts/` and `python -m cli` expect `PYTHONPATH=src`. Everything is driven by a YAML experiment (`configs/exp/<id>.yaml`, only the differences from `configs/base.yaml`), a backend (`configs/backends/*.yaml`: where the LLM / embedder / reranker endpoints are) and `--set key=value` overrides.
-A run writes `data/runs/<exp>__<hash>/{config.yaml, predictions.jsonl, metrics.json}` and a row in `data/runs/results.tsv`; same configuration = same directory (runs resume).
-Embedding, reranking and the LLM are **inference endpoints** (vLLM, OpenAI-compatible); start them as in [`docs/ops/l40s.md`](docs/ops/l40s.md) (`make box ARGS="serve <model> --gpu 0 [--kind embed|rerank]"`) or any compatible server and set the URLs in the backend file.
+One question, from the request to the quoted answer:
 
-```bash
-# 3.1 course baseline (dev; add --set split=test for the report numbers)
+```mermaid
+flowchart TD
+    Q["Question<br/>'Mức phạt ... mũ bảo hiểm ...?'"] --> E["Embed the question<br/>(Vietnamese_Embedding)"]
+    E --> D["Dense search over<br/>one passage per Điều (FAISS)"]
+    D --> R["Rerank the top 50<br/>(Vietnamese_Reranker)"]
+    R -->|"best score < threshold"| X["Refuse:<br/>context does not cover it"]
+    R --> P["Prompt: top-5 passages<br/>+ 2 nearest training Q/A pairs<br/>+ the question"]
+    P --> G["Qwen3.5-2B<br/>SFT + 2 DPO rounds<br/>greedy (or MBR-8)"]
+    G --> A["'Căn cứ tại khoản k Điều n ...'<br/>+ quoted provision + sources"]
+```
+
+And how the generator was trained:
+
+```mermaid
+flowchart LR
+    T["Train split<br/>(decontaminated)"] --> S["SFT data: k in 3..10 passages,<br/>gold injected 70%, 0-3 shots,<br/>20% refusal rows"]
+    S --> F["LoRA SFT<br/>3 epochs"]
+    F --> S1["Sample 8 answers<br/>per train prompt"]
+    S1 --> P1["Pairs: best vs worst<br/>by ROUGE-L (margin .1)"]
+    P1 --> D1["DPO round 1"]
+    D1 --> S2["Sample again"] --> P2["Pairs"] --> D2["DPO round 2<br/>= final model"]
+```
+
+## Architecture
+
+```mermaid
+flowchart LR
+    user(["Client"]) -->|"POST /ask"| api["QA service<br/>FastAPI (src/serve)"]
+    subgraph gpu["One L40S"]
+        llm["vLLM: Qwen3.5-2B<br/>(SFT + DPO)"]
+        emb["vLLM: embedder"]
+        rr["vLLM: reranker"]
+    end
+    api --> emb
+    api --> idx[("FAISS index<br/>per-Điều passages")]
+    api --> rr
+    api --> llm
+```
+
+| Layer | Stack |
+|---|---|
+| Generator | Qwen3.5-2B, LoRA SFT (PEFT), DPO (TRL) |
+| Retrieval | AITeamVN Vietnamese_Embedding, FAISS, AITeamVN Vietnamese_Reranker |
+| Serving | vLLM (OpenAI-compatible), FastAPI, Docker Compose in [`docker/`](docker) |
+| Experiments | YAML configs, run directories under `data/runs/`, paired bootstrap ([`make compare`](Makefile)) |
+| Metrics | Exact port of the course notebook: cosine, Jaccard, token overlap, BLEU-1, ROUGE-L |
+| Tests | pytest: unit tests (no data, no models) and a smoke test with BM25 and a fake LLM |
+
+Service details, variables and latency: [`docs/ops/docker.md`](docs/ops/docker.md).
+
+```sh
+GPU=0 HF_CACHE=$HOME/.cache/huggingface docker compose -p lawrag-qa -f docker/compose.yml up -d
+curl -s -X POST localhost:8080/ask -H 'Content-Type: application/json' \
+  -d '{"question":"Mức phạt đối với hành vi không đội mũ bảo hiểm khi đi xe máy là bao nhiêu?"}'
+```
+
+<details>
+<summary><b>Reproducing every step</b></summary>
+<br>
+
+Scripts and `python -m cli` expect `PYTHONPATH=src`. An experiment is a YAML file (`configs/exp/<id>.yaml`, only the differences from `configs/base.yaml`), a backend file (`configs/backends/*.yaml`: where the endpoints are) and `--set key=value` overrides. A run writes `data/runs/<exp>__<hash>/{config.yaml, predictions.jsonl, metrics.json}` and a row in `data/runs/results.tsv`. Start the endpoints as in [`docs/ops/l40s.md`](docs/ops/l40s.md).
+
+```sh
+# course baseline (dev; add --set split=test for the report numbers)
 make run EXP=configs/exp/B0_baseline.yaml
-# 3.2 retrieval ablations: A2a ... A2e (cleaning, per-Điều chunks, extra corpora, de-duplication)
+# retrieval ablations A2a ... A2e, then retrieval-only scores
 make run EXP=configs/exp/A2e_dedup.yaml
-python -m cli retrieval data/runs/<run>          # doc@k / Điều@k / MRR   (PYTHONPATH=src)
-# 3.3 supervised fine-tuning data + training (decontaminated; recipe "v3b": k in [3,10], gold injection 0.7, 0-3 shots, 20% refusal rows)
-PYTHONPATH=src python -m cli sft-data configs/exp/A3_Q3.yaml --name q35_v3b --k-range 3,10 --oracle 0.7 --shots 0,1,2,3 --refuse 0.2
+python -m cli retrieval data/runs/<run>
+# SFT data and training
+python -m cli sft-data configs/exp/A3_Q3.yaml --name q35_v3b --k-range 3,10 --oracle 0.7 --shots 0,1,2,3 --refuse 0.2
 python src/train/sft/sft_lora.py --data data/train/q35_v3b --base Qwen/Qwen3.5-2B --out data/models/q35_v3b --epochs 3 --max-length 12288 --batch 1 --accum 16
-# 3.4 evaluate a model (serve it with vLLM first; shots=2 must be explicit)
+# evaluate (serve the model with vLLM first; shots=2 must be explicit)
 make run EXP=configs/exp/A5_v3b.yaml ARGS="--set generate.model=data/models/q35_v3b --set generate.shots=2"
 make run EXP=configs/exp/A6_mbrv3b.yaml ARGS="--set generate.model=data/models/q35_v3b --set generate.shots=2"   # MBR-8
-# 3.5 on-policy DPO (round 1; round 2 repeats it from the round-1 model)
+# on-policy DPO, round 1 (round 2 repeats it from data/models/dpo_a)
 python scripts/train/pref_sample.py --data data/train/q35_v3b --out data/train/pref_v3b/cands.jsonl --model data/models/q35_v3b --base-url http://localhost:8001/v1
-PYTHONPATH=src python scripts/train/build_pairs.py data/train/pref_v3b/cands.jsonl data/train/pref_v3b/pairs.jsonl --min-margin 0.1
+python scripts/train/build_pairs.py data/train/pref_v3b/cands.jsonl data/train/pref_v3b/pairs.jsonl --min-margin 0.1
 python src/train/preference/dpo.py --pairs data/train/pref_v3b/pairs.jsonl --base data/models/q35_v3b --out data/models/dpo_a --lr 2e-5 --beta 0.1
-#   round 2: pref_sample with --model data/models/dpo_a (same train prompts) -> build_pairs -> dpo.py --base data/models/dpo_a --out data/models/dpo_a2
-# 3.6 significance: paired bootstrap between two runs
+# is A better than B?
 make compare A=data/runs/<run_a> B=data/runs/<run_b> METRIC=rouge_l
 ```
-Training scripts need the `train` extra (`uv sync --extra train`, or a separate environment with torch, TRL and PEFT); on the L40S box they run in a dedicated environment. Typical cost on one L40S:
-SFT ≈ 1.3 h, one DPO round ≈ 35 min (+ 25 min sampling), one 300-question dev evaluation ≈ 5 min greedy / 12 min MBR-8. Weights are not in git (≈4.6 GB each); rebuild them with 3.3 + 3.5, or ask the authors.
-GRPO (`src/train/preference/grpo.py`), weight merging (`src/train/sft/merge.py`), reranker / embedder fine-tuning and the ReAct agent are documented in the report and the notes under `docs/notes/`.
 
-## 4. Running the QA service (container)
+Training needs the `train` extra (`uv sync --extra train`). On one L40S: SFT about 1.3 h, one DPO round about 35 min plus 25 min of sampling, a 300-question dev run 5 min greedy or 12 min with MBR-8. Weights (about 4.6 GB each) are not in git.
 
-One question in, answer + sources + timings out (`POST /ask`); LLM, embedder and reranker are separate vLLM endpoints (compose file in `docker/`).
-Full instructions, variables and measured latency (median 2.6 s end to end on one L40S): [`docs/ops/docker.md`](docs/ops/docker.md).
+</details>
 
-```bash
-GPU=0 HF_CACHE=$HOME/.cache/huggingface docker compose -p lawrag-qa -f docker/compose.yml up -d     # needs data/models/dpo_a2, the index and data/serve/shots.json
-curl -s -X POST localhost:8080/ask -H 'Content-Type: application/json' -d '{"question":"Mức phạt đối với hành vi không đội mũ bảo hiểm khi đi xe máy là bao nhiêu?"}'
-python scripts/serve/demo.py docs/report/demo_questions.json > docs/report/demo.md                          # the demo transcript (dev only)
-```
+## What did not work
 
-## 5. Repository map
+Measured, reported in the [report](docs/report/report.pdf), and left out of the final system:
 
-```
-src/        corpus (data, decontamination) · index · retrieve · generate (prompt, generator, ReAct) · train (SFT, DPO, GRPO, merge) · evaluate · serve (QA service) · ops (GPU box)
-configs/    base.yaml · exp/<id>.yaml · backends/ · queues/ (job queues for the GPU box)
-scripts/    entry points by stage: data/ train/ analysis/ serve/ ops/ (see scripts/README.md); queues: configs/queues/<group>/
-tests/      unit/ (no data, no models) · smoke/ (pipeline with BM25 + fake LLM)     docker/  compose + API image
-docs/       report/ (paper, demo) · CHANGELOG · ops/ · notes/ · ADR/ · reference/ (assignment brief)
-```
-`AGENTS.md` is the entry point for coding agents (rules, layout, conventions).
+| Tried | Result |
+|---|---|
+| Fine-tuning the embedder or the reranker | No gain on answer ROUGE-L |
+| Legal-domain or larger base models | Raw models all land at .39–.46; SFT is the step that matters |
+| ReAct tool-using agent | Worse than one-shot RAG at 2B (without thinking mode) |
+| FP8 weights | 21% lower latency, but −.009 ROUGE-L |
+| MBR only when the model is unsure | .644 at 3.1 generations, below plain MBR-8 (.658) |
+| A third DPO round | Answers collapse in length; quality drops |
+| PiSSA SFT, new pair sets, weight-space edits | Inside the seed noise (up to .016 between identical chains) |
+| Perfect retrieval (gold passage injected) | Only +.007: the rest is which khoản to quote and how much |
 
-## 6. Notes and limits
+## Project layout
 
-* Metrics are an exact port of the baseline notebook (`src/evaluate/metrics.py`); they measure similarity to template-style references, not legal correctness. Answers are not legal advice.
-* The service refuses questions with no support in the corpus (best reranker score below `MIN_RERANK_SCORE`, default 0.001).
-* Greedy decoding with vLLM is not bit-deterministic (±0.003 ROUGE-L between identical runs).
+| Path | What's there |
+|---|---|
+| [`src/`](src) | `corpus` (data, decontamination) · `index` · `retrieve` · `generate` · `train` (SFT, DPO, GRPO) · `evaluate` · `serve` |
+| [`configs/`](configs) | `base.yaml`, one file per experiment in `exp/`, endpoints in `backends/`, GPU job queues in `queues/` |
+| [`scripts/`](scripts/README.md) | Entry points by stage: `data/`, `train/`, `analysis/`, `serve/`, `ops/` |
+| [`tests/`](tests) | `unit/` (no data, no models) and `smoke/` (pipeline with BM25 and a fake LLM) |
+| [`docker/`](docker) | Compose file and API image |
+| [`docs/report/`](docs/report) | The paper (LaTeX in `paper/`), the PDF and the demo transcript |
+| [`docs/CHANGELOG.md`](docs/CHANGELOG.md) | Every experiment in order, with its numbers |
+| [`docs/research/`](docs/research) | Plans and running logs of the later experiments |
+
+[`AGENTS.md`](AGENTS.md) is the entry point for coding agents: rules, layout and conventions.
+
+## Limits
+
+- The metrics measure similarity to template-style references, not legal correctness. **Answers are not legal advice.**
+- Greedy decoding in vLLM is not bit-deterministic: identical runs differ by about ±.003 ROUGE-L.
+- The corpus is a snapshot. Laws amended after it are not reflected.
+
+## Author
+
+Nguyễn Đắc Hoàng Phú (2670352), supervised by Assoc. Prof. Quản Thành Thơ, Ho Chi Minh City University of Technology.
+
+## License
+
+No license has been chosen yet, so all rights are reserved by default. The course data and the third-party models keep their own terms.
