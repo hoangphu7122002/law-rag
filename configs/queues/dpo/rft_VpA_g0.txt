@@ -1,0 +1,15 @@
+# Best-of-8 rejection-sampling SFT (expert iteration) from dpo_Vp_A on its own round-2 samples (data/train/rft_Vp2: best-ROUGE sample per prompt, length .8-1.3x, rouge>=.55). LoRA r32, lr 2e-5, 1 epoch. Compare with dpo_Vp_A2 (DPO round 2: .6743/.6435) and dpo_a2. GPU0 after the oracle eval.
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1126-180402"
+sh sft-VpArft cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft/sft_lora.py --data data/train/rft_Vp2 --base /home/app/phunguyen/law_rag/data/models/dpo_Vp_A --out /home/app/phunguyen/law_rag/data/models/dpo_Vp_A_rft --epochs 1 --lr 2e-5 > data/runs/logs/sft-VpArft.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-sft-VpArft"
+do sleep 60
+serve /home/app/phunguyen/law_rag/data/models/dpo_Vp_A_rft --gpu 0 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_Vp_A_rft --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
+do tmux kill-session -t lawrag-llm-g0
+do sleep 90
+serve /home/app/phunguyen/law_rag/data/models/dpo_Vp_A_rft --gpu 0 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_Vp_A_rft --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
+do tmux kill-session -t lawrag-llm-g0
+do sleep 90
