@@ -2,7 +2,7 @@
 
 A teacher LLM writes NEW question + template answer pairs from corpus articles. Articles that are gold of any dev / test
 question never enter the pool; dev / test questions and references are used only as filters (never sent anywhere).
-CLI: scripts/synth_gen.py.
+CLI: scripts/data/synth_gen.py.
 """
 import json
 import random

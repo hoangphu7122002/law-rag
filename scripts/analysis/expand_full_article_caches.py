@@ -4,7 +4,7 @@ Source = the top-15 chunk cache (retrieve.k marker 104). Variants (retrieve.k ma
 whole article | 202 first 8 | 203 the articles of the top-5 chunks only (<= 5, expanded).  Each passage keeps {pid, doc, text, score} of its best chunk; text = law title
 line + the full article (same shape as an indexed chunk).
 
-    PYTHONPATH=src .venv/bin/python scripts/expand_full_article_caches.py          (box; needs data/cpt/articles.jsonl and the marker-104 caches)
+    PYTHONPATH=src .venv/bin/python scripts/analysis/expand_full_article_caches.py          (box; needs data/cpt/articles.jsonl and the marker-104 caches)
 """
 import json
 import re

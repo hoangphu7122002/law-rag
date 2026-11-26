@@ -1,6 +1,6 @@
 """A CSV for a human check of answers: 20 test answers, one from each ROUGE-L stratum, with the columns to fill in.
 
-    PYTHONPATH=src python scripts/manual_check_sheet.py <run_dir_name> docs/report/manual_check.csv [--n 20]
+    PYTHONPATH=src python scripts/data/manual_check_sheet.py <run_dir_name> docs/report/manual_check.csv [--n 20]
 Columns to fill (0/1 or short text): right_article, right_content, invented_facts, still_in_force, notes.
 """
 import argparse

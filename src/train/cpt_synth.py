@@ -1,6 +1,6 @@
 """CPT augmentation (docs/research: knowledge must be seen in several surface forms to be extractable): for every law article a teacher LLM
 (DeepSeek via vibe) writes paraphrases, forward QA (what does Điều N say) and reverse QA (which Điều says this). Pure helpers; the call loop is
-scripts/cpt_synth.py. Dev/test gold articles are never sent to the teacher (same rule as the synthetic SFT rows).
+scripts/data/cpt_synth.py. Dev/test gold articles are never sent to the teacher (same rule as the synthetic SFT rows).
 
     row = {"text", "source": paraphrase | qa_fwd | qa_rev, "key": "<law>#<Điều>"}
 Checks per generated text: mentions "Điều N" of its article, introduces no number absent from the article, is not a near copy, paraphrase length

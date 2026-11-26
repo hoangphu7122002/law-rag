@@ -1,6 +1,6 @@
 """How much does a wrong cited Dieu cost? Splits rows by whether the prediction cites the same "Điều N" as the reference.
 
-    PYTHONPATH=src python scripts/cite_stats.py <run_dir> [<run_dir> ...]     (box: needs data/runs/<run>/predictions.jsonl + the dev questions)
+    PYTHONPATH=src python scripts/analysis/cite_stats.py <run_dir> [<run_dir> ...]     (box: needs data/runs/<run>/predictions.jsonl + the dev questions)
 rows: {"ref", "pred"}; reference rows without any "Điều N" are ignored.
 """
 import json

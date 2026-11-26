@@ -1,5 +1,5 @@
 """Retrieval-sufficiency gate (docs/research/): a tiny classical classifier on retrieval statistics says "gold article probably NOT in the top-5";
-for flagged questions the context is widened (more reranked passages). No LLM, no GPU. Pure helpers; the classifier is fitted in scripts/gate_expand_caches.py.
+for flagged questions the context is widened (more reranked passages). No LLM, no GPU. Pure helpers; the classifier is fitted in scripts/analysis/gate_expand_caches.py.
 
     features(question, passages)        28 numbers: top-10 reranker scores, gaps, slope, spread, how many laws / articles, named-law match
     select_threshold(probs, share)      the probability above which `share` of the questions are flagged

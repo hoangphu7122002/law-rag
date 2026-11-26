@@ -1,7 +1,7 @@
 """Per-run tail/mid report: ROUGE-L by failure stage (low_score_analysis stages, retrieved-not-cited split into 'cites another retrieved Điều' / 'cites none'),
 refusal rate, answer length vs reference, cited-Điều match. Prints one markdown table row per run.
 
-    PYTHONPATH=src python scripts/tailmid_report.py data/runs/A5_v3b__127c207b [more runs]   (run on the box)
+    PYTHONPATH=src python scripts/analysis/tailmid_report.py data/runs/A5_v3b__127c207b [more runs]   (run on the box)
 """
 import json
 import re

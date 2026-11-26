@@ -1,6 +1,6 @@
 """Paired bootstrap of per-question retrieval hits between two retrieval caches (control vs a chunking variant).
 
-    PYTHONPATH=src python scripts/retr_compare.py --split dev [--k 5] [--level art] --variant "chunk.split=khoan" --variant "chunk.size=2000"
+    PYTHONPATH=src python scripts/analysis/retr_compare.py --split dev [--k 5] [--level art] --variant "chunk.split=khoan" --variant "chunk.size=2000"
 The control is the default config (the cached index 4ac2a75c); the variant adds the --variant overrides. Both caches must exist (run
 `cli run ... --retrieval-only` first). level art = gold (law, Điều) pair among the top k; doc = gold law among the top k.
 """

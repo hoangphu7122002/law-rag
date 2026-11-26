@@ -4,7 +4,7 @@ Per document: strip HTML -> normalize -> quality filter -> (judgments) PII mask 
 with the title as first line -> drop chunks sharing a 13-gram with a dev/test question or reference. Sources are read file by file into a temp dir that is
 removed straight after (disk), in random order, until each token budget (chars / 3.4) is reached. Output rows {"text","source"} + a per-source report.
 
-    PYTHONPATH=src .venv/bin/python scripts/cpt_build_v2.py --out data/cpt/ext_v2.jsonl
+    PYTHONPATH=src .venv/bin/python scripts/data/cpt_build_v2.py --out data/cpt/ext_v2.jsonl
 Licences: UTS_VLC MIT; tmquan/* and th1nhng0 CC-BY-4.0; wikisource/wikipedia CC-BY-SA; FineWeb-2 ODC-By.  Nothing gated, nothing without a stated licence.
 """
 import argparse

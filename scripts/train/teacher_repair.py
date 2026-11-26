@@ -1,5 +1,5 @@
 """Teacher repair of wrong ReAct trajectories (DeepSeek flash via vibe_call.py).
-Usage: PYTHONPATH=src python3 scripts/teacher_repair.py --traj RUN/trajectories.jsonl --out data/train/repair.jsonl [--tools-url URL] [--dry-run] [--limit N]
+Usage: PYTHONPATH=src python3 scripts/train/teacher_repair.py --traj RUN/trajectories.jsonl --out data/train/repair.jsonl [--tools-url URL] [--dry-run] [--limit N]
 Rejected repairs go to <out>.rejected.jsonl; rerun resumes (skips qids already in either file)."""
 import argparse
 import json

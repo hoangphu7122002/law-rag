@@ -1,10 +1,10 @@
 # GPU1: iterative (on-policy) DPO. dpo_b (lr 5e-5 + SFT term) was WORSE than dpo_a (greedy dev300 .6421 vs .6543). Round 2 from dpo_a with its own fresh samples: sample 8 from dpo_a on the train prompts -> pairs -> DPO lr 2e-5 (as dpo_a) -> greedy + MBR8.
 wait ! tmux has-session -t lawrag-queue-1120-180128 2>/dev/null
 serve /home/app/phunguyen/law_rag/data/models/dpo_a --gpu 1 --share 0.5
-sh pref-sample-a cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/pref_sample.py --data data/train/q35_v3b --out data/train/pref_dpoa/cands.jsonl --base-url http://localhost:8001/v1 --model /home/app/phunguyen/law_rag/data/models/dpo_a > data/runs/logs/pref-sample-a.log 2>&1
+sh pref-sample-a cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/train/pref_sample.py --data data/train/q35_v3b --out data/train/pref_dpoa/cands.jsonl --base-url http://localhost:8001/v1 --model /home/app/phunguyen/law_rag/data/models/dpo_a > data/runs/logs/pref-sample-a.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pref-sample-a"
 do tmux kill-session -t lawrag-llm-g1
-sh pairs-a cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/build_pairs.py data/train/pref_dpoa/cands.jsonl data/train/pref_dpoa/pairs.jsonl --min-margin 0.1 > data/runs/logs/pairs-a.log 2>&1
+sh pairs-a cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/train/build_pairs.py data/train/pref_dpoa/cands.jsonl data/train/pref_dpoa/pairs.jsonl --min-margin 0.1 > data/runs/logs/pairs-a.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pairs-a"
 sh dpo-a2 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/dpo.py --pairs data/train/pref_dpoa/pairs.jsonl --base data/models/dpo_a --out data/models/dpo_a2 --lr 2e-5 --beta 0.1 > data/runs/logs/dpo-a2.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo-a2"

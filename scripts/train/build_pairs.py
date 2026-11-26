@@ -1,6 +1,6 @@
 """cands.jsonl -> pairs.jsonl (DPO), parallel over rows (the pure-python ROUGE-L is slow).
 
-    PYTHONPATH=src python scripts/build_pairs.py data/train/pref_v3b/cands.jsonl data/train/pref_v3b/pairs.jsonl [--min-margin 0.1]
+    PYTHONPATH=src python scripts/train/build_pairs.py data/train/pref_v3b/cands.jsonl data/train/pref_v3b/pairs.jsonl [--min-margin 0.1]
 """
 import argparse
 import json

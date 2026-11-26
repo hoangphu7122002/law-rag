@@ -1,7 +1,7 @@
 # GPU1 ablations for the report: (1) k and shots of the FINAL model (dpo_a2), (2) DPO design: pair margin threshold .05 / .2 (round 1 from v3b, lr 2e-5, beta .1; reference dpo_a = margin .1 .6543).
-sh pairs-m02 cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/build_pairs.py data/train/pref_v3b/cands.jsonl data/train/pref_v3b/pairs_m02.jsonl --min-margin 0.2 > data/runs/logs/pairs-m02.log 2>&1
+sh pairs-m02 cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/train/build_pairs.py data/train/pref_v3b/cands.jsonl data/train/pref_v3b/pairs_m02.jsonl --min-margin 0.2 > data/runs/logs/pairs-m02.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pairs-m02"
-sh pairs-m005 cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/build_pairs.py data/train/pref_v3b/cands.jsonl data/train/pref_v3b/pairs_m005.jsonl --min-margin 0.05 > data/runs/logs/pairs-m005.log 2>&1
+sh pairs-m005 cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/train/build_pairs.py data/train/pref_v3b/cands.jsonl data/train/pref_v3b/pairs_m005.jsonl --min-margin 0.05 > data/runs/logs/pairs-m005.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pairs-m005"
 serve /home/app/phunguyen/law_rag/data/models/dpo_a2 --gpu 1 --share 0.45
 # reranker ablation with the final model: no reranker (dense top-5), and rerank candidates 20 / 100 (default 50)

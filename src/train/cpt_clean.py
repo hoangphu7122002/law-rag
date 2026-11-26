@@ -1,6 +1,6 @@
 """Cleaning and curation of external CPT text (docs/research/cpt: quality + dedup + PII + no eval leakage matter more than raw volume).
 
-Pure helpers used by scripts/cpt_build_v2.py: strip_html, normalize, quality (reason or None), mask_pii (court judgments), Dedup (exact document, repeated
+Pure helpers used by scripts/data/cpt_build_v2.py: strip_html, normalize, quality (reason or None), mask_pii (court judgments), Dedup (exact document, repeated
 long paragraphs, repeated document numbers), chunk_doc (paragraph chunks with the document title as first line, like the retrieval prompts).
 """
 import hashlib

@@ -1,6 +1,6 @@
 """Why is ROUGE-L only ~.71 when the model cites the right Điều? Precision/recall of the LCS, length ratio and khoản agreement inside the 'retrieved and cited' group.
 
-    PYTHONPATH=src python scripts/diag_cited_group.py data/runs/A5_v3b__127c207b [more runs]   (box)
+    PYTHONPATH=src python scripts/analysis/diag_cited_group.py data/runs/A5_v3b__127c207b [more runs]   (box)
 """
 import json
 import re

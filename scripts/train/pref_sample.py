@@ -1,6 +1,6 @@
 """Sample candidates for DPO: per train row (src/train/sft_data.py format) one greedy + (n-1) samples at T0.7 from a vLLM endpoint.
 
-    python scripts/pref_sample.py --data data/train/q35_v3b --out data/train/pref_v3b/cands.jsonl --base-url http://localhost:8001/v1 --model <served name>
+    python scripts/train/pref_sample.py --data data/train/q35_v3b --out data/train/pref_v3b/cands.jsonl --base-url http://localhost:8001/v1 --model <served name>
 Output rows: {"qid", "prompt", "reference", "cands"}. Rows whose completion is a refusal are skipped. Resumable (appends, skips done qids).
 """
 import argparse

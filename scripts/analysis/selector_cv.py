@@ -1,7 +1,7 @@
 """Learned candidate selector, cross-validated on dev: candidates per question = the model answer + "intro + verbatim article" of each of the 5
 retrieved passages; a regressor predicts each candidate's ROUGE-L from cheap features, the best predicted one is picked.
 
-    PYTHONPATH=src python scripts/selector_cv.py data/runs/<dev run> [--folds 5]
+    PYTHONPATH=src python scripts/analysis/selector_cv.py data/runs/<dev run> [--folds 5]
 Exploration on dev only (300 questions: a small, noisy training set), nothing here touches test.
 """
 import argparse

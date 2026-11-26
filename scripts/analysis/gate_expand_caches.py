@@ -1,6 +1,6 @@
 """Build retrieval-cache files for the gate + widen experiment (no index, no GPU), so the normal eval path runs it with the retrieval step cached.
 
-    PYTHONPATH=src uv run --with scikit-learn python scripts/gate_expand_caches.py --train data/cache/retrieval/<k10 train> --dev <k20 dev> --test <k20 test>
+    PYTHONPATH=src uv run --with scikit-learn python scripts/analysis/gate_expand_caches.py --train data/cache/retrieval/<k10 train> --dev <k20 dev> --test <k20 test>
 
 Gate: gradient boosting on retrieval.gate.features, fitted on TRAIN only; threshold = the 80th percentile of 5-fold out-of-fold train probabilities (flags ~20 %).
 Variants (retrieve.k marker -> cache key): 101 base top-5 | 102 gate -> top-10 | 103 gate -> top-15 | 104 always top-15 | 105 oracle (widen to 15 exactly when the

@@ -37,7 +37,7 @@ Empty question → 422; an endpoint down → 503 with the error.
 Variables: `GPU` (device index), `LLM_SHARE` / `EMBED_SHARE` / `RERANK_SHARE` (GPU memory fractions, default .45 / .15 / .15), `API_PORT` (8080), `VLLM_IMAGE`
 (default `vllm/vllm-openai:v0.30.0`, the version the experiments used), `HF_CACHE`, `HF_HUB_OFFLINE`. The api also reads `LAWRAG_EXP`, `SHOTS_PATH`, `PORT` and `MIN_RERANK_SCORE` (refuse when the best reranker score is below it, default 0.001, 0 = off). A refused answer is the fixed sentence "Dựa trên các ngữ cảnh được cung cấp, chưa tìm thấy quy định liên quan để trả lời câu hỏi này.", the LLM is not called, and the response carries `"refused": true`.
 
-## Measured (L40S box, GPU 1 shared by the three vLLM endpoints; dev questions through POST /ask, `scripts/api_eval.py`)
+## Measured (L40S box, GPU 1 shared by the three vLLM endpoints; dev questions through POST /ask, `scripts/serve/api_eval.py`)
 | | n | errors | rougeL | mean | p50 | p95 |
 |---|---|---|---|---|---|---|
 | 1 request at a time | 25 | 0 | .6735 | 3.15 s | 2.61 s | 6.61 s |
@@ -63,4 +63,4 @@ Stage means (1 at a time): retrieve .084 s · rerank .214 s · generate 2.85 s. 
 | A  one card, everything shared | `GPU=0 docker compose -p lawrag-a -f docker/compose.yml up -d` | 6-7 |
 | B  one stack per card + nginx (default for two cards) | `GPU=0 API_PORT=8081 ... -p lawrag-b0`, `GPU=1 API_PORT=8082 ... -p lawrag-b1`, then `docker compose -p lawrag-lb -f docker/compose.lb.yml up -d` (:8080) | 15-18 |
 | C  LLM alone on card 0, embed + rerank on card 1 | `LLM_GPU=0 AUX_GPU=1 LLM_SHARE=0.88 EMBED_SHARE=0.3 RERANK_SHARE=0.3 docker compose -p lawrag-c ...` | 18 |
-`scripts/serve_bench.sh A|B|C` brings a layout up, runs `scripts/load_test.py` (modes: sweep, max (largest users under the SLO), burst (open-loop phases), spike (N at once)) and tears it down; results in `data/runs/load.jsonl` with p95 and p99, GPU utilisation and temperature (a run stops at 85 C). `scripts/vllm_flag_sweep.sh` varies `MAX_SEQS`, `MAX_BATCHED`, `PREFIX_CACHING`, `LLM_EXTRA`: none of them beats the defaults (prefix caching is worth about 9 % at 32 users).
+`scripts/serve/serve_bench.sh A|B|C` brings a layout up, runs `scripts/serve/load_test.py` (modes: sweep, max (largest users under the SLO), burst (open-loop phases), spike (N at once)) and tears it down; results in `data/runs/load.jsonl` with p95 and p99, GPU utilisation and temperature (a run stops at 85 C). `scripts/serve/vllm_flag_sweep.sh` varies `MAX_SEQS`, `MAX_BATCHED`, `PREFIX_CACHING`, `LLM_EXTRA`: none of them beats the defaults (prefix caching is worth about 9 % at 32 users).

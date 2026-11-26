@@ -1,6 +1,6 @@
 """Demo: send example questions to the running QA API and write a readable Markdown transcript.
 
-    PYTHONPATH=src python scripts/demo.py docs/report/demo_questions.json --url http://localhost:8080 > docs/report/demo.md
+    PYTHONPATH=src python scripts/serve/demo.py docs/report/demo_questions.json --url http://localhost:8080 > docs/report/demo.md
 questions file: JSON list of {"qid": <dev question id>} (text + reference taken from the dev split) or {"question": "<free text>"}.
 Dev only, never the test split.
 """

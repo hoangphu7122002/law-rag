@@ -1,8 +1,8 @@
 """Closed-loop load test of the QA API: U virtual users, each sends questions back to back for --seconds.
 
-    PYTHONPATH=src python scripts/load_test.py --url http://localhost:8080 --users 1,4,8,16,32 --seconds 60 [--out data/runs/load.jsonl]
+    PYTHONPATH=src python scripts/serve/load_test.py --url http://localhost:8080 --users 1,4,8,16,32 --seconds 60 [--out data/runs/load.jsonl]
 Per user level one JSON line: ok, errors, 429s, requests/s, TTFT and total latency p50/p95 (client side, via /ask/stream).
-Questions are dev questions cycled (answers are not scored here; see scripts/api_eval.py for quality).
+Questions are dev questions cycled (answers are not scored here; see scripts/serve/api_eval.py for quality).
 """
 import argparse
 import asyncio

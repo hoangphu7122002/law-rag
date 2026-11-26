@@ -1,6 +1,6 @@
 """A nested, seeded subset of an SFT dataset by question (every row of a kept question stays), for the learning curve.
 
-    python scripts/subset_sft.py data/train/q35_v3b data/train/q35_v3b_f25_s1 --fraction 0.25 --seed 1
+    python scripts/data/subset_sft.py data/train/q35_v3b data/train/q35_v3b_f25_s1 --fraction 0.25 --seed 1
 val.jsonl is copied unchanged so validation loss is comparable across sizes.
 """
 import argparse

@@ -1,6 +1,6 @@
 """Automatic checks + worked examples of one run, for the report appendix.
 
-    PYTHONPATH=src python scripts/appendix_examples.py <run_dir_name> [--split test] [--n 12] [--out docs/report/paper/appendix_examples.tex]
+    PYTHONPATH=src python scripts/analysis/appendix_examples.py <run_dir_name> [--split test] [--n 12] [--out docs/report/paper/appendix_examples.tex]
 Writes (1) data/runs/<run>/faithfulness.json: citation / law agreement with the reference, number grounding and quotation rate of the answers
 (and of the references, as context); (2) a LaTeX file with n examples spread from the easiest to the hardest question by ROUGE-L, each shown with
 its ground-truth answer. Retrieval comes from the cache of the run's own configuration.

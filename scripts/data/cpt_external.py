@@ -3,7 +3,7 @@
   laws    : undertheseanlp/UTS_VLC (MIT) + tmquan/thuvienphapluat-vn-vbpl (CC-BY-4.0; Luật / Bộ luật / Nghị định / Thông tư / Pháp lệnh / Nghị quyết)
   general : HuggingFaceFW/fineweb-2 vie_Latn (ODC-By), replay against forgetting
 Every text is cut into ~1500-char chunks; a chunk that shares a 13-gram with a dev/test question or reference is dropped.
-Output rows: {"text", "source"}.   PYTHONPATH=src python3 scripts/cpt_external.py --law-chars 60e6 --general-chars 30e6
+Output rows: {"text", "source"}.   PYTHONPATH=src python3 scripts/data/cpt_external.py --law-chars 60e6 --general-chars 30e6
 """
 import argparse
 import json

@@ -1,7 +1,7 @@
 """Does the context (retrieved chunks) contain what the reference quotes? Reference 4-gram coverage by (a) the context, (b) the full gold articles (upper bound),
 split by the length of the longest gold article. Also: how much of the gold articles' text is in the context (chunk-level, not article-level).
 
-    PYTHONPATH=src python scripts/diag_coverage.py data/runs/A5_v3b__127c207b   (box)
+    PYTHONPATH=src python scripts/analysis/diag_coverage.py data/runs/A5_v3b__127c207b   (box)
 """
 import json
 import statistics as st

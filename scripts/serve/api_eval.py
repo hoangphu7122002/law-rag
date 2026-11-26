@@ -1,6 +1,6 @@
 """Send dev questions to the running QA API and score the answers (parity check with the offline run + end-to-end latency).
 
-    PYTHONPATH=src python scripts/api_eval.py [--url http://localhost:8080] [--n 30] [--workers 4]
+    PYTHONPATH=src python scripts/serve/api_eval.py [--url http://localhost:8080] [--n 30] [--workers 4]
 Dev only. Latency = wall time of one POST /ask (retrieve + rerank + generate), measured by the client.
 """
 import argparse

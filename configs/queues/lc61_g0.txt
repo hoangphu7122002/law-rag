@@ -1,5 +1,5 @@
 # Learning curve (Track A): the v3b SFT recipe on 25% and 50% of the train questions, two seeds each (subset seed = training seed); 100% = q35_v3b (seed 1, .6325) and q35_v3b_s2 (.603, deleted). Dev300 greedy, 2 shots. Models are deleted after their eval (disk).
-sh sub-lc_f25_s101 cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH uv run python scripts/subset_sft.py data/train/q35_v3b data/train/lc_f25_s101 --fraction 0.25 --seed 101 > data/runs/logs/sub-lc_f25_s101.log 2>&1
+sh sub-lc_f25_s101 cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH uv run python scripts/data/subset_sft.py data/train/q35_v3b data/train/lc_f25_s101 --fraction 0.25 --seed 101 > data/runs/logs/sub-lc_f25_s101.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-sub-lc_f25_s101"
 sh train-lc_f25_s101 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/lc_f25_s101 --base Qwen/Qwen3.5-2B --out data/models/lc_f25_s101 --epochs 3 --max-length 12288 --batch 1 --accum 16 --seed 101 > data/runs/logs/train-lc_f25_s101.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-train-lc_f25_s101"
@@ -9,7 +9,7 @@ wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
 do tmux kill-session -t lawrag-llm-g0
 sh rm-lc_f25_s101 rm -rf /home/app/phunguyen/law_rag/data/models/lc_f25_s101
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-rm-lc_f25_s101"
-sh sub-lc_f25_s102 cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH uv run python scripts/subset_sft.py data/train/q35_v3b data/train/lc_f25_s102 --fraction 0.25 --seed 102 > data/runs/logs/sub-lc_f25_s102.log 2>&1
+sh sub-lc_f25_s102 cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH uv run python scripts/data/subset_sft.py data/train/q35_v3b data/train/lc_f25_s102 --fraction 0.25 --seed 102 > data/runs/logs/sub-lc_f25_s102.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-sub-lc_f25_s102"
 sh train-lc_f25_s102 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/lc_f25_s102 --base Qwen/Qwen3.5-2B --out data/models/lc_f25_s102 --epochs 3 --max-length 12288 --batch 1 --accum 16 --seed 102 > data/runs/logs/train-lc_f25_s102.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-train-lc_f25_s102"
@@ -19,7 +19,7 @@ wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
 do tmux kill-session -t lawrag-llm-g0
 sh rm-lc_f25_s102 rm -rf /home/app/phunguyen/law_rag/data/models/lc_f25_s102
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-rm-lc_f25_s102"
-sh sub-lc_f50_s101 cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH uv run python scripts/subset_sft.py data/train/q35_v3b data/train/lc_f50_s101 --fraction 0.5 --seed 101 > data/runs/logs/sub-lc_f50_s101.log 2>&1
+sh sub-lc_f50_s101 cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH uv run python scripts/data/subset_sft.py data/train/q35_v3b data/train/lc_f50_s101 --fraction 0.5 --seed 101 > data/runs/logs/sub-lc_f50_s101.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-sub-lc_f50_s101"
 sh train-lc_f50_s101 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/lc_f50_s101 --base Qwen/Qwen3.5-2B --out data/models/lc_f50_s101 --epochs 3 --max-length 12288 --batch 1 --accum 16 --seed 101 > data/runs/logs/train-lc_f50_s101.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-train-lc_f50_s101"
@@ -29,7 +29,7 @@ wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
 do tmux kill-session -t lawrag-llm-g0
 sh rm-lc_f50_s101 rm -rf /home/app/phunguyen/law_rag/data/models/lc_f50_s101
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-rm-lc_f50_s101"
-sh sub-lc_f50_s102 cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH uv run python scripts/subset_sft.py data/train/q35_v3b data/train/lc_f50_s102 --fraction 0.5 --seed 102 > data/runs/logs/sub-lc_f50_s102.log 2>&1
+sh sub-lc_f50_s102 cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH uv run python scripts/data/subset_sft.py data/train/q35_v3b data/train/lc_f50_s102 --fraction 0.5 --seed 102 > data/runs/logs/sub-lc_f50_s102.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-sub-lc_f50_s102"
 sh train-lc_f50_s102 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft_lora.py --data data/train/lc_f50_s102 --base Qwen/Qwen3.5-2B --out data/models/lc_f50_s102 --epochs 3 --max-length 12288 --batch 1 --accum 16 --seed 102 > data/runs/logs/train-lc_f50_s102.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-train-lc_f50_s102"

@@ -1,6 +1,6 @@
 """Generator ceiling: sample the MBR candidates per dev question, keep them all, score greedy / MBR pick / best-of-n vs the reference.
 
-    PYTHONPATH=src python scripts/mbr_oracle.py configs/exp/A6_mbrv3b.yaml out.jsonl --set generate.shots=2 --set split=dev_clean [--backend l40s]
+    PYTHONPATH=src python scripts/analysis/mbr_oracle.py configs/exp/A6_mbrv3b.yaml out.jsonl --set generate.shots=2 --set split=dev_clean [--backend l40s]
 Needs the experiment's LLM endpoint (box); retrieval comes from the cache. Dev only (never the test split).
 """
 import argparse

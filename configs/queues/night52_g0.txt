@@ -1,10 +1,10 @@
 # GPU0: DPO round for the Qwen2.5-3B-legal-vn line (q25_v3b greedy .6153 is below C1 .6325; user asked to run DPO anyway). Samples from q25_v3b on its own train prompts -> pairs -> DPO lr 2e-5 (as dpo_a) -> greedy + MBR8.
 wait ! tmux has-session -t lawrag-queue-1120-180125 2>/dev/null
 serve /home/app/phunguyen/law_rag/data/models/q25_v3b --gpu 0 --share 0.5
-sh pref-sample-q cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/pref_sample.py --data data/train/q25_v3b --out data/train/pref_q25/cands.jsonl --base-url http://localhost:8000/v1 --model /home/app/phunguyen/law_rag/data/models/q25_v3b > data/runs/logs/pref-sample-q.log 2>&1
+sh pref-sample-q cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/train/pref_sample.py --data data/train/q25_v3b --out data/train/pref_q25/cands.jsonl --base-url http://localhost:8000/v1 --model /home/app/phunguyen/law_rag/data/models/q25_v3b > data/runs/logs/pref-sample-q.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pref-sample-q"
 do tmux kill-session -t lawrag-llm-g0
-sh pairs-q cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/build_pairs.py data/train/pref_q25/cands.jsonl data/train/pref_q25/pairs.jsonl --min-margin 0.1 > data/runs/logs/pairs-q.log 2>&1
+sh pairs-q cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/train/build_pairs.py data/train/pref_q25/cands.jsonl data/train/pref_q25/pairs.jsonl --min-margin 0.1 > data/runs/logs/pairs-q.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pairs-q"
 sh dpo-q25 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/dpo.py --pairs data/train/pref_q25/pairs.jsonl --base data/models/q25_v3b --out data/models/q25_dpo --lr 2e-5 --beta 0.1 > data/runs/logs/dpo-q25.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo-q25"

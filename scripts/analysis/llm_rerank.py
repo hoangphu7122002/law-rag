@@ -1,9 +1,9 @@
 """Exploratory: can a large LLM (via Mistral Vibe) re-rank the reranker's top candidates better? Dev only.
 
-    box:   PYTHONPATH=src python scripts/llm_rerank.py export --out data/runs/llm_rerank_tasks.json     (dev questions + 10 candidates + gold, from the retrieval cache)
-    local: python scripts/llm_rerank.py prompts tasks.json --dir prompts/ --batch 6                      (prompt files WITHOUT gold)
+    box:   PYTHONPATH=src python scripts/analysis/llm_rerank.py export --out data/runs/llm_rerank_tasks.json     (dev questions + 10 candidates + gold, from the retrieval cache)
+    local: python scripts/analysis/llm_rerank.py prompts tasks.json --dir prompts/ --batch 6                      (prompt files WITHOUT gold)
            ... run ~/.claude/skills/vibe/vibe_call.py on each prompt, save the replies ...
-           python scripts/llm_rerank.py score tasks.json replies/*.txt                                    (Dieu@1 / @5 / MRR: original order vs LLM order)
+           python scripts/analysis/llm_rerank.py score tasks.json replies/*.txt                                    (Dieu@1 / @5 / MRR: original order vs LLM order)
 The helper is far larger than the 4B answering-model limit: this measures an upper bound on retrieval-side re-ranking, not a deployable system.
 """
 import argparse

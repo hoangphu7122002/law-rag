@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Bring a GPU layout up with docker compose, wait until healthy, run the load sweep, tear it down.
-#   scripts/serve_bench.sh A|B|C [users] [seconds]      (run in the repo root on the GPU box)
+#   scripts/serve/serve_bench.sh A|B|C [users] [seconds]      (run in the repo root on the GPU box)
 # A: one card, everything shared    B: two single-card stacks behind nginx (data parallel)    C: LLM on card 0, embed+rerank on card 1
 # Results: appended to data/runs/load.jsonl (tag = layout + shares). Uses only cards that have the memory free.
 set -euo pipefail
@@ -40,7 +40,7 @@ MODE=${MODE:-all}   # any of: sweep max burst spike (space separated) or all
 [ "$MODE" = all ] && MODE="sweep max burst spike"
 T="${TAG}${EXTRA_TAG:-}"
 has() { [[ " $MODE " == *" $1 "* ]]; }
-LT="uv run python scripts/load_test.py --url $URL --seconds $SECS --out data/runs/load.jsonl"
+LT="uv run python scripts/serve/load_test.py --url $URL --seconds $SECS --out data/runs/load.jsonl"
 has sweep && $LT --users "$USERS" --tag "$T"
 # max: largest user count meeting the SLO (p95 total < SLO_P95 s, <1 % errors, no 429)
 has max && $LT --find-max --users "${MAXSTART:-8}" --limit "${MAXLIMIT:-256}" --slo-p95 "${SLO_P95:-10}" --tag "$T-max"

@@ -1,4 +1,4 @@
-"""Print the trajectory monitor table. Usage: PYTHONPATH=src python3 scripts/traj_monitor.py [--no-tools] [--by split|gold|rouge] FILE.jsonl ..."""
+"""Print the trajectory monitor table. Usage: PYTHONPATH=src python3 scripts/ops/traj_monitor.py [--no-tools] [--by split|gold|rouge] FILE.jsonl ..."""
 import argparse
 import json
 from pathlib import Path

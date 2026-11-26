@@ -58,8 +58,8 @@ python src/train/sft_lora.py --data data/train/q35_v3b --base Qwen/Qwen3.5-2B --
 make run EXP=configs/exp/A5_v3b.yaml ARGS="--set generate.model=data/models/q35_v3b --set generate.shots=2"
 make run EXP=configs/exp/A6_mbrv3b.yaml ARGS="--set generate.model=data/models/q35_v3b --set generate.shots=2"   # MBR-8
 # 3.5 on-policy DPO (round 1; round 2 repeats it from the round-1 model)
-python scripts/pref_sample.py --data data/train/q35_v3b --out data/train/pref_v3b/cands.jsonl --model data/models/q35_v3b --base-url http://localhost:8001/v1
-PYTHONPATH=src python scripts/build_pairs.py data/train/pref_v3b/cands.jsonl data/train/pref_v3b/pairs.jsonl --min-margin 0.1
+python scripts/train/pref_sample.py --data data/train/q35_v3b --out data/train/pref_v3b/cands.jsonl --model data/models/q35_v3b --base-url http://localhost:8001/v1
+PYTHONPATH=src python scripts/train/build_pairs.py data/train/pref_v3b/cands.jsonl data/train/pref_v3b/pairs.jsonl --min-margin 0.1
 python src/train/dpo.py --pairs data/train/pref_v3b/pairs.jsonl --base data/models/q35_v3b --out data/models/dpo_a --lr 2e-5 --beta 0.1
 #   round 2: pref_sample with --model data/models/dpo_a (same train prompts) -> build_pairs -> dpo.py --base data/models/dpo_a --out data/models/dpo_a2
 # 3.6 significance: paired bootstrap between two runs
@@ -77,7 +77,7 @@ Full instructions, variables and measured latency (median 2.6 s end to end on on
 ```bash
 GPU=0 HF_CACHE=$HOME/.cache/huggingface docker compose -p lawrag-qa -f docker/compose.yml up -d     # needs data/models/dpo_a2, the index and data/serve/shots.json
 curl -s -X POST localhost:8080/ask -H 'Content-Type: application/json' -d '{"question":"Mức phạt đối với hành vi không đội mũ bảo hiểm khi đi xe máy là bao nhiêu?"}'
-python scripts/demo.py docs/report/demo_questions.json > docs/report/demo.md                          # the demo transcript (dev only)
+python scripts/serve/demo.py docs/report/demo_questions.json > docs/report/demo.md                          # the demo transcript (dev only)
 ```
 
 ## 5. Repository map

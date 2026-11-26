@@ -1,12 +1,12 @@
 # Track C: stronger cited-Dieu term in the DPO reward (round 1 only, from SFT v3b, lr 2e-5, beta .1, margin .1): cite_weight 0.4 and 0.6 vs the original 0.2 (dpo_a, dev300 .6543). Same candidates (data/train/pref_v3b/cands.jsonl).
-sh pairs-cw04 cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/build_pairs.py data/train/pref_v3b/cands.jsonl data/train/pref_v3b/pairs_cw04.jsonl --min-margin 0.1 --cite-weight 0.4 > data/runs/logs/pairs-cw04.log 2>&1
+sh pairs-cw04 cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/train/build_pairs.py data/train/pref_v3b/cands.jsonl data/train/pref_v3b/pairs_cw04.jsonl --min-margin 0.1 --cite-weight 0.4 > data/runs/logs/pairs-cw04.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pairs-cw04"
 sh dpo-cw04 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/dpo.py --base data/models/q35_v3b --pairs data/train/pref_v3b/pairs_cw04.jsonl --out data/models/dpo_cw04 --lr 2e-5 --beta 0.1 > data/runs/logs/dpo-cw04.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo-cw04"
 serve /home/app/phunguyen/law_rag/data/models/dpo_cw04 --gpu 0 --share 0.45
 configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_cw04 --set backend.base_url=http://localhost:8000/v1 --set generate.shots=2
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
-sh pairs-cw06 cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/build_pairs.py data/train/pref_v3b/cands.jsonl data/train/pref_v3b/pairs_cw06.jsonl --min-margin 0.1 --cite-weight 0.6 > data/runs/logs/pairs-cw06.log 2>&1
+sh pairs-cw06 cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python scripts/train/build_pairs.py data/train/pref_v3b/cands.jsonl data/train/pref_v3b/pairs_cw06.jsonl --min-margin 0.1 --cite-weight 0.6 > data/runs/logs/pairs-cw06.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pairs-cw06"
 sh dpo-cw06 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/dpo.py --base data/models/q35_v3b --pairs data/train/pref_v3b/pairs_cw06.jsonl --out data/models/dpo_cw06 --lr 2e-5 --beta 0.1 > data/runs/logs/dpo-cw06.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo-cw06"

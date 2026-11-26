@@ -43,7 +43,7 @@ Dev stages (n / rouge_l), V_pissa -> cptC best-val -> cptC last: gold not in pas
 Closed-book cloze of CPT v2 (209M tokens): train articles 51.0% (v1 54.1%, base 37.7%), dev/test gold raw-only 52.3% (v1 50.5%, base 34.5%): knowledge gain same as v1 despite 8x more tokens.
 Reading: CPT injects facts (cloze +15 pts) and slightly helps the "cites another Điều" group (+.05) but adds refusals and loses elsewhere; net ROUGE-L neutral-to-negative. data-effect (C vs D3 from CPT) pending: cptD3_pissa training ends ~07:50, evals after.
 
-## Diagnoses of 2026-11-26 (D3c rsLoRA dev300; scripts/diag_cited_group.py, scripts/diag_coverage.py)
+## Diagnoses of 2026-11-26 (D3c rsLoRA dev300; scripts/analysis/diag_cited_group.py, scripts/analysis/diag_coverage.py)
 - Cited-correct group (206): ROUGE-L by answer/reference length ratio: 0.7-1.3x n=116 F .841; >1.3x (over-quoting) n=64 F .546 (P .42 R .82); <0.7x n=26 F .561 (P .91 R .42). Reference names a khoản in 47/64 and 22/26 of the mismatches. Ceiling if mismatches reached .84: ~+.09 overall. V_pissa shows the same pattern (69 / 30 mismatches).
 - Gold coverage by the context (article level): all gold retrieved 164 q .703; >=50% 46 q .635; <50% 29 q .557; none 25 q .331 (41% of lost points are in the 100 not-fully-covered questions; ceiling +.055). Mean gold-article recall .744.
 - Long gold articles: ROUGE-L by longest gold article: <1000 chars n=68 .737; 1000-2000 n=59 .722; 2000-4000 n=52 .627; >4000 n=83 .515. 44% of dev gold articles are >2000 chars (all articles 20%). Reference 4-gram coverage by context vs full gold: <=2000 chars no loss; 2000-4000 .677 vs .756; >4000 .602 vs .699 (only 33% of a >4000-char article's text is in the context).

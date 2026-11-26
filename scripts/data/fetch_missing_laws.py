@@ -1,6 +1,6 @@
 """Fetch the cited laws that the store lacks (data/processed/missing_laws.json, written by the coverage check) from luatvietnam.vn.
 
-    PYTHONPATH=src python scripts/fetch_missing_laws.py [--dry-run]
+    PYTHONPATH=src python scripts/data/fetch_missing_laws.py [--dry-run]
 Refs come from Citations().table() whose law key is in the missing set; the existing polite crawler does the fetching and the
 manifest is merged, not replaced. Rebuild / extend the index afterwards (a new document is invisible to a cached index).
 """

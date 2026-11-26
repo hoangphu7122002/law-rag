@@ -1,4 +1,4 @@
-# Full corpus index (Track B, GPU1 embed :8101 + rerank :8201): sources + web_new_laws (10 fetched cited laws); retrieval-only dev + test, k=10, compare with the control index 4ac2a75c via scripts/retr_compare.py
+# Full corpus index (Track B, GPU1 embed :8101 + rerank :8201): sources + web_new_laws (10 fetched cited laws); retrieval-only dev + test, k=10, compare with the control index 4ac2a75c via scripts/analysis/retr_compare.py
 sh retr-full-dev cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_full.yaml --retrieval-only --set split=dev --set retrieve.k=10 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 > data/runs/logs/retr-full-dev.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-retr-full-dev"
 sh retr-full-test cd /home/app/phunguyen/law_rag && PATH=$HOME/.local/bin:$PATH PYTHONPATH=src uv run python -m cli run configs/exp/A5_full.yaml --retrieval-only --set split=test --set retrieve.k=10 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 > data/runs/logs/retr-full-test.log 2>&1

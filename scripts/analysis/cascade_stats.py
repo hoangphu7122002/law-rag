@@ -1,6 +1,6 @@
 """Cascade: MBR only for the least confident share of questions, greedy for the rest.
 
-    PYTHONPATH=src python scripts/cascade_stats.py <greedy_run> <mbr_run> [--exp configs/exp/A6_mbrv3b.yaml]     (box, dev)
+    PYTHONPATH=src python scripts/analysis/cascade_stats.py <greedy_run> <mbr_run> [--exp configs/exp/A6_mbrv3b.yaml]     (box, dev)
 Signal = reranker margin (top-1 minus top-2 score from the cached retrieval): low margin = unsure -> MBR. Cost in generations per question
 (greedy 1, MBR8 8). Prints rougeL of the cascade per share of questions sent to MBR.
 """

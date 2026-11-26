@@ -1,7 +1,7 @@
 """CPT augmentation: paraphrases / forward+reverse QA / summaries per law article via DeepSeek (vibe_call.py). See src/train/cpt_synth.py.
 
-    PYTHONPATH=src python3 scripts/cpt_synth.py --articles data/cpt/articles.jsonl --dry-run
-    PYTHONPATH=src python3 scripts/cpt_synth.py --articles data/cpt/articles.jsonl --limit-articles 200 --out data/cpt/aug_pilot.jsonl
+    PYTHONPATH=src python3 scripts/data/cpt_synth.py --articles data/cpt/articles.jsonl --dry-run
+    PYTHONPATH=src python3 scripts/data/cpt_synth.py --articles data/cpt/articles.jsonl --limit-articles 200 --out data/cpt/aug_pilot.jsonl
 Resumable (finished batch ids skipped). Dev/test gold articles are never sent to the teacher.
 """
 import argparse

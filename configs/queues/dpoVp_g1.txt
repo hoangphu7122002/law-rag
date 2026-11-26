@@ -1,12 +1,12 @@
 # DPO on V_pissa (best SFT, C PiSSA dev .6414 / test .6307), dpo_a recipe. GPU1: sample n=8 on the C prompts, pairs A (standard reward) and B (extent-aware: +.15 khoản match, +.15 length 0.7-1.3x), DPO A here; DPO B runs on GPU0 (queue dpoVp_g0). Then dev + test.
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-queue-1126-080912"
 serve /home/app/phunguyen/law_rag/data/models/q35_V_pissa --gpu 1 --share 0.45
-sh pref-Vp cd /home/app/phunguyen/law_rag && PYTHONPATH=src .venv/bin/python scripts/pref_sample.py --data data/train/q35_C --out data/train/pref_Vp/cands.jsonl --base-url http://localhost:8001/v1 --model /home/app/phunguyen/law_rag/data/models/q35_V_pissa --n 8 > data/runs/logs/pref-Vp.log 2>&1
+sh pref-Vp cd /home/app/phunguyen/law_rag && PYTHONPATH=src .venv/bin/python scripts/train/pref_sample.py --data data/train/q35_C --out data/train/pref_Vp/cands.jsonl --base-url http://localhost:8001/v1 --model /home/app/phunguyen/law_rag/data/models/q35_V_pissa --n 8 > data/runs/logs/pref-Vp.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pref-Vp"
 do tmux kill-session -t lawrag-llm-g1
-sh pairs-VpA cd /home/app/phunguyen/law_rag && PYTHONPATH=src .venv/bin/python scripts/build_pairs.py data/train/pref_Vp/cands.jsonl data/train/pref_Vp/pairs_A.jsonl --min-margin 0.1 > data/runs/logs/pairs-VpA.log 2>&1
+sh pairs-VpA cd /home/app/phunguyen/law_rag && PYTHONPATH=src .venv/bin/python scripts/train/build_pairs.py data/train/pref_Vp/cands.jsonl data/train/pref_Vp/pairs_A.jsonl --min-margin 0.1 > data/runs/logs/pairs-VpA.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pairs-VpA"
-sh pairs-VpB cd /home/app/phunguyen/law_rag && PYTHONPATH=src .venv/bin/python scripts/build_pairs.py data/train/pref_Vp/cands.jsonl data/train/pref_Vp/pairs_B.jsonl --min-margin 0.1 --khoan-weight 0.15 --length-weight 0.15 > data/runs/logs/pairs-VpB.log 2>&1
+sh pairs-VpB cd /home/app/phunguyen/law_rag && PYTHONPATH=src .venv/bin/python scripts/train/build_pairs.py data/train/pref_Vp/cands.jsonl data/train/pref_Vp/pairs_B.jsonl --min-margin 0.1 --khoan-weight 0.15 --length-weight 0.15 > data/runs/logs/pairs-VpB.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pairs-VpB"
 sh dpo-VpA cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/dpo.py --pairs data/train/pref_Vp/pairs_A.jsonl --base /home/app/phunguyen/law_rag/data/models/q35_V_pissa --out /home/app/phunguyen/law_rag/data/models/dpo_Vp_A --lr 2e-5 --beta 0.1 --max-length 12288 > data/runs/logs/dpo-VpA.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo-VpA"

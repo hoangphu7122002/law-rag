@@ -1,6 +1,6 @@
 """CSV of the low-scoring questions of a run, one row per question, for reading by hand.
 
-    PYTHONPATH=src python scripts/tail_cases.py data/runs/<dev run> --out tail_cases_dev.csv [--low 0.4]
+    PYTHONPATH=src python scripts/analysis/tail_cases.py data/runs/<dev run> --out tail_cases_dev.csv [--low 0.4]
 Columns: qid, rougeL, stage (low_score_analysis.failure_stage), law_match, lengths, question, gold articles, retrieved articles (rank order), reference, answer.
 Dev only: the reference answers of the test split are not printed.
 """

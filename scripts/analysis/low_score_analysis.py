@@ -1,6 +1,6 @@
 """Where do the low-scoring questions fail? Stage of the first failure, per question of a run:
 
-    PYTHONPATH=src python scripts/low_score_analysis.py data/runs/<run> [--low 0.4]
+    PYTHONPATH=src python scripts/analysis/low_score_analysis.py data/runs/<run> [--low 0.4]
 stages: reference cites no article | gold article not in the passages | retrieved, not cited | retrieved and cited
 (passages = the retrieval cache of the run; gold = corpus.gold pairs "<law key>#<Điều>"; "cited" = the answer names a gold Điều number.)
 """
