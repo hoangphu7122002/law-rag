@@ -1,10 +1,10 @@
 # Fdb version 4
-["xdvipdfmx"] 1795692682.79597 "main.xdv" "main.pdf" "main" 1795692683.30178 0
-  "main.xdv" 1795692682.39967 910068 576bca9a1476c4ca4e2d184cac42a516 "xelatex"
+["xdvipdfmx"] 1795694266.20011 "main.xdv" "main.pdf" "main" 1795694266.70971 0
+  "main.xdv" 1795694265.91435 913944 1affcd52627920a9e1b2070ed2f07702 "xelatex"
   (generated)
   "main.pdf"
   (rewritten before read)
-["xelatex"] 1795692680.0281 "main.tex" "main.xdv" "main" 1795692683.29881 0
+["xelatex"] 1795694264.23774 "main.tex" "main.xdv" "main" 1795694266.70667 0
   "/Users/hoangphu/Library/Application Support/MiKTeX/texmfs/data/miktex/data/le/xetex/xelatex.fmt" 1791360537.39853 27205472 5ac6474b8a3463142933c2020bd542ed ""
   "/Users/hoangphu/Library/Application Support/MiKTeX/texmfs/install/fonts/tfm/adobe/zapfding/pzdr.tfm" 1136747054 1528 f853c4d1b4e0550255e02831fdc8496f ""
   "/Users/hoangphu/Library/Application Support/MiKTeX/texmfs/install/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1778080988.77124 1004 54797486969f23fa377b128694d548df ""
@@ -209,9 +209,9 @@
   "/Users/hoangphu/Library/Application Support/MiKTeX/texmfs/install/tex/latex/url/url.sty" 1778081059.02377 12796 8edb7d69a20b857904dd0ea757c14ec9 ""
   "/Users/hoangphu/Library/Application Support/MiKTeX/texmfs/install/tex/latex/xcolor/xcolor.sty" 1778081059.10363 55384 b454dec21c2d9f45ec0b793f0995b992 ""
   "appendix_examples.tex" 1795194045.42799 21717 f0a977cb95e17e359582b1fb5274d60d ""
-  "main.aux" 1795692682.39623 26062 206a6b06c1c6b8821e45aa0ebf0d2997 "xelatex"
-  "main.out" 1795692682.39888 6411 e0458b60a1883256a0d26c9db1074b21 "xelatex"
-  "main.tex" 1795692678.88023 81603 0abe21e6c60df493d73f8a5ede28a7e5 ""
+  "main.aux" 1795694265.91111 26062 a649b70e4039a775f375f5ed93c60b50 "xelatex"
+  "main.out" 1795694265.91375 6411 e0458b60a1883256a0d26c9db1074b21 "xelatex"
+  "main.tex" 1795694260.73499 82050 ef1ff79567bd64650bafa3b0663078c8 ""
   (generated)
   "main.aux"
   "main.log"
