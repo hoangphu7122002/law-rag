@@ -77,3 +77,12 @@ Seed replicates queued: round 2 with DPO seed 777 (GPU1, dpo_Vp_A2s2) and a full
 - dpo_Vp_As2 (round 1, seed 777): dev .6544 / test .6263 (dpo_Vp_A .6493 / .6226): round 1 also reproduces (spread +.005 / +.004).
 - GPU0: dpo_Vp_As2_r2 (round 2 of the second chain) training; GPU1: round 3 sampling from dpo_Vp_A2 (queue 1126-122633).
 - Disk 67G after deleting the CPT models and soup_a2 with the user's approval (31G freed).
+
+## 2026-11-26 13:00 — pair coverage by bucket (pref_Vp2 cands, pairs_mix 1323)
+Bucket = mean ROUGE-L of the 8 samples (tail <.45, mid .45–.65, head ≥.65).
+| bucket | prompts | pairs | pairs/prompt | no pair | extent/synth pairs |
+|---|---|---|---|---|---|
+| tail | 346 | 292 | 0.84 | 73 | 101 |
+| mid | 299 | 402 | 1.34 | 56 | 239 |
+| head | 807 | 629 | 0.78 | 310 | 283 |
+Read: tail under-covered (0.84/prompt, 21% no pair); head wastes 283 extent pairs. Gap for tail+mid ≈ 130 prompts with no pair (+ ~150 more tail pairs for parity). Haiku 5.5 low candidate targets: those prompts (chosen = Haiku answer verified by rougeL vs gold ≥ .65, rejected = model's worst); decontaminate vs dev/test (train split is disjoint by qid; also check question text). Queued dpo_Vp_A2m (queue 1126-125335) on GPU0 after chain-2.
