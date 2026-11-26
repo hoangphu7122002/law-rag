@@ -144,3 +144,7 @@ Rule: align answer lines to the lines of the passage they quote (token F1 ≥ .8
 
 ## 2026-11-26 21:40 — dpo_Vp_A2n16 (round 2 from dpo_Vp_A, n=16 samples/prompt → 1197 pairs vs 1043; model verified)
 dev .6589 / test .6475, pooled .6544, −.0012 vs dpo_a2 [−.0146,+.0122] (≈ plain A2 .6620 within noise). Stage table dev: other-Điều 26 / .449, retrieved-and-cited 210 / .739, gold-missing 25 / .343, len ratio .97. Read: more samples per prompt (better best/worst selection) gives no gain. MBR8 of dpo_Vp_A2c queued on GPU0.
+
+## 2026-11-26 21:15 — dpo_Vp_A2cs2 (seed 777 replicate of cite-contrast) and MBR8 of dpo_Vp_A2c (models verified)
+A2cs2: dev .6653 / test .6403, pooled .6553 (−.0003 vs dpo_a2 [−.0141,+.0133]); A2c .6602 → seed spread .005. Stage table dev: other-Điều 22/.470 (A2c .512), retrieved-and-cited 213/.743, gold-missing 25/.348 → the +.011 on the wrong-article group of A2c was seed noise. MBR8 of A2c: dev .6767 / test .6465 (greedy .6728/.6413: +.004/+.005), pooled .6646 (+.0090 vs dpo_a2 greedy [−.0043,+.0226]).
+State of all recipes (pooled dev+test, n=500, greedy): dpo_a2 .6556 | Vp_A2 .6620 | Vp_A2c .6602 / A2cs2 .6553 | A2m .6553 / A2ms2 .6561 | A2n16 .6544 | As2_r2 .6471 | A2g .6368 | A_rft .6408 | A3 .6338. With MBR8: Vp_A2 ≈ .666, Vp_A2c .6646. Every sound recipe sits at .655–.662 greedy (seed spread ≈ .005–.015); no recipe is distinguishable from another. Both GPUs idle: no justified experiment left (all remaining ideas are inside noise); decision needed from the user: recipe for the final train+dev → DPO → test.

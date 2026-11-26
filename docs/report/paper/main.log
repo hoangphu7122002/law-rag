@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (MiKTeX 22.1) (preloaded format=xelatex 2026.10.7)  26 NOV 2026 20:41
+This is XeTeX, Version 3.141592653-2.6-0.999993 (MiKTeX 22.1) (preloaded format=xelatex 2026.10.7)  26 NOV 2026 21:07
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1199,36 +1199,36 @@ cmm/m/it/10 :\OT1/cmr/m/n/10 603$ \TU/TimesNewRoman(0)/m/n/10 / $\OML/cmm/m/it/
 [10]
 
 [11]
-Overfull \hbox (35.54991pt too wide) in paragraph at lines 443--460
+Overfull \hbox (35.54991pt too wide) in paragraph at lines 443--462
  [][] 
  []
 
 
 
 [12]
-Underfull \hbox (badness 10000) in paragraph at lines 471--471
+Underfull \hbox (badness 10000) in paragraph at lines 473--473
 []|\TU/TimesNewRoman(0)/m/n/10.95 ReAct agent [[]] with
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 471--471
+Underfull \hbox (badness 10000) in paragraph at lines 473--473
 \TU/TimesNewRoman(0)/m/n/10.95 4 tools (search, article
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 471--471
+Underfull \hbox (badness 10000) in paragraph at lines 473--473
 []|\TU/TimesNewRoman(0)/m/n/10.95 dev_clean $\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/
 10.95 537$ \TU/TimesNewRoman(0)/m/n/10.95 (trained 2B),
  []
 
 
-Underfull \hbox (badness 1735) in paragraph at lines 471--471
+Underfull \hbox (badness 1735) in paragraph at lines 473--473
 \OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.95 574$ \TU/TimesNewRoman(0)/m/n/10.95 wit
 h question-seeded search;
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 471--471
+Underfull \hbox (badness 10000) in paragraph at lines 473--473
 \TU/TimesNewRoman(0)/m/n/10.95 RAG+SFT $\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.95
  633$\TU/TimesNewRoman(0)/m/n/10.95 /$\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.95 6
 34$\TU/TimesNewRoman(0)/m/n/10.95 ; $\OMS/cmsy/m/n/10.95 ^^@\OT1/cmr/m/n/10.95 
@@ -1236,31 +1236,31 @@ Underfull \hbox (badness 10000) in paragraph at lines 471--471
  []
 
 
-Underfull \hbox (badness 1242) in paragraph at lines 471--472
+Underfull \hbox (badness 1242) in paragraph at lines 473--474
 []|\TU/TimesNewRoman(0)/m/n/10.95 Own queries find the gold ar-
  []
 
 
-Underfull \hbox (badness 4726) in paragraph at lines 471--472
+Underfull \hbox (badness 4726) in paragraph at lines 473--474
 \TU/TimesNewRoman(0)/m/n/10.95 ticle in $\OT1/cmr/m/n/10.95 66$\TU/TimesNewRoma
 n(0)/m/n/10.95 –$\OT1/cmr/m/n/10.95 72[]$ \TU/TimesNewRoman(0)/m/n/10.95 of que
 stions
  []
 
 
-Underfull \hbox (badness 5652) in paragraph at lines 471--472
+Underfull \hbox (badness 5652) in paragraph at lines 473--474
 \TU/TimesNewRoman(0)/m/n/10.95 (ROUGE-L $\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.9
 5 65$ \TU/TimesNewRoman(0)/m/n/10.95 vs $\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.9
 5 32$ \TU/TimesNewRoman(0)/m/n/10.95 when
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 478--478
+Underfull \hbox (badness 10000) in paragraph at lines 480--480
 []|\TU/TimesNewRoman(0)/m/n/10.95 Continued pre-training
  []
 
 
-Underfull \hbox (badness 1292) in paragraph at lines 478--478
+Underfull \hbox (badness 1292) in paragraph at lines 480--480
 []|\TU/TimesNewRoman(0)/m/n/10.95 cloze $\OT1/cmr/m/n/10.95 +15$ \TU/TimesNewRo
 man(0)/m/n/10.95 points, ROUGE-L un-
  []
@@ -1270,9 +1270,9 @@ man(0)/m/n/10.95 points, ROUGE-L un-
 [13]
 
 [14]
-Package pgfplots info on input line 559: Using 'lua backend=false' for axis: xm
+Package pgfplots info on input line 561: Using 'lua backend=false' for axis: xm
 ode=log unsupported (yet).
-Package pgfplots info on input line 564: Using 'lua backend=false' for axis: xm
+Package pgfplots info on input line 566: Using 'lua backend=false' for axis: xm
 ode=log unsupported (yet).
 
 
@@ -1291,20 +1291,20 @@ ode=log unsupported (yet).
 [21])
 
 [22]
-Underfull \hbox (badness 1067) in paragraph at lines 661--661
+Underfull \hbox (badness 1067) in paragraph at lines 663--663
 \TU/TimesNewRoman(0)/m/n/10.95 put along (gold $\OMS/cmsy/m/n/10.95 ^^@$ \TU/Ti
 mesNewRoman(0)/m/n/10.95 own answer) hidden
  []
 
 
-Overfull \hbox (11.00754pt too wide) in paragraph at lines 657--670
+Overfull \hbox (11.00754pt too wide) in paragraph at lines 659--672
  [][] 
  []
 
 
 
 [23]
-Underfull \hbox (badness 10000) in paragraph at lines 692--693
+Underfull \hbox (badness 10000) in paragraph at lines 694--695
 []\TU/TimesNewRoman(0)/m/n/10 J.Hu et al. Exploring weight-space programming: c
 apabilities, generalization, and limitations.
  []
@@ -1312,7 +1312,7 @@ apabilities, generalization, and limitations.
 
 
 [24]
-Underfull \hbox (badness 2689) in paragraph at lines 720--721
+Underfull \hbox (badness 2689) in paragraph at lines 722--723
 []\TU/TimesNewRoman(0)/m/n/10 DeepSeek-AI. DeepSeek-R1: incentivizing reasoning
  capability in LLMs via reinforcement learning.
  []
@@ -1321,7 +1321,7 @@ Underfull \hbox (badness 2689) in paragraph at lines 720--721
 
 [25]
 LaTeX Font Info:    Font shape `TU/Menlo(0)/m/n' will be
-(Font)              scaled to size 8.80005pt on input line 729.
+(Font)              scaled to size 8.80005pt on input line 731.
 
 
 [26] (main.aux)
@@ -1339,6 +1339,6 @@ Here is how much of TeX's memory you used:
  64887 multiletter control sequences out of 15000+600000
  637862 words of font info for 122 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 99i,18n,108p,1720b,2517s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 99i,18n,108p,1835b,2517s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main.xdv (26 pages, 931912 bytes).
+Output written on main.xdv (26 pages, 934168 bytes).
