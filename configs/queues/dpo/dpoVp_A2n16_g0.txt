@@ -1,0 +1,20 @@
+# Round 2 from dpo_Vp_A with n=16 on-policy samples per prompt (instead of 8): more candidates -> better best/worst pairs (tail-mid plan, user asked about n=16). Plain pair recipe otherwise. Compare with dpo_Vp_A2 (.6743/.6435; chain spread ~.016), A2ms2, dpo_a2. GPU0.
+serve /home/app/phunguyen/law_rag/data/models/dpo_Vp_A --gpu 0 --share 0.45
+sh pref-Vpn16 cd /home/app/phunguyen/law_rag && PYTHONPATH=src .venv/bin/python scripts/train/pref_sample.py --data data/train/q35_C --out data/train/pref_Vpn16/cands.jsonl --base-url http://localhost:8000/v1 --model /home/app/phunguyen/law_rag/data/models/dpo_Vp_A --n 16 > data/runs/logs/pref-Vpn16.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pref-Vpn16"
+do tmux kill-session -t lawrag-llm-g0
+sh pairs-Vpn16 cd /home/app/phunguyen/law_rag && PYTHONPATH=src .venv/bin/python scripts/train/build_pairs.py data/train/pref_Vpn16/cands.jsonl data/train/pref_Vpn16/pairs.jsonl --min-margin 0.1 > data/runs/logs/pairs-Vpn16.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pairs-Vpn16"
+sh dpo-VpA2n16 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/preference/dpo.py --pairs data/train/pref_Vpn16/pairs.jsonl --base /home/app/phunguyen/law_rag/data/models/dpo_Vp_A --out /home/app/phunguyen/law_rag/data/models/dpo_Vp_A2n16 --lr 2e-5 --beta 0.1 --max-length 12288 > data/runs/logs/dpo-VpA2n16.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo-VpA2n16"
+do sleep 60
+serve /home/app/phunguyen/law_rag/data/models/dpo_Vp_A2n16 --gpu 0 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_Vp_A2n16 --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
+do tmux kill-session -t lawrag-llm-g0
+do sleep 90
+serve /home/app/phunguyen/law_rag/data/models/dpo_Vp_A2n16 --gpu 0 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_Vp_A2n16 --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
+do tmux kill-session -t lawrag-llm-g0
+do sleep 90
