@@ -453,3 +453,10 @@ Test split (200 questions, 0 errors, 0 empty), retrieval as in the dev runs (den
 - vLLM n-gram speculative decoding (dpo_Vp_A2, GPU1, 40 dev prompts, `scripts/serve/spec_ab.sh`): conc 1 tok/s 160 → 242 / 312 / 382 (ngram3 / 5 / 8, up to 2.4x, p95 6.2 → 2.4 s); conc 16 1380 → 722 / 1099 / 1305 (0.52-0.95x). Helps a single user, hurts or does nothing under load. Only 11-15/40 answers identical to the baseline (spec decoding should not change greedy output: check before using). Base run is from 22:34 (the 02:2x rerun hit a quoting bug, fixed); ngram3 ran while the box was disturbed (see below), so treat its conc-16 number as noisy.
 - Thinking SFT data: take 1 (blind Qwen3.5-9B thoughts, kept when the answer cites the right Điều) kept 1/1683: the 9B thinks in English and runs past 2200 tokens. Take 2: 9B rationalisation shown the reference (Vietnamese, 3-6 sentences, must name the cited Điều, may rule out others): 1147/1683 train, 133/188 val. SFT + dev eval running.
 - Ops: a co-tenant benchmark's box-wide `pkill vllm` killed law-rag's GPU1 servers at 02:17; fixed on their side (kill only own session), servers restarted.
+
+## Step 39 — anchored DPO pairs, 4B/9B scaling launched (2026-11-27)
+- Anchored DPO round 1 (from q35_v3b, same cands as dpo_a, `scripts/train/anchor_pairs.py`, queue `configs/queues/dpo/anchor_g1.txt`). Idea: never teach a chosen answer below ROUGE-L .5 (227/1211 round-1 pairs).
+  - drop (984 pairs): dev .621 vs dpo_a .6543, −.033 [−.048, −.019].
+  - ref (984 + 257 reference-as-chosen pairs, SFT weight .2): dev .591, −.063 [−.079, −.047].
+  - Both over-lengthen (median 1863 / 2148 chars vs 1563 for dpo_a, reference mean 1583). Low-scoring pairs still carry the "avoid worse" signal. Standard pairs kept; no round 2. Paper: DPO-design ablation table + failed-ideas table.
+- Scaling runs launched with the dpo_a2 recipe (analysis only, the submission stays 2B): Qwen3.5-9B on GPU0 (`configs/queues/final/q9b_g0.txt`), Qwen3.5-4B on GPU1 (`q4b_g1.txt`). 9B SFT smoke at max-length 12288: no OOM, ~37 s/step.

@@ -651,6 +651,8 @@ Pair margin & $0.05$ & .655 & $\approx$ reference\\
  & $0.2$ & .641 & $-.013$ vs.\ reference\\
 $\beta$ & $0.05$ & .642 & $-.012$ vs.\ reference\\
  & $0.3$ & .652 & $-.002$ vs.\ reference\\
+Anchored pairs & drop chosen $<.5$ & .621 & $-.033$ \ci{-.048}{-.019}$^\ast$\\
+ & reference as chosen & .591 & $-.063$ \ci{-.079}{-.047}$^\ast$\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -659,7 +661,8 @@ No single factor improves on the final configuration:
 \item the reranker over $50$ candidates, $k{=}5$ and two shots are at or near the optimum;
 \item removing the reranker costs $0.022$;
 \item the only nominally better setting, $k{=}8$ ($+.002$), is not significant and lengthens the context, so it is not adopted;
-\item no DPO design variant exceeds the reference margin and $\beta$ ($0.1$/$0.1$).
+\item no DPO design variant exceeds the reference margin and $\beta$ ($0.1$/$0.1$);
+\item \emph{anchored} pairs, which never teach a chosen answer below \rl{} $0.5$, are clearly worse. In $19\%$ of the round-1 pairs ($227$ of $1{,}211$) the chosen answer scores below $0.5$, because when all $8$ samples are poor the best of them is poor too. Dropping these pairs ($984$ left) loses $.033$. Keeping the $984$ pairs and, for the $257$ prompts whose best sample is below $0.5$, using the reference as chosen against the worst sample (plus an SFT term of weight $0.2$) loses $.063$. Both models over-lengthen: median answers of $1{,}863$ and $2{,}148$ characters against $1{,}563$ for $\mathrm{dpo}_a$ and a reference mean of $1{,}583$. A low-scoring pair still teaches the model to avoid the worse answer, and it also balances the length direction of the pairs.
 \end{itemize}
 Because the per-factor winners coincide with the final configuration, the best combined configuration \emph{is} the final system.
 
@@ -790,6 +793,7 @@ GRPO from v3b & $.627$ vs $.633$ & DPO on self-samples is better and cheaper\\
 Third DPO round & $-.029$ (v3b chain), $-.022$ pooled (PiSSA) & Exploits the reward through length\\
 Gold answers as chosen / own best sample as SFT target & $-.019$ / $-.015$ pooled & Off-policy text, or no rejected examples\\
 Higher cited-article weight in the reward ($0.4$/$0.6$) & $.6551$ / $.6458$ vs $.6543$ & No gain at round~1\\
+Anchored pairs: drop chosen $<.5$ / reference as chosen & $.621$ / $.591$ vs $.654$ & Loses the ``avoid worse'' signal; answers grow longer\\
 Cite-contrast, $n{=}16$, length-balanced pairs & $-.001$ to $+.005$ pooled & Inside the seed spread\\
 Averaging two DPO seeds; agent edits of the weights & no gain; best $+.004\pm.005$ & Remaining loss is question-specific\\
 \midrule
