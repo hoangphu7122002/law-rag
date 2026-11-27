@@ -1,0 +1,7 @@
+# Any single machine with an NVIDIA GPU: the three vLLM servers of docs/MANUAL.md section 4 on localhost.
+name: gpu
+base_url: http://localhost:8000/v1          # LLM (vllm serve ... --port 8000)
+embed_url: http://localhost:8100/v1         # embedder (vllm serve ... --port 8100)
+rerank_url: http://localhost:8200           # reranker (vllm serve ... --port 8200)
+api_key: EMPTY
+device: cuda
