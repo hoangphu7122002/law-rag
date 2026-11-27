@@ -12,6 +12,7 @@ Job queues for the GPU box (`PYTHONPATH=src python -m cli box queue configs/queu
 | [retrieval/](retrieval/INDEX.md) | retrieval, chunking ablations, reranker, index and context experiments |
 | [decoding/](decoding/INDEX.md) | MBR / decoding experiments |
 | [eval/](eval/INDEX.md) | dev / test evaluations of finished models, order sensitivity |
+| [final/](final/INDEX.md) | final pre-declared chain, thinking SFT, 4B / 9B scaling lanes |
 | [night/](night/INDEX.md) | overnight autopilot lanes of the 2026-11-2x campaigns (59 files, numbered) |
 
 Add new queues to the right folder and keep the first line a `# description` comment (INDEX.md is generated from it).
