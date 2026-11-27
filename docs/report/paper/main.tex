@@ -1018,7 +1018,23 @@ A second adapter recipe (PiSSA), several new pair sets and a configuration fixed
 What remains is the choice of clause and of quotation extent, which no deployable selector has yet captured. The system runs as a containerised service: one L40S serves $6$--$7$ concurrent users and two serve $15$--$18$ within a $10$\,s p95.
 
 \section*{Reproducibility}
-Code, configurations, the container stack and a step-by-step manual are in the repository (\texttt{README.md}, \texttt{docs/ops/docker.md}). Every number above corresponds to a run directory with its configuration and predictions; the experiment log is in \texttt{docs/CHANGELOG.md}.
+Code, configurations, the container stack and a step-by-step manual are in the repository (\texttt{README.md}, \texttt{docs/ops/docker.md}). Every number above corresponds to a run directory with its configuration and predictions; the experiment log is in \texttt{docs/CHANGELOG.md}. Code: \url{https://github.com/hoangphu7122002/law-rag}. Data and weights are on the Hugging Face Hub, account \href{https://huggingface.co/hoangphu7122002ai}{\texttt{hoangphu7122002ai}} (all models merged, bf16, same prompt):
+
+\begin{center}\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Artifact & Repository & Dev / test\\
+\midrule
+Corpus snapshot, split, SFT and DPO data & \href{https://huggingface.co/datasets/hoangphu7122002ai/law-rag-data}{\texttt{law-rag-data}} & --\\
+\textbf{Reported system} (SFT v3b + 2 DPO rounds) & \href{https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-dpo}{\texttt{law-rag-qwen3.5-2b-dpo}} & \textbf{.664 / .643}\\
+SFT v3b (its supervised stage) & \href{https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-sft}{\texttt{law-rag-qwen3.5-2b-sft}} & .633 / .607\\
+PiSSA SFT (best supervised model) & \href{https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-pissa-sft}{\texttt{law-rag-qwen3.5-2b-pissa-sft}} & .641 / --\\
+Fixed configuration, train+dev: SFT & \href{https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-trainval-sft}{\texttt{law-rag-qwen3.5-2b-trainval-sft}} & -- / --\\
+\quad + DPO round 1 & \href{https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-trainval-dpo1}{\texttt{law-rag-qwen3.5-2b-trainval-dpo1}} & -- / --\\
+\quad + DPO round 2 & \href{https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-trainval-dpo2}{\texttt{law-rag-qwen3.5-2b-trainval-dpo2}} & -- / .640\\
+\bottomrule
+\end{tabular}
+\end{center}
 
 \appendix
 \section{Earlier test-split evaluations}\label{app:test}

@@ -7,9 +7,17 @@ How to install, run and reproduce the submitted system: a Vietnamese legal quest
 | Report | `report.pdf` (LaTeX source: `docs/report/paper/`) |
 | Source code | this repository (`source/law-rag-src.zip` in the submission) |
 | Dataset (small files) | `dataset/` in the submission |
-| Dataset (corpus, training data) | Hugging Face dataset `hoangphu7122002ai/law-rag-data` |
-| Model weights (final model, merged, bf16) | Hugging Face model `hoangphu7122002ai/law-rag-qwen3.5-2b-dpo` |
-| Intermediate models | `hoangphu7122002ai/law-rag-qwen3.5-2b-sft` (SFT stage of the final model); `…-pissa-sft` (best SFT-only model, PiSSA, report section "Post-training from the PiSSA supervised model"); `…-trainval-sft`, `…-trainval-dpo1`, `…-trainval-dpo2` (the fixed configuration trained on train+dev, report section "Final configuration") |
+| Dataset (corpus, training data) | https://huggingface.co/datasets/hoangphu7122002ai/law-rag-data |
+| Model weights | Hugging Face Hub, table below |
+
+| Model version (merged, bf16) | Hugging Face | Dev / test ROUGE-L (greedy) |
+|---|---|---|
+| **Reported system**: SFT v3b + 2 DPO rounds | https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-dpo | **.664 / .643** |
+| SFT v3b (supervised stage of the reported system) | https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-sft | .633 / .607 |
+| PiSSA SFT (best supervised model, report "Post-training from the PiSSA supervised model") | https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-pissa-sft | .641 / – |
+| Fixed configuration on train+dev, SFT (report "Final configuration") | https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-trainval-sft | – / – |
+| … + DPO round 1 | https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-trainval-dpo1 | – / – |
+| … + DPO round 2 | https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-trainval-dpo2 | – / .640 |
 
 Main result (200 held-out test questions, ROUGE-L): course baseline .171, **final system .643 (greedy)**, .652 with MBR-8.
 
