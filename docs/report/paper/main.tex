@@ -27,56 +27,115 @@
 \maketitle
 
 \begin{abstract}
-We study retrieval-augmented question answering (RAG) over Vietnamese legal texts, where the answering language model must have fewer than four billion parameters and the reference answers follow a rigid template (``\textit{Căn cứ tại khoản $k$ Điều $n$ \ldots\ quy định \ldots}'') followed by a near-verbatim quotation of the cited article. Starting from the course baseline (naive recursive chunking, a Vietnamese SBERT embedder, FAISS, and Qwen1.5-1.8B; test \rl{} $0.171$), we improve each stage of the pipeline and report every change against a paired-bootstrap criterion. The largest gains come from (i)~an index that actually contains the cited laws (law-hit rate $0.00\!\to\!0.62$), (ii)~supervised fine-tuning of Qwen3.5-2B on decontaminated training pairs with few-shot demonstrations and refusal rows, and (iii)~two rounds of on-policy preference optimisation (DPO) on the model's own best-versus-worst samples, which lets greedy decoding match $8$-sample minimum-Bayes-risk (MBR) decoding. On the held-out test split (200 questions) the final single-generation system reaches \rl{} $0.643$ (cosine $0.916$, token overlap $0.734$, BLEU-1 $0.582$), a $3.8\times$ improvement over the baseline, and $0.652$ with MBR-8. We further document what did \emph{not} help (embedder and reranker fine-tuning, legal-domain base models, tool-using agents, FP8 quantisation, cascaded decoding), quantify the remaining headroom with an oracle analysis, and package the system as a container with three inference endpoints (median end-to-end latency $2.6$\,s, p95 $6.6$\,s on one L40S).
+We study retrieval-augmented question answering (RAG) over Vietnamese legal texts under two constraints: the answering model must have fewer than four billion parameters, and the reference answers follow a rigid template (``\textit{Căn cứ tại khoản $k$ Điều $n$ \ldots\ quy định \ldots}'') followed by a near-verbatim quotation of the cited article. Starting from the course baseline (recursive chunking, a Vietnamese SBERT embedder, FAISS and Qwen1.5-1.8B; test \rl{} $0.171$), we improve each stage of the pipeline and accept a change only when a paired bootstrap on a development split supports it. Three steps carry almost all of the gain: (i)~an index that contains the laws the questions cite (law-hit rate $0.00\!\to\!0.62$); (ii)~supervised fine-tuning of Qwen3.5-2B on decontaminated pairs with few-shot demonstrations and refusal rows; and (iii)~two rounds of on-policy preference optimisation (DPO) on the model's own best-versus-worst samples. After step~(iii), a single greedy generation matches $8$-sample minimum-Bayes-risk (MBR) decoding. On the held-out test split ($200$ questions) the system reaches \rl{} $0.643$ with one generation per question (cosine $0.916$, token overlap $0.734$, BLEU-1 $0.582$), and $0.652$ with MBR-8. A configuration fixed in advance and retrained on train plus development data lands at $0.640$/$0.646$, inside the seed spread. We also report what did not help (retrieval fine-tuning, legal-domain base models, continued pre-training, agents, thinking-mode training, quantisation), locate the remaining error with oracle analyses, and package the system as a container with three inference endpoints. On one L40S the median end-to-end latency is $2.6$\,s and the p95 is $6.6$\,s; two cards serve $15$--$18$ concurrent users within a $10$\,s p95.
 \end{abstract}
 
 %------------------------------------------------------------------------------
 \section{Introduction}
-Retrieval-augmented generation \cite{lewis2020rag,rag_survey} grounds a language model in retrieved passages; legal question answering is a demanding setting for it: the corpus is large and heavily cross-referenced, answers must cite the right article, and a small model that is deployable on a single GPU must reproduce the register of statutory text. The assignment fixes the evaluation (five lexical/semantic similarity metrics against reference answers), restricts the answering model to under $4$B parameters, and provides a deliberately naive baseline. We treat it as an empirical-systems problem: decompose the pipeline into retrieval, generation, decoding and post-training, run controlled ablations in each, and keep only changes that survive a significance test on a development split.
+Retrieval-augmented generation \cite{lewis2020rag,rag_survey} grounds a language model in retrieved passages. Legal question answering is a demanding setting for it:
+\begin{itemize}[leftmargin=*]
+\item the corpus is large and heavily cross-referenced;
+\item answers must cite the right article;
+\item a small model that fits on one GPU must reproduce the register of statutory text.
+\end{itemize}
+The assignment fixes the evaluation (five lexical and semantic similarity metrics against reference answers), limits the answering model to under $4$B parameters, and provides a deliberately naive baseline.
+
+We treat the task as an empirical systems problem. We split the pipeline into retrieval, generation, decoding and post-training, run controlled ablations in each stage, and keep only changes that pass a significance test on a development split. The final system was then checked twice more: by re-running its post-training from other seeds, and by a configuration fixed in advance and scored on test once.
 
 \paragraph{Contributions.}
 \begin{enumerate}[leftmargin=*]
-\item A corpus-aware retrieval stack (one chunk per \dieu, cleaning and de-duplication, an index extended with the laws that the QA set cites, dense top-50 followed by a cross-encoder reranker) that raises the fraction of questions whose cited law is retrievable from $0$ to $0.62$ and, with an untuned Vietnamese 3B generator, test \rl{} from $0.171$ to $0.443$ (Section~\ref{sec:retrieval}).
-\item A supervised recipe for a 2.3B model (decontaminated pairs, few-shot demonstrations drawn from nearest training questions, gold-passage injection, refusal rows) worth $+0.20$ \rl{} over the raw model and $+0.03$ over plain SFT on dev (Section~\ref{sec:generator}).
-\item On-policy, iterated DPO on best-versus-worst self-samples scored by the same lexical reward as RL: two rounds give $+0.031$ dev \rl{} \ci{+0.014}{+0.049} over the SFT model under greedy decoding, replicated with a second DPO seed on the same SFT model; starting instead from a second SFT seed, round~1 again helps ($+0.027$) but round~2 adds nothing (Section~\ref{sec:posttrain}); a third round degrades.
-\item A systematic negative-results record and an oracle analysis showing where the remaining error lies (answer wording, not retrieval) (Sections~\ref{sec:negative} and~\ref{sec:analysis}).
-\item A reproducible, containerised QA service with separate LLM, embedding and reranking endpoints, a refusal guard for off-topic questions, and measured latency (Section~\ref{sec:deploy}).
+\item \textbf{Corpus-aware retrieval.} One chunk per \dieu, cleaning and de-duplication, an index extended with the laws the QA set cites, then dense top-50 and a cross-encoder reranker. The share of questions whose cited law can be retrieved rises from $0$ to $0.62$. With an untuned Vietnamese 3B generator, test \rl{} rises from $0.171$ to $0.443$ (Section~\ref{sec:retrieval}).
+\item \textbf{A supervised recipe for a 2.3B model}: decontaminated pairs, few-shot demonstrations drawn from the nearest training questions, gold-passage injection and refusal rows. It is worth $+0.20$ \rl{} over the raw model and $+0.03$ over plain fine-tuning on dev (Section~\ref{sec:generator}).
+\item \textbf{On-policy, iterated DPO} on best-versus-worst self-samples, scored by the evaluation metric itself:
+  \begin{itemize}[leftmargin=*]
+  \item two rounds add $+0.031$ dev \rl{} \ci{+0.014}{+0.049} over the supervised model under greedy decoding;
+  \item a third round degrades the model;
+  \item across seeds, the first round is robust, but the second round's extra gain is not always reproduced (Section~\ref{sec:posttrain}).
+  \end{itemize}
+\item \textbf{A record of what did not help}, with an oracle analysis showing that the remaining error lies in which clause is quoted and how much of it, not in retrieval (Sections~\ref{sec:analysis} and~\ref{sec:negative}).
+\item \textbf{A containerised QA service} with separate LLM, embedding and reranking endpoints and a refusal guard for off-topic questions, with measured latency, capacity and engine settings (Section~\ref{sec:deploy}).
 \end{enumerate}
 
 %------------------------------------------------------------------------------
 \section{Related Work}
 \paragraph{Retrieval-augmented generation and legal NLP.}
-RAG combines a retriever with a generator \cite{lewis2020rag}; \cite{rag_survey} survey chunking, retrieval, reranking and generation choices. Legal NLP has produced English benchmarks \cite{lexglue,legalbench} and, for Vietnamese, pretrained legal models \cite{vilegallm} built on Vietnamese encoders \cite{phobert} or multilingual decoder families \cite{qwen25,qwen3}. Reported Vietnamese legal results mostly concern retrieval or classification rather than free-form answers scored against references, which is the setting here.
+RAG combines a retriever with a generator \cite{lewis2020rag}; \cite{rag_survey} survey chunking, retrieval, reranking and generation choices. Legal NLP has English benchmarks \cite{lexglue,legalbench}. For Vietnamese there are pretrained legal models \cite{vilegallm}, built on Vietnamese encoders \cite{phobert} or on multilingual decoder families \cite{qwen25,qwen3}. Reported Vietnamese legal results mostly concern retrieval or classification. Free-form answers scored against references, the setting studied here, are rarely reported.
 \paragraph{Retrieval and reranking.}
-Dense bi-encoders \cite{dpr,sbert,bgem3} retrieve candidates cheaply; cross-encoders \cite{monobert} re-score a short list more accurately, and lexical scoring \cite{bm25} can be fused with dense ranks \cite{rrf}. We follow this two-stage design and measure each component. Context length matters for the generator \cite{lostmiddle}, which motivates keeping $k$ small.
+Dense bi-encoders \cite{dpr,sbert,bgem3} retrieve candidates cheaply; cross-encoders \cite{monobert} re-score a short list more accurately. Lexical scoring \cite{bm25} can be fused with dense ranks \cite{rrf}. We follow this two-stage design and measure each component. Context length matters for the generator \cite{lostmiddle}, which is a reason to keep the number of passages small.
 \paragraph{Adapting small generators.}
-Parameter-efficient fine-tuning \cite{lora} and retrieval-aware training with distractor and injected gold passages \cite{raft} teach a small model the answer register. Policy-gradient methods \cite{ppo,instructgpt} and their group-relative variants \cite{grpo,r1} optimise a verifiable reward, while DPO \cite{dpo} and reference-free relatives \cite{simpo} optimise preferences without a reward model; weight-space operations \cite{soups,taskarith} combine checkpoints. We use the evaluation metric itself as the reward and apply DPO \emph{on-policy and iteratively}.
+Parameter-efficient fine-tuning \cite{lora,pissa} and retrieval-aware training with distractor and injected gold passages \cite{raft} can teach a small model the answer register. Policy-gradient methods \cite{ppo,instructgpt} and their group-relative variants \cite{grpo,r1} optimise a verifiable reward. DPO \cite{dpo} and reference-free relatives \cite{simpo} optimise preferences without a reward model. Weight-space operations \cite{soups,taskarith} combine checkpoints, and rationalisation \cite{star} produces reasoning traces for supervised training. We use the evaluation metric itself as the reward and apply DPO \emph{on-policy and iteratively}.
 \paragraph{Decoding and agents.}
-Minimum-Bayes-risk decoding \cite{mbr,freitag} and self-consistency \cite{selfcons} choose among samples by agreement; we show it recovers only part of the best-of-$n$ headroom and that DPO can move that selection into the model. Agentic RAG with tools \cite{react,selfrag,searchr1} lets the model decide what to retrieve, but with a 2B model and retrieval already near the ceiling it did not help.
+Minimum-Bayes-risk decoding \cite{mbr,freitag} and self-consistency \cite{selfcons} choose among samples by agreement. Agentic RAG with tools \cite{react,selfrag,searchr1} lets the model decide what to retrieve. We show that MBR recovers only part of the best-of-$n$ headroom and that DPO can move that selection into the model. With a 2B model and retrieval already near its ceiling, agents did not help.
 
 %------------------------------------------------------------------------------
 \section{Task, Data and Evaluation Protocol}\label{sec:data}
 
 \subsection{Corpus}
-The course corpus consists of $16{,}441$ plain-text legal documents ($428$\,MB; $63.1$M words; median $2{,}224$ words per document). Local regulations dominate (Địa phương $64.8\%$, ministries $23.3\%$, Government $7.3\%$, National Assembly $0.4\%$), and decisions (\textit{Quyết định}) are $54.8\%$ of all documents; $12{,}272$ documents contain at least one \dieu{} ($84{,}222$ articles in total). Years range from 1929 to 2025 (median 2015). Documents carry relation blocks (``based on'', ``replaced by'', \ldots) giving $190{,}981$ edges.
+The course corpus has $16{,}441$ plain-text legal documents ($428$\,MB; $63.1$M words; median $2{,}224$ words per document).
+\begin{itemize}[leftmargin=*]
+\item \textbf{Issuers:} local regulations dominate (Địa phương $64.8\%$), followed by ministries ($23.3\%$), the Government ($7.3\%$) and the National Assembly ($0.4\%$).
+\item \textbf{Types:} decisions (\textit{Quyết định}) are $54.8\%$ of all documents.
+\item \textbf{Articles:} $12{,}272$ documents contain at least one \dieu{} ($84{,}222$ articles in total).
+\item \textbf{Years:} 1929 to 2025, median 2015.
+\item \textbf{Relations:} documents carry relation blocks (``based on'', ``replaced by'', \ldots) that give $190{,}981$ edges.
+\end{itemize}
 
 \subsection{Question--answer set and splits}
-The QA set has $2{,}745$ question/reference pairs (question median $137$ characters; reference median $1{,}426$ characters, maximum $9{,}858$). References follow a template and quote the cited article almost verbatim, so lexical metrics reward citing and quoting the right article. A fixed seeded split gives $2{,}245$ training, $300$ development and $200$ test pairs.
+The QA set has $2{,}745$ question/reference pairs. Questions have a median of $137$ characters; references a median of $1{,}426$ and a maximum of $9{,}858$. References follow a template and quote the cited article almost verbatim, so lexical metrics reward citing and quoting the right article. A fixed seeded split gives $2{,}245$ training, $300$ development and $200$ test pairs.
 
 \paragraph{Corpus--question mismatch.}
-Only $8$ law identifiers ($51$ QA rows) match a file of the course corpus; $772$ rows have no extractable law identifier and the most frequent cited laws are 2024--2025 banking circulars absent from the corpus. Consequently the baseline retrieves the cited law for essentially no question (\textit{law-hit} $0$). We therefore extend the retrieval store with (i)~central-government documents issued since 2000 from a public Vietnamese legal-document dataset and (ii)~every document cited by a QA answer that is missing from both (crawled from a public legal portal). The final store holds $46{,}498$ documents ($724{,}215$ chunks) after exact and near-duplicate removal ($186$ documents dropped).
+The questions mostly cite laws that the course corpus does not contain:
+\begin{itemize}[leftmargin=*]
+\item only $8$ law identifiers ($51$ QA rows) match a file of the course corpus;
+\item $772$ rows have no extractable law identifier;
+\item the most frequently cited laws are 2024--2025 banking circulars absent from the corpus.
+\end{itemize}
+As a result, the baseline retrieves the cited law for essentially no question (law-hit $0$). We therefore extend the retrieval store with:
+\begin{enumerate}[leftmargin=*,label=(\roman*)]
+\item central-government documents issued since 2000, from a public Vietnamese legal-document dataset;
+\item every document that a QA answer cites and that is missing from both sources, crawled from a public legal portal.
+\end{enumerate}
+After exact and near-duplicate removal ($186$ documents dropped), the final store holds $46{,}498$ documents ($724{,}215$ chunks).
 
 \paragraph{Decontamination.}
-Nothing a model is trained on may contain knowledge tied to the test split. We drop training/development pairs that cite the same (law, \dieu) as a test answer ($16\%$ of train) or share a non-boilerplate 13-gram with a test answer ($20\%$ of train); after filtering, $1{,}452$ training and $188$ development pairs remain for fine-tuning. The retrieval store may contain full laws but never test question/answer pairs.
+Nothing a model is trained on may contain knowledge tied to the test split. We drop training and development pairs that either:
+\begin{itemize}[leftmargin=*]
+\item cite the same (law, \dieu) as a test answer ($16\%$ of train), or
+\item share a non-boilerplate 13-gram with a test answer ($20\%$ of train).
+\end{itemize}
+After filtering, $1{,}452$ training and $188$ development pairs remain for fine-tuning. The retrieval store may contain full laws but never test question/answer pairs.
 
 \paragraph{Development subsets.}
-Because $45\%$ of development questions share a \dieu{} with retained training pairs (test: $0\%$) and $72\%$ share a 13-gram (test: $32\%$), plain dev is optimistic for fine-tuned models. We report \texttt{dev} ($300$), \texttt{dev\_clean} ($166$; no shared \dieu) and \texttt{dev\_strict} ($74$; additionally no shared non-boilerplate 13-gram), the latter being the closest to the test condition.
+Dev overlaps more with the retained training pairs than test does:
+\begin{itemize}[leftmargin=*]
+\item $45\%$ of development questions share a \dieu{} with retained training pairs (test: $0\%$);
+\item $72\%$ share a 13-gram (test: $32\%$).
+\end{itemize}
+Plain dev is therefore optimistic for fine-tuned models, and we report three views:
+\begin{itemize}[leftmargin=*]
+\item \texttt{dev} ($300$ questions);
+\item \texttt{dev\_clean} ($166$; no shared \dieu);
+\item \texttt{dev\_strict} ($74$; additionally no shared non-boilerplate 13-gram), the closest to the test condition.
+\end{itemize}
 
 \subsection{Metrics and significance}
-We report the five course metrics (cosine similarity of Vietnamese SBERT embeddings, Jaccard, token overlap, unigram BLEU with brevity penalty, and \rl{} F1 \cite{rouge}), computed with a line-for-line port of the baseline code on lower-cased, punctuation-stripped text; \rl{} is the primary metric. Differences between systems are assessed with a paired bootstrap \cite{bootstrap,bergk} over questions ($95\%$ intervals). A change is \emph{accepted} only if the lower bound is positive on \texttt{dev}, and it must not be negative on \texttt{dev\_clean}/\texttt{dev\_strict}. Run-to-run noise is non-negligible: greedy decoding with vLLM varies by about $\pm0.003$ \rl{} between identical runs and $8$-sample MBR by about $\pm0.006$.
+We report the five course metrics, computed with a line-for-line port of the baseline code on lower-cased, punctuation-stripped text:
+\begin{itemize}[leftmargin=*]
+\item cosine similarity of Vietnamese SBERT embeddings;
+\item Jaccard;
+\item token overlap;
+\item unigram BLEU with brevity penalty;
+\item \rl{} F1 \cite{rouge}, the primary metric.
+\end{itemize}
+Differences between systems are assessed with a paired bootstrap over questions \cite{bootstrap,bergk} ($95\%$ intervals). A change is \emph{accepted} only if the lower bound of its interval is positive on \texttt{dev} and the difference is not negative on \texttt{dev\_clean} or \texttt{dev\_strict}. Run-to-run noise is not negligible: identical vLLM runs differ by about $\pm0.003$ \rl{} with greedy decoding and by about $\pm0.006$ with $8$-sample MBR.
 
-\paragraph{Protocol.}
-All model and hyper-parameter selection used the development split. The final configuration was fixed on dev before being scored on the $200$-question test split; earlier configurations were also scored on test during development (Table~\ref{tab:testold}), which we report for completeness.
+\paragraph{Use of the test split.}
+Model and hyper-parameter selection used the development split. The test split was scored at three points, and each is reported:
+\begin{enumerate}[leftmargin=*]
+\item for configurations of the main development line, as a progress check that was not used for selection (Appendix~\ref{app:test});
+\item for the later PiSSA-based recipes, which were compared on dev \emph{and} test, so test is not untouched for those comparisons (Section~\ref{sec:pissa});
+\item once for a configuration fixed in advance (Section~\ref{sec:finalchain}).
+\end{enumerate}
 
 %------------------------------------------------------------------------------
 \section{Method}\label{sec:method}
@@ -104,37 +163,73 @@ All model and hyper-parameter selection used the development split. The final co
 \end{figure}
 
 \subsection{Retrieval}
-Documents are cleaned (headers, signatures and tails removed), de-duplicated, and split with one chunk per \dieu{} (long articles are split at $2{,}000$ characters with $100$ overlap). Chunks are embedded with the AITeamVN Vietnamese Embedding model (568M parameters, $512$ tokens; a bge-m3-style encoder \cite{bgem3} fine-tuned for Vietnamese) into an inner-product FAISS index \cite{faiss}; the top $50$ are re-scored by the AITeamVN Vietnamese Reranker cross-encoder \cite{monobert} (max length $1{,}024$) and the top $k{=}5$ are passed to the generator. Both models are served by vLLM \cite{vllm} pooling servers; the pipeline is built with LlamaIndex \cite{llamaindex} and training uses TRL \cite{trl}.
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Preparation.} Documents are cleaned (headers, signatures and tails removed), de-duplicated, and split into one chunk per \dieu. Long articles are split at $2{,}000$ characters with an overlap of $100$.
+\item \textbf{Dense retrieval.} Chunks are embedded with the AITeamVN Vietnamese Embedding model (568M parameters, $512$ tokens; a bge-m3-style encoder \cite{bgem3} fine-tuned for Vietnamese) into an inner-product FAISS index \cite{faiss}, which returns the top $50$.
+\item \textbf{Reranking.} The AITeamVN Vietnamese Reranker cross-encoder \cite{monobert} (max length $1{,}024$) re-scores these $50$, and the top $k{=}5$ go to the generator.
+\end{enumerate}
+Both encoder models are served by vLLM \cite{vllm} pooling servers. The pipeline is built with LlamaIndex \cite{llamaindex}; training uses TRL \cite{trl}.
 
 \subsection{Generator and supervised fine-tuning}
-The answering model is Qwen3.5-2B ($2.27$B parameters; Qwen family \cite{qwen3}; thinking mode disabled). The prompt contains the retrieved \dieu{} passages, optionally two demonstrations (the nearest decontaminated training questions by token Jaccard, with their reference answers), and the question. Supervised fine-tuning uses LoRA \cite{lora} ($r{=}32$, all linear layers) on the decontaminated pairs rendered with exactly the inference prompt, with loss on the answer only. The final recipe (\emph{v3b}) combines: (a)~random $k\in[3,10]$ passages per example; (b)~\emph{gold injection}: with probability $0.7$ the gold \dieu{} is inserted when retrieval missed it (RAFT-style \cite{raft}); (c)~$0$--$3$ demonstrations per example; (d)~with probability $0.2$ an additional row whose context was retrieved for an unrelated question, with a refusal as target. Training runs $3$ epochs (effective batch $16$, max length $12{,}288$).
+The answering model is Qwen3.5-2B ($2.27$B parameters; Qwen family \cite{qwen3}) with thinking mode disabled. The prompt contains:
+\begin{itemize}[leftmargin=*]
+\item the retrieved \dieu{} passages;
+\item optionally two demonstrations: the nearest decontaminated training questions by token Jaccard, with their reference answers;
+\item the question.
+\end{itemize}
+Supervised fine-tuning uses LoRA \cite{lora} ($r{=}32$, all linear layers) on the decontaminated pairs, rendered with exactly the inference prompt; the loss covers the answer only. The final recipe, \emph{v3b}, combines four elements:
+\begin{enumerate}[leftmargin=*,label=(\alph*)]
+\item a random number $k\in[3,10]$ of passages per example;
+\item \emph{gold injection}: when retrieval missed the gold \dieu, it is inserted with probability $0.7$ (RAFT-style \cite{raft});
+\item $0$--$3$ demonstrations per example;
+\item with probability $0.2$, an extra row whose context was retrieved for an unrelated question and whose target is a refusal.
+\end{enumerate}
+Training runs $3$ epochs (effective batch $16$, max length $12{,}288$). A later variant initialises the adapter from the principal singular vectors of the weights (PiSSA \cite{pissa}); Section~\ref{sec:pissa} reports it.
 
 \subsection{Decoding}
-\textbf{Greedy} decoding (temperature $0$, top-$p$ $0.95$, $\le 1{,}024$ new tokens) needs one generation per question. \textbf{MBR} decoding \cite{mbr} samples $n{-}1$ candidates at temperature $0.7$ in addition to the greedy one and returns the candidate with the highest mean \rl{} to the others,
+\textbf{Greedy} decoding (temperature $0$, top-$p$ $0.95$, $\le 1{,}024$ new tokens) needs one generation per question.
+
+\textbf{MBR} decoding \cite{mbr} samples $n{-}1$ candidates at temperature $0.7$ in addition to the greedy one. It returns the candidate with the highest mean \rl{} to the others:
 \begin{equation}
-\hat y=\arg\max_{y\in\mathcal C}\sum_{y'\in\mathcal C\setminus\{y\}}\operatorname{ROUGE\text{-}L}(y,y'),
+\hat y=\arg\max_{y\in\mathcal C}\sum_{y'\in\mathcal C\setminus\{y\}}\operatorname{ROUGE\text{-}L}(y,y').
 \end{equation}
-trading $n\times$ generation cost for consensus quality.
+MBR trades $n\times$ generation cost for consensus quality.
 
 \subsection{Post-training with the evaluation metric as reward}
-\paragraph{GRPO.} We run Group-Relative Policy Optimisation \cite{grpo} (8 completions per prompt, LoRA $r{=}32$, no KL term unless stated) with a verifiable reward computed against the reference,
+\paragraph{Reward.} Both post-training methods score an answer against the reference with
 \begin{equation}
 R=0.6\,\mathrm{RL}+0.2\,\mathrm{TO}+0.2\,\mathrm{cite}-p_{\mathrm{copy}}-p_{\mathrm{len}},
 \end{equation}
-where $\mathrm{cite}$ is the fraction of reference \dieu{} numbers present in the answer, $p_{\mathrm{copy}}$ penalises copying $>90\%$ of the prompt's 8-grams, and $p_{\mathrm{len}}$ is a two-sided band around the reference length; a cosine variant replaces part of the lexical weight by sentence-embedding cosine.
-\paragraph{On-policy DPO.} For each training prompt we draw $8$ samples (greedy $+7$ at $T{=}0.7$) from the current model, score them with the reward above, and form one preference pair (best, worst) when the reward gap is $\ge0.1$ and the reference is not a refusal. Direct Preference Optimisation \cite{dpo} (LoRA $r{=}32$, $\beta{=}0.1$, learning rate $2\!\times\!10^{-5}$, one epoch, effective batch $16$, reference = adapter disabled) is trained on these pairs. \emph{Iterating} (sampling again from the improved model) gives round~2.
-\paragraph{Weight-space merging.} We also test weight averaging \cite{soups} and task arithmetic \cite{taskarith}, $\theta=\theta_{\mathrm{SFT}}+\alpha(\theta_{\mathrm{RL}}-\theta_{\mathrm{base}})$.
+where:
+\begin{itemize}[leftmargin=*]
+\item $\mathrm{RL}$ is \rl{} and $\mathrm{TO}$ is token overlap;
+\item $\mathrm{cite}$ is the fraction of the reference's \dieu{} numbers that appear in the answer;
+\item $p_{\mathrm{copy}}$ penalises copying more than $90\%$ of the prompt's 8-grams;
+\item $p_{\mathrm{len}}$ is a two-sided band around the reference length.
+\end{itemize}
+A cosine variant replaces part of the lexical weight by sentence-embedding cosine.
 
-\subsection{Serving}
-The QA service (Section~\ref{sec:deploy}) calls three vLLM endpoints (LLM, embedder, reranker), returns the answer, its reranked sources and per-stage timings, and \emph{refuses} when the best reranker score is below $\tau{=}0.001$ (no corpus support), avoiding invented answers to off-topic questions.
+\paragraph{GRPO.} Group-Relative Policy Optimisation \cite{grpo} uses $8$ completions per prompt, LoRA $r{=}32$, and no KL term unless stated.
+
+\paragraph{On-policy DPO.}
+\begin{enumerate}[leftmargin=*]
+\item For each training prompt, draw $8$ samples from the current model: the greedy one and $7$ at $T{=}0.7$.
+\item Score them with the reward above.
+\item Form one preference pair (best, worst) when the reward gap is $\ge0.1$ and the reference is not a refusal.
+\item Train Direct Preference Optimisation \cite{dpo} on these pairs: LoRA $r{=}32$, $\beta{=}0.1$, learning rate $2\!\times\!10^{-5}$, one epoch, effective batch $16$; the reference model is the policy with its adapter disabled.
+\end{enumerate}
+\emph{Iterating}, i.e.\ sampling again from the improved model, gives round~2.
+
+\paragraph{Weight-space merging.} We also test weight averaging \cite{soups} and task arithmetic \cite{taskarith}, $\theta=\theta_{\mathrm{SFT}}+\alpha(\theta_{\mathrm{RL}}-\theta_{\mathrm{base}})$.
 
 %------------------------------------------------------------------------------
 \section{Results}\label{sec:results}
 
 \subsection{Main results on the test split}
+Table~\ref{tab:main} follows the system from the course baseline to the final model, and Figure~\ref{fig:ladder} plots the same path.
 \begin{table}[H]
 \centering
-\caption{Test split ($n{=}200$, no errors). The first row is the course baseline (answer-only decoding). All five metrics are reported for every row.}\label{tab:main}
+\caption{Test split ($n{=}200$, no errors). The first row is the course baseline (answer-only decoding). The final system is SFT v3b followed by two DPO rounds.}\label{tab:main}
 \begin{tabular}{@{}lccccc@{}}
 \toprule
 System & Cos. & Jacc. & Tok. & BLEU-1 & \rl{}\\
@@ -146,15 +241,35 @@ SFT Qwen3.5-2B (v0), greedy & .905 & .658 & .754 & .563 & .618\\
 SFT v0 + MBR-8 & .915 & .677 & .761 & .599 & .645\\
 SFT v3b (2 shots), greedy & .905 & .656 & .735 & .538 & .607\\
 \midrule
-\best{Final: SFT + 2 DPO rounds, greedy} & \best{.916} & \best{.673} & \best{.734} & \best{.582} & \best{.643}\\
-\quad second seed, greedy & .915 & .665 & .707 & .578 & .638\\
+\best{Final: SFT v3b + 2 DPO rounds, greedy} & \best{.916} & \best{.673} & \best{.734} & \best{.582} & \best{.643}\\
+\quad second DPO seed, greedy & .915 & .665 & .707 & .578 & .638\\
 \quad + MBR-8 (accuracy mode) & .918 & .681 & .728 & .587 & \best{.652}\\
 \bottomrule
 \end{tabular}
 \end{table}
 
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[ybar,width=0.95\linewidth,height=5.6cm,bar width=16pt,ymin=0,ymax=0.75,
+ symbolic x coords={Baseline,+Index,+SFT,+MBR8 (SFT),Final greedy,Final+MBR8},xtick=data,
+ x tick label style={font=\scriptsize,rotate=20,anchor=east},ylabel={Test \rl{}},
+ nodes near coords,nodes near coords style={font=\scriptsize},every node near coord/.append style={/pgf/number format/fixed,/pgf/number format/precision=3},
+ ymajorgrids,grid style={dotted}]
+\addplot[fill=blue!45] coordinates {(Baseline,0.171)(+Index,0.443)(+SFT,0.618)(+MBR8 (SFT),0.645)(Final greedy,0.643)(Final+MBR8,0.652)};
+\end{axis}
+\end{tikzpicture}
+\caption{Test \rl{} along the development of the system.}\label{fig:ladder}
+\end{figure}
+
 \paragraph{Significance on test.}
-Table~\ref{tab:testboot} gives paired-bootstrap differences (10{,}000 resamples over the 200 test questions). The improvement over the baseline is large on every metric, and the final greedy system is significantly better than both SFT models. MBR-8 on top of the final system and the second seed are not distinguishable from it, so the single-generation system is the recommended one.
+Table~\ref{tab:testboot} gives paired-bootstrap differences ($10{,}000$ resamples over the $200$ test questions).
+\begin{itemize}[leftmargin=*]
+\item The improvement over the baseline is large on every metric.
+\item The final greedy system is significantly better than both supervised models.
+\item Adding MBR-8 on top of the final system, or switching to the second DPO seed, cannot be distinguished from the final greedy system.
+\end{itemize}
+The single-generation system is therefore the recommended one.
 \begin{table}[H]
 \centering
 \caption{Paired bootstrap on the test split ($n{=}200$): mean difference (B$-$A) with $95\%$ interval.}\label{tab:testboot}
@@ -177,23 +292,9 @@ Final, seed 2, greedy & Final, greedy & \rl{} & $+.006$ & \ci{-.009}{+.019} (n.s
 \end{tabular}
 \end{table}
 
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}
-\begin{axis}[ybar,width=0.95\linewidth,height=5.6cm,bar width=16pt,ymin=0,ymax=0.75,
- symbolic x coords={Baseline,+Index,+SFT,+MBR8 (SFT),Final greedy,Final+MBR8},xtick=data,
- x tick label style={font=\scriptsize,rotate=20,anchor=east},ylabel={Test \rl{}},
- nodes near coords,nodes near coords style={font=\scriptsize},every node near coord/.append style={/pgf/number format/fixed,/pgf/number format/precision=3},
- ymajorgrids,grid style={dotted}]
-\addplot[fill=blue!45] coordinates {(Baseline,0.171)(+Index,0.443)(+SFT,0.618)(+MBR8 (SFT),0.645)(Final greedy,0.643)(Final+MBR8,0.652)};
-\end{axis}
-\end{tikzpicture}
-\caption{Test \rl{} along the development of the system.}\label{fig:ladder}
-\end{figure}
-
 \subsection{Retrieval study}\label{sec:retrieval}
 \paragraph{Corpus coverage is the dominant factor.}
-Table~\ref{tab:corpus} varies the retrieval store with the generator fixed (Vi-Qwen2-3B-RAG, no fine-tuning). Cleaning and per-\dieu{} chunking change nothing (A2a/A2b) because the cited laws are simply absent; adding documents that are cited by the QA set moves law-hit from $\approx0.02$ to $0.55$--$0.62$ and \rl{} from $0.17$ to $0.44$.
+Table~\ref{tab:corpus} varies the retrieval store with the generator fixed (Vi-Qwen2-3B-RAG, no fine-tuning). Cleaning and per-\dieu{} chunking change nothing (A2a/A2b), because the cited laws are simply absent. Adding the documents that the QA set cites raises law-hit from $\approx0.02$ to $0.55$--$0.62$ and \rl{} from $0.17$ to $0.44$.
 \begin{table}[H]
 \centering
 \caption{Effect of the retrieval store (dev $n{=}300$; test in parentheses). Law-hit = fraction of questions whose cited law is among the retrieved passages.}\label{tab:corpus}
@@ -209,26 +310,18 @@ A2e & + near-duplicate removal & \best{.633} & \best{.423} & (.443)\\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\paragraph{The two-stage stack.}
+Table~\ref{tab:retrabl} compares retrievers on the final store.
+\begin{itemize}[leftmargin=*]
+\item \textbf{Lexical retrieval is far weaker} than the dense embedder (Doc@5 $.65$ against $.89$). Fusing it with dense results lowers recall compared with dense alone.
+\item \textbf{Hybrid after reranking} is on par with dense on dev but not better, so we keep the simpler dense-plus-reranker stack.
+\item \textbf{Reranking} adds about $+0.04$ Doc@5 and $+0.06$ \dieu{}@5; at the retrieval level its depth ($20$--$100$ candidates) matters little.
+\item \textbf{More passages buy little recall:} on test, \dieu{}@5/10/20 is $.898/.944/.966$. For the fine-tuned generator, $k{=}10$ was worse than $k{=}5$ (dev \rl{} $.612$ against $.633$ for v3b), consistent with long contexts diluting the relevant passage \cite{lostmiddle}.
+\end{itemize}
 \begin{table}[H]
 \centering
-\caption{Retrieval quality of the stack (dense top-50, then reranker top-5). \dieu{}@$k$ = gold article in the top $k$.}\label{tab:retr}
-\begin{tabular}{@{}lccccc@{}}
-\toprule
-Store / split & Doc@1 & Doc@5 & \dieu{}@1 & \dieu{}@5 & Doc MRR\\
-\midrule
-A2c, dev / test & .609/.643 & .879/.871 & .576/.616 & .879/.848 & .722/.733\\
-A2d, dev / test & .644/.648 & .932/.922 & .591/.610 & .905/.898 & .765/.755\\
-\bottomrule
-\end{tabular}
-\end{table}
-On test, \dieu{}@5/10/20 is $.898/.944/.966$, so enlarging $k$ buys little recall and, for the fine-tuned generator, $k{=}10$ was not better than $k{=}5$ (longer contexts dilute the relevant passage \cite{lostmiddle}; dev \rl{} $.612$ vs $.633$ for v3b).
-
-\paragraph{Trained retrieval components did not help generation.}
-Fine-tuning the reranker on $4{,}015$ groups raised pipeline \dieu{}@1 from $.587$ to $.712$ on dev but \emph{not} generation quality ($.6325\to.6253$). Fifteen embedder fine-tuning variants (LoRA/full, several learning rates) gave at best $+0.023$ \dieu{}@1 \ci{+0.004}{+0.045} without reaching the acceptance rule. Among zero-shot alternatives, AITeamVN's embedder (\dieu{}@1 $.534$, MRR $.674$ on its own top-50 pool) beat bge-m3 ($.523$) and Qwen3-Embedding-4B/8B ($.51$, 9--12$\times$ slower). Embedding the chapter/scope line into chunks and a kNN prior over training questions also showed no significant gain.
-
-\begin{table}[H]
-\centering
-\caption{Retrieval variants (retrieval only, top-10 returned; dev / test; documents $n{=}281/193$, articles $n{=}264/177$ with a recoverable gold). ``+rr$N$'' = reranker over $N$ candidates; the fine-tuned reranker was trained on $4{,}015$ groups (gold \dieu{} positives, dense hard negatives) and raises \dieu{}@1 but not generation (Table~\ref{tab:abl}); hybrid = reciprocal-rank fusion of dense and BM25.}\label{tab:retrabl}
+\caption{Retrieval variants (retrieval only, top-10 returned; dev / test). Documents $n{=}281/193$ and articles $n{=}264/177$ have a recoverable gold. ``+rr$N$'' = reranker over $N$ candidates; hybrid = reciprocal-rank fusion of dense and BM25. The fine-tuned reranker was trained on $4{,}015$ groups (gold \dieu{} positives, dense hard negatives).}\label{tab:retrabl}
 \begin{tabular}{@{}lccccc@{}}
 \toprule
 Retriever & Doc@1 & Doc@5 & \dieu{}@1 & \dieu{}@5 & Doc MRR\\
@@ -245,12 +338,64 @@ Dense + fine-tuned rr50 (dev only) & -- & -- & .712 & -- & --\\
 \bottomrule
 \end{tabular}
 \end{table}
-Lexical retrieval is far weaker than the dense embedder on this task (Doc@5 $.65$ vs.\ $.89$), and fusing it with dense results lowers recall compared with dense alone; after reranking, hybrid is on par with dense (dev) but not better, so the simpler dense + reranker stack is kept. Reranking adds about $+0.04$ Doc@5 and $+0.06$ \dieu{}@5, and its depth ($20$--$100$ candidates) matters little at the retrieval level.
+
+\paragraph{Better ranking does not reach the answer.}
+Every attempt to improve the ranking itself left generation unchanged:
+\begin{itemize}[leftmargin=*]
+\item \textbf{Fine-tuned reranker.} Raises pipeline \dieu{}@1 from $.587$ to $.712$ on dev, but generation does not improve ($.6325\to.6253$).
+\item \textbf{Fine-tuned embedder.} The best of fifteen variants (LoRA or full, several learning rates) gains $+0.023$ \dieu{}@1 \ci{+0.004}{+0.045}, which does not meet the acceptance rule.
+\item \textbf{Other zero-shot embedders.} AITeamVN's embedder (\dieu{}@1 $.534$, MRR $.674$ on its own top-50 pool) beat bge-m3 ($.523$) and Qwen3-Embedding-4B/8B ($.51$, 9--12$\times$ slower).
+\item \textbf{Chapter/scope prefixes and a kNN prior.} Embedding the chapter/scope line into chunks, and a kNN prior over training questions, gave no significant gain.
+\item \textbf{LLM re-ranking (exploratory ceiling).} GLM-5.3 and DeepSeek-V4 re-ranked the top-10 articles of the dev questions (dev text only; not part of the system). This raises \dieu{}@1 by $+.14$ and $+.10$ over the fine-tuned reranker (paired intervals exclude 0), while \dieu{}@5 is unchanged. Feeding the final model the re-ranked passages gives $.6654$ and $.6637$ against $.6637$.
+\end{itemize}
+The model does read the passage order (reversed $.615$, shuffled $.646$), but it does not profit from a better one.
+
+\paragraph{Chunking.}
+Long articles are $17\%$ of the $4.6{\times}10^5$ articles but hold $67\%$ of the characters. We re-indexed the store with other ways of cutting them and measured retrieval only, with the final stack (Table~\ref{tab:chunk}).
+\begin{itemize}[leftmargin=*]
+\item \textbf{Fixed pieces of $1{,}000$ characters} lose context and lower \dieu{}@5 (dev $-.023$ \ci{-.046}{-.004}).
+\item \textbf{Cutting at sentence ends} recovers most of that loss.
+\item \textbf{Packing whole clauses} up to $2{,}000$ characters cannot be distinguished from the control ($+.004$ \ci{-.011}{+.019}).
+\item \textbf{Semantic chunking} (breakpoints at the $90$th percentile of neighbouring-sentence distance) produced $1.88$ million chunks against $0.72$ million. Its index build ($3.7$\,h) exceeded the $46$\,GB memory cap and did not complete, in line with reports that semantic chunking does not beat simple splitters on natural documents \cite{vectara}.
+\end{itemize}
+No variant passed the gate stated in advance (lower bound of the \dieu{}@5 interval above zero), so none reached a generation run.
+\begin{table}[H]
+\centering
+\caption{Chunking variants, retrieval only (dense top-50 $\to$ reranker top-5). \dieu{}@5 with the paired difference to the control (one chunk per article, split at $2{,}000$ characters) and its $95\%$ interval.}\label{tab:chunk}
+\small\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Variant & dev \dieu{}@5 & difference & test \dieu{}@5 & difference\\
+\midrule
+Control (per-article, $2000$) & .905 & -- & .898 & --\\
+Clauses merged up to $2000$ & .909 & $+.004$ \ci{-.011}{+.019} & .904 & $+.006$ \ci{.000}{+.017}\\
+Sentences packed to $1000$ & .902 & $-.004$ \ci{-.019}{+.011} & .893 & $-.006$ \ci{-.028}{+.017}\\
+Clauses merged up to $1000$ & .890 & $-.015$ \ci{-.038}{+.004} & .876 & $-.023$ \ci{-.057}{+.006}\\
+Fixed pieces of $1000$ & .883 & $-.023$ \ci{-.046}{-.004} & .876 & $-.023$ \ci{-.057}{+.006}\\
+Semantic $1000$ & \multicolumn{4}{c}{index build did not complete (memory)}\\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \paragraph{Retrieval is not the bottleneck for the fine-tuned model.}
-Injecting the gold \dieu{} at rank~1 (oracle) improves dev \rl{} by only $+0.004$ \ci{-0.003}{+0.012} for the SFT model, so remaining error is attributed to generation. For the best PiSSA-based DPO model the same oracle gives $+0.007$ \ci{+0.001}{+0.014} on dev ($.6743\to.6815$), almost all of it in the $25$ questions whose gold article was missing ($.350\to.428$), so a perfect retriever would add less than one point. A per-question breakdown of the $264$ dev questions with a gold article shows $90.5\%$ hits, $3.4\%$ whose gold article is in the dense top-$10$ but was pushed out by the reranker or the cut at five, $3.4\%$ with the right law but a sibling article, $1.1\%$ with the law in the candidate pool but not the article and only $1.5\%$ with the law missing from the corpus; the dense top-$50$ contained the gold law for every question whose law is in the corpus. Injecting the gold passage lifts the first two groups from $.33$/$.37$ to $.46$, still far below the $.72$ of the hits, and none of the missed questions except two names a law number in its text.
+Injecting the gold \dieu{} at rank~1 (an oracle) adds little:
+\begin{itemize}[leftmargin=*]
+\item \textbf{SFT model:} $+0.004$ \ci{-0.003}{+0.012} on dev.
+\item \textbf{Best PiSSA-based DPO model:} $+0.007$ \ci{+0.001}{+0.014} ($.6743\to.6815$). Almost all of it comes from the $25$ questions whose gold article had been missed ($.350\to.428$).
+\end{itemize}
+Of the $264$ dev questions with a gold article, retrieval:
+\begin{itemize}[leftmargin=*]
+\item hits in $90.5\%$;
+\item has the gold in the dense top-10 but loses it to the reranker or to the cut at five in $3.4\%$;
+\item finds the right law but a sibling article in $3.4\%$;
+\item has the law in the candidate pool but not the article in $1.1\%$;
+\item cannot find it because the law is missing from the corpus in $1.5\%$.
+\end{itemize}
+Injecting the gold passage lifts the two near-miss groups from $.33$/$.37$ to $.46$, still far below the $.72$ of the hits: these questions are hard even with the right text in front of the model.
 
 \subsection{Generator study}\label{sec:generator}
+\paragraph{Raw models.}
+Raw models land at $0.39$--$0.46$ \rl{} regardless of size or Vietnamese specialisation (Table~\ref{tab:raw}), because they do not reproduce the reference register. Supervised fine-tuning is the decisive step.
 \begin{table}[H]
 \centering
 \caption{Raw (not fine-tuned) generators, dev $n{=}300$, same retrieval store (A2e), each with its default prompt.}\label{tab:raw}
@@ -263,12 +408,28 @@ Qwen3-1.7B (2.03B) & .398 & .786\\
 Qwen2.5-3B (3.09B) & .393 & .820\\
 Vi-Qwen2-3B-RAG (3.09B) & .423 & .803\\
 Qwen2.5-3B-legal-vn (3.09B) & .455 & --\\
-Qwen3.5-9B teacher, thinking on (not allowed in the final system) & .429 & .802\\
+Qwen3.5-9B, thinking on (too large for the final system) & .429 & .802\\
 \bottomrule
 \end{tabular}
 \end{table}
-Raw models land at $0.39$--$0.46$ \rl{} regardless of size or Vietnamese specialisation; they do not reproduce the reference register. Supervised fine-tuning is the decisive step.
 
+\paragraph{Supervised recipe.}
+Table~\ref{tab:sft} lists the fine-tuning variants. The two demonstrations supply the answer register and are worth $+0.039$ at inference compared with zero shots. The v3b-minus-v0 difference shrinks on the subsets that are closer to the test condition:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lc@{}}
+\toprule
+Split & v3b $-$ v0 \rl{}\\
+\midrule
+\texttt{dev\_clean} & $+0.052$ \ci{+0.024}{+0.079}\\
+\texttt{dev\_strict} & $+0.032$ \ci{-0.008}{+0.072}\\
+test & $-0.010$ (n.s.)\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Part of the dev gain therefore reflects answer overlap between train and dev. We keep v3b because it costs nothing, and the DPO and MBR gains are measured on top of it.
 \begin{table}[H]
 \centering
 \caption{Supervised fine-tuning variants (dev $n{=}300$, greedy, $k{=}5$ unless stated).}\label{tab:sft}
@@ -287,15 +448,73 @@ v3b, 0 shots / $k{=}10$ & .594 / .612 & demonstrations matter\\
 \bottomrule
 \end{tabular}
 \end{table}
-The two-shot demonstrations supply the answer register and are worth $+0.039$ over zero-shot at inference. On the subsets closer to the test condition the v3b-minus-v0 difference is $+0.052$ \ci{+0.024}{+0.079} (dev\_clean) and $+0.032$ \ci{-0.008}{+0.072} (dev\_strict), and $-0.010$ on test (n.s.), i.e.\ the dev gain of the recipe partly reflects train/dev answer overlap; we keep it because the cost is nil and DPO and MBR gains are measured on top of it.
 
-\paragraph{Legal-domain base models.}
-Continuing pretraining on legal text reportedly adds only $0.4$--$0.7$ \rl{} on generation after identical fine-tuning \cite{vilegallm}. In our own test, Qwen2.5-3B-legal-vn (best raw score, $.455$) reached \emph{lower} scores than Qwen3.5-2B after the same recipe: SFT greedy $.615$ and MBR-8 $.636$ (vs $.633$ and $.658$), and $.625$/$.644$ after DPO; the gap to the Qwen3.5-2B model is significant on dev\_clean ($-0.044$ for SFT, $-0.035$ after DPO, greedy). Raw rank did not predict post-SFT rank.
+\paragraph{Adapter variants.}
+A later round of supervised training compared adapters on a revised build of the training data. The numbers are therefore not directly comparable with Table~\ref{tab:sft}. On dev, the adapters rank as follows:
 
-\subsection{Decoding and post-training}\label{sec:posttrain}
+\begin{center}
+\small
+\begin{tabular}{@{}lc@{}}
+\toprule
+Adapter & Dev \rl{}\\
+\midrule
+PiSSA \cite{pissa} & $.6414$\\
+rsLoRA & $.6319$\\
+Full fine-tuning & $.6304$\\
+LoRA rank 64 & $.6301$\\
+LoRA rank 32 & $.6202$\\
+DoRA & diverged\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Section~\ref{sec:pissa} asks whether the PiSSA gain survives preference training.
+
+\paragraph{Data size.}
+Training on $25\%$, $50\%$ and $100\%$ of the questions (three seeds each) gives $.585$, $.603$ and $.616$, i.e.\ about $+0.016$ \rl{} per doubling. Adding the development questions ($+13\%$) should then add about $+0.003$, so more data of the same kind is a slow lever. Section~\ref{sec:finalchain} confirms this.
+
+\paragraph{Legal-domain knowledge does not transfer to the score.}
+Continued pretraining on legal text is reported to add only $0.4$--$0.7$ \rl{} after identical fine-tuning \cite{vilegallm}. We tested this in two ways:
+\begin{itemize}[leftmargin=*]
+\item \textbf{Legal-domain base model.} Qwen2.5-3B-legal-vn has the best raw score ($.455$) but ends \emph{lower} than Qwen3.5-2B after the same recipe: SFT greedy $.615$ and MBR-8 $.636$ (against $.633$ and $.658$), and $.625$/$.644$ after DPO. The gap is significant on \texttt{dev\_clean} ($-0.044$ after SFT, $-0.035$ after DPO, greedy). Raw rank did not predict post-SFT rank.
+\item \textbf{Our own continued pre-training.} $209$M tokens of statutes, regulations, translated and web-derived legal text (filtered and de-duplicated; one epoch, LoRA rank $64$) raised closed-book cloze accuracy by $15$ points but left \rl{} unchanged. The model knows more legal text, but not better where to start and stop quoting.
+\end{itemize}
+
+\paragraph{Thinking mode.}
+Qwen3.5 can reason in a \texttt{<think>} block before answering. We tested it in three settings (Table~\ref{tab:think}):
+\begin{enumerate}[leftmargin=*]
+\item Turning thinking on at inference for models fine-tuned without it hurts.
+\item To train thinking explicitly, we built rationales in the STaR style \cite{star}: Qwen3.5-9B was shown the context, the question \emph{and} the reference, and asked to write the 3--6 Vietnamese sentences of reasoning that lead to it. The reasoning had to name the cited \dieu{} and could rule out neighbouring ones. The training target is the rationale followed by the reference answer.
+\item Letting the 9B think blindly and keeping traces whose answer cites the right \dieu{} gave $1$ usable trace out of $1{,}683$: its thoughts were in English and ran past $2{,}200$ tokens. Rationalisation kept $1{,}147$ of the $1{,}683$ training rows.
+\end{enumerate}
+The model trained on these rationales is worse with thinking on ($.585$) and with thinking off ($.605$) than the same PiSSA recipe without rationales ($.641$). Fewer rows explain about $-.01$ of the gap (learning curve above). The rest is a weaker model ($-.036$ with thinking off) plus a further $-.020$ when it actually thinks. A written-out choice of clause does not make the quotation that follows more accurate.
 \begin{table}[H]
 \centering
-\caption{MBR-$n$ with the SFT model (v3b, 2 shots, dev\_clean, $n{=}166$). Mean single sample $.604$; best-of-$n$ uses the reference and is an \emph{oracle}.}\label{tab:mbrn}
+\caption{Thinking mode (dev $n{=}300$, greedy, 2 shots).}\label{tab:think}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Model & Inference & \rl{}\\
+\midrule
+SFT v0 (trained without thinking) & thinking off / on & .603 / .590\\
+ReAct agent, trained 2B & thinking off / on & .574 / .513\\
+PiSSA SFT, no rationales ($1{,}683$ rows) & thinking off & .641\\
+PiSSA SFT on 9B rationales ($1{,}147$ rows) & thinking off / on & .605 / .585\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Decoding and post-training}\label{sec:posttrain}
+\paragraph{MBR decoding.}
+MBR is the most reliable single technique on the supervised model, but it costs $n\times$ generation:
+\begin{itemize}[leftmargin=*]
+\item dev: $+0.034$ \ci{+0.020}{+0.048};
+\item test: $+0.028$ ($.645$ against $.618$) \ci{+0.011}{+0.044}.
+\end{itemize}
+It recovers only a sixth of the distance to the best-of-$n$ oracle (Table~\ref{tab:mbrn}, Figure~\ref{fig:mbrn}). Most of its gain is already reached with four candidates.
+\begin{table}[H]
+\centering
+\caption{MBR-$n$ with the SFT model (v3b, 2 shots, \texttt{dev\_clean}, $n{=}166$). Mean single sample $.604$. Best-of-$n$ picks with the reference and is therefore an \emph{oracle}.}\label{tab:mbrn}
 \begin{tabular}{@{}lcccccc@{}}
 \toprule
 $n$ (candidates) & 1 & 2 & 3 & 4 & 6 & 8\\
@@ -317,9 +536,17 @@ Oracle best-of-$n$ & .630 & .660 & -- & .696 & -- & .726\\
 \caption{MBR recovers only $17\%$ of the gap between greedy ($.630$) and the oracle ($.726$); MBR-4 keeps $\approx\!76\%$ of the MBR-8 gain.}\label{fig:mbrn}
 \end{figure}
 
+\paragraph{Post-training ladder.}
+Table~\ref{tab:ladder} compares the post-training methods from the same supervised starting point.
+\begin{itemize}[leftmargin=*]
+\item \textbf{GRPO} moves greedy dev \rl{} by $+0.01$ to $+0.03$, depending on the reward; the final variants span $.612$--$.634$. Started from v3b it does not beat v3b with MBR.
+\item \textbf{Merging} the RL delta into v3b by task arithmetic is marginal and sits at the MBR noise level.
+\item \textbf{On-policy DPO} is the best trade-off. Under \emph{greedy} decoding, round~2 ($.664$) exceeds v3b with MBR-8 ($.658$) at one eighth of the generation cost, and MBR adds only $+0.003$ to $+0.008$ on top of it.
+\item \textbf{Round~3 over-optimises} (Figure~\ref{fig:dpo}): answers grow to $2{,}000$ characters against a reference mean of $1{,}583$, i.e.\ the policy exploits the lexical reward through length.
+\end{itemize}
 \begin{table}[H]
 \centering
-\caption{Recipe ladder on dev ($n{=}300$, 2 shots, \rl{}). Intervals are paired-bootstrap differences against the row marked $\dagger$ (\ci{lo}{hi}).}\label{tab:ladder}
+\caption{Post-training ladder on dev ($n{=}300$, 2 shots, \rl{}). Intervals are paired-bootstrap differences against the row marked $\dagger$ (\ci{lo}{hi}).}\label{tab:ladder}
 \begin{tabular}{@{}lccl@{}}
 \toprule
 System & Greedy & MBR-8 & Difference vs.\ C1 greedy$\dagger$ / C1 MBR-8\\
@@ -333,13 +560,11 @@ DPO round 1 ($\mathrm{dpo}_a$) & .654 & .659 & +.019 \ci{+.001}{+.038}\\
 DPO round 1, lr $5\!\times\!10^{-5}$ + SFT term & .642 & .659 & worse than $\mathrm{dpo}_a$\\
 \best{DPO round 2 ($\mathrm{dpo}_{a2}$)} & \best{.664} & \best{.672} & \best{+.031 \ci{+.014}{+.049}}; MBR $+.015$ \ci{-.001}{+.030}\\
 \quad second DPO seed ($\mathrm{dpo}_{a2}'$) & .662 & .665 & +.030 \ci{+.011}{+.050}\\
-\textit{Seed 555}: SFT/r1/r2 & .613/.640/.634 & -- & r1 $+.027$; r2 $-.006$\\
 \quad MBR with 4 candidates & -- & .667 & \\
 DPO round 3 ($\mathrm{dpo}_{a3}$) & .635 & .642 & $-.029$ \ci{-.045}{-.012} vs round 2\\
 \bottomrule
 \end{tabular}
 \end{table}
-
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}
@@ -349,16 +574,61 @@ DPO round 3 ($\mathrm{dpo}_{a3}$) & .635 & .642 & $-.029$ \ci{-.045}{-.012} vs r
 \legend{Greedy,MBR-8}
 \end{axis}
 \end{tikzpicture}
-\caption{Iterated DPO on self-samples: gains in rounds 1--2, collapse in round 3 (answers grow to $2{,}000$ characters against a reference mean of $1{,}583$, i.e.\ reward exploitation).}\label{fig:dpo}
+\caption{Iterated DPO on self-samples: gains in rounds 1--2, collapse in round 3.}\label{fig:dpo}
 \end{figure}
 
-\paragraph{Findings.} (i)~MBR is the most reliable single technique on the SFT model ($+0.034$ dev \ci{+0.020}{+0.048}; $+0.028$ test, $.645$ vs $.618$, \ci{+0.011}{+0.044}), but costs $n\times$ generation. (ii)~GRPO moves greedy dev \rl{} by $+0.01$ to $+0.03$ depending on the reward (final variants span $.612$--$.634$), and RL from the v3b checkpoint does not beat plain v3b + MBR. (iii)~Merging the RL delta into v3b is marginal and sits at the MBR noise level. (iv)~DPO on \emph{own} samples with the evaluation reward is the best trade-off: round~2 under \emph{greedy} decoding ($.664$) exceeds C1 with MBR-8 ($.658$) at one eighth of the generation cost, MBR adds only $+0.003$ to $+0.008$ on top, and round~3 over-optimises. The round-2 gain replicates across two seeds ($.6637$ vs $.6623$ dev; $.6433$ vs $.6377$ test), which mitigates the risk that round~2 is a lucky checkpoint selected on dev.
+\paragraph{How robust is the DPO gain?}
+\begin{itemize}[leftmargin=*]
+\item \textbf{Second DPO seed, same supervised model.} Round~2 is reproduced: dev $.6637$ against $.6623$, test $.6433$ against $.6377$.
+\item \textbf{Different supervised seeds.} Three SFT seeds on the full data give $.6325$, $.603$ and $.613$ (mean $.616$, standard deviation $.015$). The reported chain starts from the best of the three.
+\item \textbf{Repeating both rounds from the $.613$ seed.} Round~1 helps again ($.640$, $+.027$), but round~2 adds nothing ($.634$).
+\end{itemize}
+The robust effect of on-policy DPO is therefore $+.02$ to $+.03$ over its supervised model. The extra benefit of the second round is real for the reported chain but not guaranteed for another starting seed.
 
-\subsection{Ablations of the final system and best combined configuration}\label{sec:ablation}
-Starting from the final system (DPO round~2, greedy, $k{=}5$, $2$ shots, reranker over $50$ dense candidates; dev \rl{} $.6637$), each inference-side factor was varied alone and each round-1 DPO design choice was varied against the reference round-1 model ($\mathrm{dpo}_a$, $.6543$). The acceptance rule was fixed beforehand: a change is adopted only if the lower bound of the paired $95\%$ interval on dev ($n{=}300$) is above zero and it is not worse on \texttt{dev\_clean} and \texttt{dev\_strict}; ties keep the cheaper setting.
+\paragraph{A second supervised recipe: PiSSA.}\label{sec:pissa}
+The PiSSA adapter gave the best supervised model ($.6414$ dev). We asked whether it, or better preference pairs, could lift the system above $\mathrm{dpo}_{a2}$. Because several of these chains were compared on dev and test, Table~\ref{tab:pissa} reports both splits and their pooled value ($n{=}500$, disjoint questions); test is not an untouched estimate for this comparison. The answer is no: every sound variant ends at a pooled \rl{} of $.655$--$.662$, while whole chains that differ only in the random seed already differ by up to $.016$.
 \begin{table}[H]
 \centering
-\caption{One-factor ablations on dev ($n{=}300$, greedy, final model unless stated). Difference is against the final system ($.6637$) with a paired-bootstrap interval; $\ast$ = interval excludes zero (worse). $^\dagger$Fine-tuned reranker (rr\_v0) evaluated on the SFT v3b model, compared with the stock reranker on that model.}\label{tab:abl}
+\caption{Post-training from the PiSSA supervised model $V_p$ (greedy, 2 shots, \rl{}). Pooled = dev$+$test; interval = paired bootstrap against $\mathrm{dpo}_{a2}$. Round~2 always starts from the round-1 model.}\label{tab:pissa}
+\footnotesize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lcccl@{}}
+\toprule
+System & Dev & Test & Pooled & vs.\ $\mathrm{dpo}_{a2}$\\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Reference and starting points}}\\
+$\mathrm{dpo}_{a2}$ (reported system, v3b) & .6637 & .6433 & .6556 & --\\
+$V_p$ (PiSSA SFT) & .6414 & .6307 & -- & --\\
+$V_p$ + DPO round 1 (two seeds) & .6493 / .6544 & .6226 / .6263 & -- & --\\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Round 2, standard pairs (the plain recipe)}}\\
+chain 1 (two seeds) & .6743 / .6782 & .6435 / .6472 & .6620 / -- & $+.006$ \ci{-.007}{+.020} / --\\
+chain 2 (all steps repeated, other seed) & .6586 & .6299 & .6471 & $-.009$ \ci{-.022}{+.005}\\
+round 3 (after chain 1) & .6453 & .6166 & .6338 & $-.022$ \ci{-.035}{-.009}\\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Round 2, other pair sets}}\\
+mixed pairs (two seeds) & .6642 / .6663 & .6418 / .6410 & .6553 / .6561 & $-.000$ / $+.001$\\
+mixed $+$ $129$ gold-chosen pairs & .6363 & .6376 & .6368 & $-.019$ \ci{-.033}{-.004}\\
+standard $+$ $143$ cite-contrast pairs (two seeds) & .6728 / .6653 & .6413 / .6403 & .6602 / .6553 & $+.005$ / $-.000$\\
+\quad same, MBR-8 (first seed) & .6767 & .6465 & .6646 & $+.009$ \ci{-.004}{+.023}\\
+$n{=}16$ samples per prompt ($1{,}197$ pairs) & .6589 & .6475 & .6544 & $-.001$ \ci{-.015}{+.012}\\
+SFT on own best sample ($921$ rows) instead of DPO & .6546 & .6200 & .6408 & $-.015$ \ci{-.029}{-.000}\\
+\bottomrule
+\end{tabular}
+\end{table}
+\begin{itemize}[leftmargin=*]
+\item \textbf{PiSSA helps the supervised model, not the final one.} After two DPO rounds its gain over v3b is inside the noise.
+\item \textbf{Chains are noisy.} The best chain ($.6743/.6782$ dev) was not reproduced when every step was repeated with another seed ($.6586$).
+\item \textbf{A third round hurts again:} dev falls to $.6453$, and answers grow to $1.11\times$ the reference length.
+\item \textbf{DPO learns ``shorter''.} In $45$--$55\%$ of the standard pairs the chosen answer is more than $20\%$ shorter than the rejected one, and the number of under-quoting answers on dev rose from $44$ to $52$. A \emph{mixed} set balances both length directions, combining real pairs from the samples with truncated and extended copies (Appendix~\ref{app:failed}). It is stable across seeds (pooled $.6553$ and $.6561$) but not better.
+\item \textbf{Pairs must stay on-policy.} Using the reference as the chosen answer for $129$ hard questions loses $.019$. It lowers the share of correctly cited answers ($.741\to.716$) and raises the answers that cite nothing ($3\to8$ of $300$). Fine-tuning on the model's own best sample instead of pairs loses $.015$: the rejected examples carry the signal.
+\item \textbf{Targeting the right failure did not help either.} Pairs that contrast a sample citing the gold article with one citing only other articles moved the targeted group ($22$ dev questions) by $+.011$ in one seed and $-.031$ in the other, i.e.\ noise. Doubling the samples per question ($n{=}16$) changed nothing. MBR-8 adds $+.004$/$+.005$.
+\end{itemize}
+
+\subsection{Ablations of the final system}\label{sec:ablation}
+Starting from the final system (DPO round~2, greedy, $k{=}5$, $2$ shots, reranker over $50$ dense candidates; dev \rl{} $.6637$), we varied each inference-side factor alone. Each round-1 DPO design choice was varied against the reference round-1 model ($\mathrm{dpo}_a$, $.6543$). The acceptance rule was fixed beforehand: a change is adopted only if the lower bound of its paired $95\%$ interval on dev is above zero and it is not worse on \texttt{dev\_clean} and \texttt{dev\_strict}. Ties keep the cheaper setting.
+\begin{table}[H]
+\centering
+\caption{One-factor ablations on dev ($n{=}300$, greedy, final model unless stated). Difference against the final system ($.6637$) with a paired-bootstrap interval; $\ast$ = interval excludes zero (worse). $^\dagger$Fine-tuned reranker evaluated on the SFT v3b model, against the stock reranker on that model.}\label{tab:abl}
 \begin{tabular}{@{}llcl@{}}
 \toprule
 Factor & Setting & \rl{} & Difference\\
@@ -384,143 +654,98 @@ $\beta$ & $0.05$ & .642 & $-.012$ vs.\ reference\\
 \bottomrule
 \end{tabular}
 \end{table}
-No single factor improves on the final configuration: the reranker over $50$ candidates, $k{=}5$ and two shots are at or near the optimum, and removing the reranker costs $0.022$. The only nominally better setting ($k{=}8$, $+.002$) is not significant and would lengthen the context, so it is not adopted. No DPO design variant exceeds the reference ($0.1$/$0.1$), hence the two-round recipe was not re-run. \textbf{Best combined configuration:} because the per-factor winners coincide with the final configuration, the combination \emph{is} the final system, and no further test run was made; we found no further gain from combining the best per-factor settings. The ablation grid was evaluated on dev only, so these conclusions inherit the selection caveats of Section~\ref{sec:limits}.
-
-\subsection{Further attempts to raise the score}\label{sec:further}
-After the main system was fixed we tried to raise the score further with the levers that the analysis of low-scoring answers suggested. Nothing below improved the greedy dev \rl{} of the final system ($.6637$); the results are reported because they bound what this recipe can reach.
-\paragraph{Where the loss is.} On dev ($n{=}300$, mean $.664$) $34\%$ of the answers score $\ge.8$ (mean $.91$), $48\%$ score $.4$--$.8$ (mean $.63$) and $17\%$ score below $.4$ (mean $.28$); the middle group accounts for $54\%$ of the distance to $1.0$ and the tail for $37\%$. Precision and recall of the longest common subsequence are about equal in every group and the median lengths match ($292$ against $294$ tokens), so length is not the problem. Among the tail, the answer cites the reference's article in only $2$ of $27$ questions (against $102$ of $118$ in the high group): the typical failure is the right law with a neighbouring article, or a different law that also fits an under-specified question. If for each question the better of the model answer and a perfect verbatim quotation of the gold article were chosen, dev \rl{} would reach $.722$ ($+.059$; $+.032$ from the middle group and $+.025$ from the tail), and using only what is available at inference (the model answer and a quotation of each of the five retrieved passages) $.715$; the tail alone would rise from $.28$ to $.42$ because references also contain text that is not in the article, so it cannot be raised ``to the top''.
-\begin{table}[H]
-\centering
-\caption{Attempts to raise the score (greedy dev \rl{} unless stated; reference $.6637$ or the stated baseline).}\label{tab:further}
-\small\setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}p{6.6cm}p{3.2cm}p{4.6cm}@{}}
-\toprule
-Attempt & Result & Verdict\\
-\midrule
-Truncate long answers (best at $3000$ chars) & $+.0006$ & noise\\
-Convert tone-mark style (the model already matches the references) & $-.0017$ & none\\
-Replace the quotation by the whole article, verbatim & $-.085$ & worse\\
-Prefer the newer law (reference law newer in $5$, older in $9$ of $14$ wrong-law cases) & -- & refuted\\
-Always quote the rank-1 passage / MBR over \{answer, quotes\} & $.534$ / $.557$ & worse\\
-Learned selector over \{answer, 5 quotes\} (5-fold CV on dev) & $.644$ & worse (oracle $.715$)\\
-DPO round~1 with cited-article weight $0.4$ / $0.6$ in the reward (original $0.2$: $.6543$) & $.6551$ / $.6458$ & no gain\\
-SFT on $25\%$ / $50\%$ / $100\%$ of the training questions (two seeds each) & $.585$ / $.603$ / $.616$ (mean of three seeds) & $+.016$ per doubling of the data\\
-Order of the five passages: reversed / shuffled (re-ranked by GLM-5.3 / DeepSeek-V4: $.6654$ / $.6637$) & $.615$ / $.646$ (re-ranked: $+.002$ / $0$) & the model reads the order, a better order adds nothing\\
-\bottomrule
-\end{tabular}
-\end{table}
-\paragraph{More data.} Table~\ref{tab:further} gives a learning curve of about $+0.016$ \rl{} per doubling of the training questions; adding the development questions ($+13\%$) would add about $+0.003$, so more data is a slow lever.
-\paragraph{Chunking.} We re-indexed the store with other ways of cutting the long articles ($17\%$ of the $4.6{\times}10^5$ articles, but $67\%$ of the characters) and measured retrieval only, with the final dense-plus-reranker stack (Table~\ref{tab:chunk}). Fixed-size pieces of $1{,}000$ characters lose context and lower \dieu{}@5 (dev $-.023$, interval \ci{-.046}{-.004}); cutting at sentence ends recovers most of the loss ($.9015$, $\approx$ control) and packing whole clauses up to $2{,}000$ characters is indistinguishable from the control ($+.004$, \ci{-.011}{+.019}). Semantic chunking (breakpoints at the $90$th percentile of neighbouring-sentence distance) produced $1.88$ million chunks against $0.72$ million and its index build ($3.7$\,h) exceeded the $46$\,GB memory cap, so it did not complete; this agrees with reports that semantic chunking does not beat simple splitters on natural documents \cite{vectara}. No variant passed the pre-stated gate (lower bound of the \dieu{}@5 interval above zero), so no generation run was made.
-\begin{table}[H]
-\centering
-\caption{Chunking variants, retrieval only (dense top-50 $\to$ reranker top-5). \dieu{}@5 with the paired difference to the control (one chunk per article, split at $2{,}000$ characters) and its $95\%$ interval.}\label{tab:chunk}
-\small\setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}lcccc@{}}
-\toprule
-Variant & dev \dieu{}@5 & difference & test \dieu{}@5 & difference\\
-\midrule
-Control (per-article, $2000$) & .905 & -- & .898 & --\\
-Clauses merged up to $2000$ & .909 & $+.004$ \ci{-.011}{+.019} & .904 & $+.006$ \ci{.000}{+.017}\\
-Sentences packed to $1000$ & .902 & $-.004$ \ci{-.019}{+.011} & .893 & $-.006$ \ci{-.028}{+.017}\\
-Clauses merged up to $1000$ & .890 & $-.015$ \ci{-.038}{+.004} & .876 & $-.023$ \ci{-.057}{+.006}\\
-Fixed pieces of $1000$ & .883 & $-.023$ \ci{-.046}{-.004} & .876 & $-.023$ \ci{-.057}{+.006}\\
-Semantic $1000$ & \multicolumn{4}{c}{index build did not complete (memory)}\\
-\bottomrule
-\end{tabular}
-\end{table}
-\paragraph{Passage order and LLM re-ranking (exploratory).} As an upper bound on better retrieval, GLM-5.3 and DeepSeek-V4 re-ranked the top-10 articles of the dev questions (dev text only; an exploratory ceiling, not part of the system). They raise \dieu{}@1 by $+.14$ and $+.10$ over the fine-tuned reranker (paired 95\% intervals exclude 0) while \dieu{}@5 is unchanged. Feeding the final model the re-ranked passages gives $.6654$ and $.6637$ against $.6637$: no gain. The model is sensitive to order (reversed $.615$, shuffled $.646$) but not to a better order, consistent with the oracle and fine-tuned reranker results above.
-\paragraph{Seed sensitivity.} Three SFT seeds on the full data give $.6325$, $.603$ and $.613$ (mean $.616$, standard deviation $.015$), so the reported chain starts from the best of three SFT runs and the final $.6637$ depends on that choice. Repeating the two DPO rounds from the second best SFT seed (the one with $.613$) reproduces the first-round gain ($.640$, $+.027$) but not the second ($.634$): the robust effect of on-policy DPO is about $+.02$ to $+.03$ over its SFT model, and the additional benefit of the second round is not confirmed.
-
-\subsection{Later experiments: a PiSSA generator and new training pairs}\label{sec:pissa}
-\textbf{In short.} We asked whether a better supervised starting point or better preference pairs could lift the system above $\mathrm{dpo}_{a2}$. The answer is no: every sound variant ends at a pooled \rl{} of $.655$--$.662$, and whole training chains that differ only in the random seed already differ by up to $.016$. \textbf{Selection note:} these runs were compared on dev \emph{and} test, so test is not untouched for this subsection; read the pooled column ($n{=}500$, dev$+$test, disjoint questions).
-
-\begin{table}[H]
-\centering
-\caption{Post-training from the PiSSA generator $V_p$ (greedy, 2 shots, \rl{}). Pooled = dev$+$test; interval = paired bootstrap against $\mathrm{dpo}_{a2}$. Round~2 always starts from the round-1 model.}\label{tab:pissa}
-\footnotesize\setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}lcccl@{}}
-\toprule
-System & Dev & Test & Pooled & vs.\ $\mathrm{dpo}_{a2}$\\
-\midrule
-\multicolumn{5}{@{}l}{\emph{Reference and starting points}}\\
-$\mathrm{dpo}_{a2}$ (previous best, v3b) & .6637 & .6433 & .6556 & --\\
-$V_p$ (PiSSA SFT) & .6414 & .6307 & -- & --\\
-$V_p$ + DPO round 1 (two seeds) & .6493 / .6544 & .6226 / .6263 & -- & --\\
-\midrule
-\multicolumn{5}{@{}l}{\emph{Round 2, standard pairs (the plain recipe)}}\\
-chain 1 (two seeds) & .6743 / .6782 & .6435 / .6472 & .6620 / -- & $+.006$ \ci{-.007}{+.020} / --\\
-chain 2 (all steps repeated, other seed) & .6586 & .6299 & .6471 & $-.009$ \ci{-.022}{+.005}\\
-round 3 (after chain 1) & .6453 & .6166 & .6338 & $-.022$ \ci{-.035}{-.009}\\
-\midrule
-\multicolumn{5}{@{}l}{\emph{Round 2, other pair sets}}\\
-mixed pairs (two seeds) & .6642 / .6663 & .6418 / .6410 & .6553 / .6561 & $-.000$ / $+.001$\\
-mixed $+$ $129$ gold-chosen pairs & .6363 & .6376 & .6368 & $-.019$ \ci{-.033}{-.004}\\
-standard $+$ $143$ cite-contrast pairs (two seeds) & .6728 / .6653 & .6413 / .6403 & .6602 / .6553 & $+.005$ / $-.000$\\
-\quad same, MBR-8 (first seed) & .6767 & .6465 & .6646 & $+.009$ \ci{-.004}{+.023}\\
-$n{=}16$ samples per prompt ($1{,}197$ pairs) & .6589 & .6475 & .6544 & $-.001$ \ci{-.015}{+.012}\\
-SFT on own best sample ($921$ rows) instead of DPO & .6546 & .6200 & .6408 & $-.015$ \ci{-.029}{-.000}\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\paragraph{What the table shows.}
+No single factor improves on the final configuration:
 \begin{itemize}[leftmargin=*]
-\item \textbf{PiSSA helps the supervised model, not the final one.} Among LoRA variants PiSSA was best on dev ($.6414$; rsLoRA $.6319$, full fine-tuning $.6304$, rank 64 $.6301$, plain rank 32 $.6202$; DoRA diverged). After two DPO rounds the gain over the earlier recipe is inside the noise.
-\item \textbf{Chains are noisy.} The best chain ($.6743/.6782$ dev) was not reproduced when every step was repeated with another seed ($.6586$); the spread between chains ($\approx.016$) is as large as the gain, so no single chain can be called better.
-\item \textbf{A third round hurts.} Dev falls to $.6453$ and answers grow to $1.11\times$ the reference length, as in Figure~\ref{fig:dpo}.
-\item \textbf{DPO learns ``shorter''.} In $45$--$55\%$ of the standard pairs the chosen answer is more than $20\%$ shorter than the rejected one, and under-quoting answers on dev rose from $44$ to $52$. A set that balances both length directions (real pairs from the samples plus truncated and extended copies) is stable across seeds (pooled $.6553$ and $.6561$) but not better.
-\item \textbf{Pairs must stay on-policy.} Using the reference as the chosen answer for $129$ hard questions lowers the share of correctly cited answers ($.741\to.716$) and raises answers citing nothing ($3\to8$ of $300$): $-.019$. Fine-tuning on the model's own best sample instead of using pairs also loses ($-.015$): the rejected examples carry the signal.
-\item \textbf{Targeting the right failure did not help either.} Pairs that contrast a sample citing the gold article with one citing only other articles moved the targeted group by $+.011$ in one seed and $-.031$ in the other ($22$ dev questions), i.e.\ noise. Doubling the samples per question ($n{=}16$) changed nothing. MBR-8 adds $+.004$/$+.005$ on top.
+\item the reranker over $50$ candidates, $k{=}5$ and two shots are at or near the optimum;
+\item removing the reranker costs $0.022$;
+\item the only nominally better setting, $k{=}8$ ($+.002$), is not significant and lengthens the context, so it is not adopted;
+\item no DPO design variant exceeds the reference margin and $\beta$ ($0.1$/$0.1$).
 \end{itemize}
+Because the per-factor winners coincide with the final configuration, the best combined configuration \emph{is} the final system.
 
-\paragraph{Other attempts that did not help.} Continued pre-training on $209$M tokens of legal text (LoRA rank 64, one epoch) raised closed-book cloze accuracy by $15$ points but not \rl{}. Averaging the weights of two DPO seeds, a wider context and full-article context gave no gain. Two searches with an agent that edits weights directly in the style of \cite{wsp} (a budget of $50$ forward requests, paired standard errors, a guard set of easy questions) found no edit above two standard errors (Appendix~\ref{app:failed}).
-
-\paragraph{Final configuration, pre-declared.} Because dev is part of the training data of the last model, the configuration was fixed before the run and the test set is scored once per model: supervised fine-tuning on train and dev (PiSSA, rank $32$, three epochs), a first DPO round on $8$ on-policy samples with the standard pairs, a second round with the mixed pair set, then greedy decoding and MBR-8 on test. A single chain (seed $1$) is trained; no replicate was run, so the earlier seed spread of up to $.016$ applies to the number it reports. Test was already used to compare the PiSSA recipes above, so this number is not an untouched estimate either.
-
+\subsection{A configuration fixed in advance, trained on train and dev}\label{sec:finalchain}
+The comparisons above select on dev, and the PiSSA comparisons also looked at test. As a last check we fixed one configuration before training and scored it on test once per decoding mode:
+\begin{enumerate}[leftmargin=*]
+\item supervised fine-tuning on train \emph{and} dev ($1{,}640$ decontaminated rows; PiSSA, rank $32$, three epochs);
+\item a first DPO round on $8$ on-policy samples with the standard pairs;
+\item a second round with the mixed pair set;
+\item greedy decoding and MBR-8.
+\end{enumerate}
+Only one chain (seed $1$) was trained, so the seed spread of up to $.016$ applies to its number. Since test had already been used to compare the PiSSA recipes, this is not an untouched estimate either.
 \begin{table}[H]
 \centering\small
-\caption{Pre-declared final chain on test ($n{=}200$, one run each), next to the reported system.}\label{tab:finalchain}
+\caption{Configuration fixed in advance, trained on train$+$dev, scored once on test ($n{=}200$), next to the reported system.}\label{tab:finalchain}
 \begin{tabular}{lccccc}
 \toprule
 Model and decoding & Cosine & Jaccard & Token overlap & BLEU-1 & \rl{} \\
 \midrule
-Final chain (train+dev), greedy & .919 & .675 & .729 & .586 & .640 \\
-Final chain (train+dev), MBR-8 & .921 & .681 & .718 & .579 & .646 \\
+Fixed configuration (train+dev), greedy & .919 & .675 & .729 & .586 & .640 \\
+Fixed configuration (train+dev), MBR-8 & .921 & .681 & .718 & .579 & .646 \\
 Reported system, greedy & .916 & .673 & .734 & .582 & .643 \\
 Reported system, MBR-8 & .918 & .681 & .728 & .587 & .652 \\
 \bottomrule
 \end{tabular}
 \end{table}
-\noindent Adding dev to the training data does not move test: both differences ($-.003$ greedy, $-.006$ MBR-8) are well inside the seed spread, so the reported system stays the first recipe.
-
-\subsection{Negative and null results}\label{sec:negative}
-\begin{table}[H]
-\centering
-\caption{Ideas that were tested and not retained (dev unless stated).}\label{tab:neg}
-\begin{tabular}{@{}p{4.1cm}p{5.6cm}p{5.1cm}@{}}
-\toprule
-Idea & Result & Reason (evidence)\\
-\midrule
-ReAct agent \cite{react} with 4 tools (search, article lookup, graph, web) & dev\_clean $.537$ (trained 2B), $.574$ with question-seeded search; RAG+SFT $.633$/$.634$; $-0.060$ \ci{-0.097}{-0.026} & Own queries find the gold article in $66$--$72\%$ of questions (\rl{} $.65$ vs $.32$ when missed); retrieval is not the bottleneck\\
-Thinking mode & SFT $.590$ vs $.603$; ReAct $.513$ vs $.574$ & Fine-tuned in non-thinking mode\\
-FP8 weights (vLLM) & $.646$ vs $.654$ ($-.009$ \ci{-.020}{+.002}) for $21\%$ lower latency & Quality loss not worth it\\
-Cascade: MBR only if uncertain & 30\% MBR: $.644$ at $3.1$ generations (MBR-8 $.658$ at $8$) & Reranker margin weakly predicts MBR gain ($+.036/.021/.019$ by tercile)\\
-Forced \textit{Căn cứ \ldots} opening & dropped before running & Oracle article injection gives only $+.004$\\
-Distillation \cite{hinton} from a 9B teacher & raw teacher $.41$--$.43$ $<$ SFT 2B & Teacher does not follow the reference register\\
-Legal-domain base models & see Section~\ref{sec:generator} & Knowledge comes from retrieval\\
-Continued pre-training (209M tokens) & cloze $+15$ points, \rl{} unchanged & Style and extent, not knowledge, limit \rl{}\\
-Gold answers as DPO chosen & $.6368$ pooled, $-.019$ \ci{-.033}{-.004} & Off-policy chosen answers hurt the cited group (Section~\ref{sec:pissa})\\
-\bottomrule
-\end{tabular}
-\end{table}
+\noindent Adding dev to the training data does not move test: both differences ($-.003$ greedy, $-.006$ MBR-8) are well inside the seed spread, as the learning curve predicted ($\approx+.003$). The reported system therefore stays the first recipe (v3b with two DPO rounds).
 
 %------------------------------------------------------------------------------
 \section{Analysis}\label{sec:analysis}
 \paragraph{Where the error is.}
-For the SFT model (v0) on dev, questions where the gold \dieu{} is retrieved \emph{and} cited ($n{=}205$) score \rl{} $.702$; those where it is retrieved but another article is cited ($n{=}28$) score $.397$; retrieval misses ($n{=}25$) score $.295$. Over $281$ dev questions whose reference cites an article, the v3b model cites the same article in $68.3\%$ of cases and the round-1 DPO model in $70.5\%$, with \rl{} $.73$--$.76$ when the citation matches and $.43$--$.46$ when it does not. Perfect retrieval is worth at most $\approx0.06$ \rl{} on dev, and the oracle experiment shows $+0.004$ for the SFT model, so the dominant remaining term is the wording and length of the answer: predicted answers have a median of $315$ words against $294$ for the reference, and truncating to the reference length would add $+0.028$.
+For the supervised model (v0) on dev, the score depends mostly on whether the gold \dieu{} is both retrieved and cited:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Gold \dieu{} & Questions & \rl{}\\
+\midrule
+retrieved and cited & $205$ & $.702$\\
+retrieved, another article cited & $28$ & $.397$\\
+not retrieved & $25$ & $.295$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Over the $281$ dev questions whose reference cites an article, the model cites the same article in $68.3\%$ of cases (v3b) and $70.5\%$ (round-1 DPO). Answers score $.73$--$.76$ when the citation matches and $.43$--$.46$ when it does not.
+
+For the final model on dev (mean $.664$), the scores split into three groups:
+\begin{itemize}[leftmargin=*]
+\item \textbf{High}, $34\%$ of answers, scoring $\ge.8$ (mean $.91$);
+\item \textbf{Middle}, $48\%$, scoring $.4$--$.8$ (mean $.63$); this group holds $54\%$ of the distance to $1.0$;
+\item \textbf{Tail}, $17\%$, scoring below $.4$ (mean $.28$); this group holds $37\%$.
+\end{itemize}
+In the tail, the answer cites the reference's article in only $2$ of $27$ questions, against $102$ of $118$ in the high group. The typical failure is the right law with a neighbouring article, or a different law that also fits an under-specified question.
+
+\paragraph{Length.}
+Length was a problem before DPO and is no longer one after it. For the SFT model, predicted answers had a median of $315$ words against $294$ for the reference, and truncating them to the reference length would have added $+0.028$. After DPO, the median lengths match ($292$ against $294$ tokens), longest-common-subsequence precision and recall are about equal in every group, and the best truncation adds only $+0.0006$.
+
+\paragraph{Headroom.}
+Three oracles bound what selection could still gain:
+\begin{itemize}[leftmargin=*]
+\item \textbf{Best of $8$ samples}, picked with knowledge of the reference: $.726$ on \texttt{dev\_clean}, $0.08$ above MBR.
+\item \textbf{The better of the model answer and a verbatim quotation of the gold article}, chosen per question: dev reaches $.722$ ($+.059$; $+.032$ from the middle group and $+.025$ from the tail).
+\item \textbf{The same using only what is available at inference} (the answer and a quotation of each of the five retrieved passages): $.715$.
+\end{itemize}
+The tail would rise only from $.28$ to $.42$, because references also contain text that is not in the article. A learned selector over the same six candidates reaches $.644$ (5-fold cross-validation on dev), below the model alone. We found no deployable selector that captures this headroom.
+
+The literature we surveyed reports no verified Vietnamese legal QA result with \rl{} of $0.8$--$0.9$ against independent references; the closest are $\approx0.66$ for style-matched fine-tuning. A score near $0.65$ with a 2B model is therefore competitive.
+
+\paragraph{Why DPO on self-samples works here.}
+\begin{itemize}[leftmargin=*]
+\item The reward is the evaluation metric.
+\item The pairs are on-policy, so there is no shift between the sampled model and the trained one.
+\item The gap threshold removes noisy pairs.
+\end{itemize}
+Reaching the best of $8$ samples in a single pass is the same objective that MBR pursues at inference time. The failure of round~3, and of off-policy chosen answers, marks the two limits: the policy starts to exploit the lexical reward through length, and text the model would not generate itself carries no usable contrast.
 
 \paragraph{What can be checked automatically.}
-Legal validity, and whether a provision is still in force, cannot be judged without a legal expert, but three properties can be measured without one (Table~\ref{tab:checks}). On the test split, $67\%$ of answers cite \emph{every} article that the reference cites and $78\%$ name a legal document that the reference names, so roughly a third of the answers miss at least one reference article, the main error type. In contrast, invented figures are rare: $96.5\%$ of the numeric tokens in the answers occur in the retrieved passages or in the question, and $88\%$ of the answers that contain numbers are fully grounded (the references themselves are grounded at $90.7\%$, since they sometimes use information outside the retrieved texts). Answers reproduce $66\%$ of their 8-grams verbatim from the sources against $55\%$ for the references, i.e.\ the model quotes more than the annotators did, consistent with the length excess noted above. Worked examples ordered from easy to hard are given in Appendix~\ref{app:examples}.
+Legal validity, and whether a provision is still in force, cannot be judged without a legal expert. Three properties can be measured without one (Table~\ref{tab:checks}):
+\begin{itemize}[leftmargin=*]
+\item \textbf{Citation agreement.} On test, $67\%$ of answers cite \emph{every} article that the reference cites, and $78\%$ name a legal document that the reference names. Roughly a third of the answers miss at least one reference article; this is the main error type.
+\item \textbf{Numbers are rarely invented.} $96.5\%$ of the numeric tokens in the answers occur in the retrieved passages or in the question, and $88\%$ of the answers that contain numbers are fully grounded. The references themselves are grounded at $90.7\%$, since they sometimes use information outside the retrieved texts.
+\item \textbf{Quotation.} Answers reproduce $66\%$ of their 8-grams verbatim from the sources, against $55\%$ for the references: the model quotes more than the annotators did.
+\end{itemize}
+Worked examples ordered from easy to hard are given in Appendix~\ref{app:examples}.
 \begin{table}[H]
 \centering
 \caption{Automatic checks of the final system's test answers ($n{=}200$). Agreement rates are over the questions whose reference contains an article or a law identifier; grounding is over the answers that contain numbers.}\label{tab:checks}
@@ -537,18 +762,68 @@ Answers whose numbers are all grounded & .880 & --\\
 \end{tabular}
 \end{table}
 
-\paragraph{Headroom.}
-Choosing, per question, the best of $8$ samples with knowledge of the reference reaches $.726$ (dev\_clean), $0.08$ above MBR; no deployable selector is known to reach this. The literature we surveyed reports no verified Vietnamese legal QA result with \rl{} of $0.8$--$0.9$ against independent references; the closest are $\approx0.66$ for style-matched fine-tuning, so a score near $0.65$ with a 2B model is competitive.
-
-\paragraph{Why DPO on self-samples works here.}
-The reward is the evaluation metric, the pairs are on-policy (no distribution shift between sampled and trained model), and the gap threshold removes noise pairs; reaching the best sample of $8$ in a single pass is the same objective MBR pursues at inference time. The failure of round~3 shows the policy then exploits the lexical reward through length.
-
-%------------------------------------------------------------------------------
-\section{Deployment and Demonstration}\label{sec:deploy}
-The final configuration is packaged as a docker-compose stack: three vLLM v0.30.0 endpoints (the DPO model in bf16, the embedder, the reranker; GPU memory fractions $.45/.15/.15$ of one L40S) and an API image ($0.7$\,GB, no model weights) holding the $12.4$\,GB index in RAM and the few-shot pool as a $3$\,MB JSON file. The service exposes \texttt{POST /ask} and \texttt{GET /health}, returns the answer, the five reranked sources and per-stage timings, and is configured by environment variables so that the same image can call shared endpoints.
+\subsection{What did not help}\label{sec:negative}
+Table~\ref{tab:neg} collects every idea that was tested and not kept, grouped by pipeline stage. Appendix~\ref{app:failed} gives the details of the post-training and weight-editing attempts.
 \begin{table}[H]
 \centering
-\caption{Measured behaviour through the HTTP API (dev questions, greedy, $k{=}5$, 2 shots).}\label{tab:lat}
+\caption{Ideas tested and not retained (greedy dev \rl{} unless stated; reference: the final system, $.6637$, or the stated baseline).}\label{tab:neg}
+\small\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{5.2cm}>{\raggedright\arraybackslash}p{4.4cm}>{\raggedright\arraybackslash}p{5.6cm}@{}}
+\toprule
+Idea & Result & Why it did not help\\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Retrieval}}\\
+Fine-tuned reranker / embedder & \dieu{}@1 $+.125$ / $+.023$; generation $.6325\to.6253$ & Ranking gains do not reach the answer\\
+Hybrid BM25 + dense & on par after reranking & Lexical recall is far weaker\\
+Other chunkings (5 variants) & \dieu{}@5 $-.023$ to $+.004$ & Per-article chunks are already the natural unit\\
+LLM re-ranking (GLM-5.3, DeepSeek-V4) & \dieu{}@1 $+.14$/$+.10$; \rl{} $+.002$/$0$ & The model does not use a better order\\
+$k{=}10$ passages & $.612$ vs $.633$ (v3b) & Longer context dilutes the gold passage\\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Generator}}\\
+Legal-domain base model (3B) & $.615$ vs $.633$ after SFT & Knowledge comes from retrieval\\
+Continued pre-training (209M tokens) & cloze $+15$ points, \rl{} unchanged & Extent and style, not knowledge, limit \rl{}\\
+Distillation \cite{hinton} from a 9B teacher & raw teacher $.41$--$.43$ $<$ SFT 2B & Teacher does not follow the reference register\\
+Thinking at inference / thinking SFT on rationales & $.590$ vs $.603$ / $.585$ vs $.641$ & Reasoning does not make the quotation more accurate (Table~\ref{tab:think})\\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Post-training}}\\
+GRPO from v3b & $.627$ vs $.633$ & DPO on self-samples is better and cheaper\\
+Third DPO round & $-.029$ (v3b chain), $-.022$ pooled (PiSSA) & Exploits the reward through length\\
+Gold answers as chosen / own best sample as SFT target & $-.019$ / $-.015$ pooled & Off-policy text, or no rejected examples\\
+Higher cited-article weight in the reward ($0.4$/$0.6$) & $.6551$ / $.6458$ vs $.6543$ & No gain at round~1\\
+Cite-contrast, $n{=}16$, length-balanced pairs & $-.001$ to $+.005$ pooled & Inside the seed spread\\
+Averaging two DPO seeds; agent edits of the weights & no gain; best $+.004\pm.005$ & Remaining loss is question-specific\\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Decoding and post-processing}}\\
+Truncate long answers; convert tone-mark style & $+.0006$ / $-.0017$ & Length and spelling already match\\
+Replace the quotation by the whole article & $-.085$ & References quote only part of it\\
+Quote the rank-1 passage / MBR over \{answer, quotes\} & $.534$ / $.557$ & Loses the template and the right clause\\
+Learned selector over \{answer, 5 quotes\} & $.644$ (oracle $.715$) & Cannot tell which clause is right\\
+Complete a partly quoted clause by rule & $-.002$ to $-.006$ & The reference also quotes only part of a list\\
+Clause hint from lexical overlap & right at rank one $21\%$ vs model $52\%$ & The model chooses the clause better\\
+Cascade: MBR only if uncertain & $.644$ at $3.1$ generations (MBR-8 $.658$) & Reranker margin weakly predicts MBR gain\\
+FP8 weights & $.646$ vs $.654$ ($-.009$ \ci{-.020}{+.002}) & $21\%$ lower latency is not worth the loss\\
+\midrule
+\multicolumn{3}{@{}l}{\emph{Agents}}\\
+ReAct agent \cite{react} with 4 tools (search, article, graph, web) & \texttt{dev\_clean} $.537$--$.574$ vs $.633$; $-0.060$ \ci{-0.097}{-0.026} & Own queries find the gold article in only $66$--$72\%$ of questions\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%------------------------------------------------------------------------------
+\section{Deployment}\label{sec:deploy}
+\subsection{Service}
+The final configuration is packaged as a docker-compose stack:
+\begin{itemize}[leftmargin=*]
+\item three vLLM v0.30.0 endpoints, for the DPO model in bf16, the embedder and the reranker (GPU memory fractions $.45/.15/.15$ of one L40S);
+\item an API image ($0.7$\,GB, no model weights) that holds the $12.4$\,GB index in RAM and the few-shot pool as a $3$\,MB JSON file.
+\end{itemize}
+The service exposes \texttt{POST /ask} (also streaming, as server-sent events and an OpenAI-compatible chat-completions endpoint) and \texttt{GET /health}. It returns the answer, the five reranked sources and per-stage timings. It exposes Prometheus metrics, can bound the number of running and queued requests (HTTP~429 beyond the queue), and is configured by environment variables so that the same image can call shared endpoints.
+
+\paragraph{Refusal guard.} When the best reranker score is below $\tau{=}0.001$ (no corpus support), the service answers with a fixed refusal sentence without calling the LLM. Only $4$ of $300$ dev questions fall below $\tau$.
+
+\begin{table}[H]
+\centering
+\caption{Measured behaviour through the HTTP API (dev questions, greedy, $k{=}5$, 2 shots). The \rl{} values are parity checks on few questions only.}\label{tab:lat}
 \begin{tabular}{@{}lccccc@{}}
 \toprule
 Setting & $n$ & \rl{} & Mean & p50 & p95\\
@@ -558,14 +833,26 @@ Setting & $n$ & \rl{} & Mean & p50 & p95\\
 \bottomrule
 \end{tabular}
 \end{table}
-Single-request stage means are retrieve $0.08$\,s, rerank $0.21$\,s and generate $2.85$\,s ($91\%$), so decode dominates. In-process batch latency (concurrency 16) is $\mathrm{p50}\approx9$\,s and is not a user-facing figure. The \rl{} values in Table~\ref{tab:lat} are parity checks on few questions only.
+For a single request, the mean time per stage is $0.08$\,s for retrieval, $0.21$\,s for reranking and $2.85$\,s for generation ($91\%$), so decoding dominates.
 
 \paragraph{Demonstration.}
-Ten questions were sent to the live service (transcript in \texttt{docs/report/demo.md}): six development questions with references (\rl{} $.558,.617,.753,.601,.675,.821$; mean $.671$), three free questions (traffic fines, personal income tax deductions, capital adequacy ratio), and one off-topic question (``weather in Hanoi''). For the traffic question the system answers in the reference register (``\textit{Căn cứ theo khoản 1 Điều 6 Nghị định 100/2019/NĐ-CP được sửa đổi bởi \ldots}'') and quotes the retrieved article; we did not verify its legal validity (the retrieved text may predate later amendments), which illustrates that the metric rewards similarity to references, not legal correctness. The first run of the off-topic question exposed a failure (an invented, repeating weather bulletin while every reranker score was $0.000$), which motivated the refusal guard: with $\tau{=}0.001$ the service now answers with the fixed refusal sentence in $0.3$\,s without calling the LLM, and only $4$ of $300$ dev questions fall below $\tau$.
+Ten questions were sent to the live service (transcript in \texttt{docs/report/demo.md}):
+\begin{itemize}[leftmargin=*]
+\item \textbf{Six development questions} with references: \rl{} $.558,.617,.753,.601,.675,.821$ (mean $.671$).
+\item \textbf{Three free questions} (traffic fines, personal income tax deductions, capital adequacy ratio). For the traffic question the system answers in the reference register (``\textit{Căn cứ theo khoản 1 Điều 6 Nghị định 100/2019/NĐ-CP được sửa đổi bởi \ldots}'') and quotes the retrieved article. We did not verify its legal validity, and the retrieved text may predate later amendments: the metric rewards similarity to references, not legal correctness.
+\item \textbf{One off-topic question} (``weather in Hanoi''). Its first run exposed a failure: the model invented a repeating weather bulletin while every reranker score was $0.000$. This motivated the refusal guard, and the service now refuses in $0.3$\,s.
+\end{itemize}
 
-%------------------------------------------------------------------------------
 \subsection{Capacity under concurrent load and GPU layout}\label{sec:capacity}
-The QA service streams its answer (server-sent events, plus an OpenAI-compatible chat-completions endpoint), exposes Prometheus metrics, and can bound the number of running and queued requests (HTTP~429 beyond the queue). We measured three layouts on the two L40S cards, with a closed-loop load generator (each virtual user sends dev questions back to back for $30$\,s;  client-side times through the streaming endpoint; GPU utilisation and temperature sampled every second, a run stops at $85^\circ$C). The target is the $95$th percentile of the total latency; $p_{99}$ is shown beside it. \textbf{A$'$}: one card, everything shared (LLM $60\%$ of memory, the baseline). \textbf{B}: one complete stack per card (LLM, embedder, reranker, API) behind an nginx least-connections balancer. \textbf{C}: the LLM alone on card~0, embedder and reranker on card~1. The first load test also exposed a defect that unit tests had not: under concurrent requests the API process aborted (OpenBLAS ``too many memory regions'' raised by dozens of fresh threads calling FAISS); retrieval now runs on a bounded thread pool with one BLAS thread each, and every run below has zero errors and zero API restarts.
+We measured three layouts on the two L40S cards:
+\begin{itemize}[leftmargin=*]
+\item \textbf{A$'$}: one card, everything shared (LLM $60\%$ of memory; the baseline);
+\item \textbf{B}: one complete stack per card (LLM, embedder, reranker, API) behind an nginx least-connections balancer;
+\item \textbf{C}: the LLM alone on card~0, embedder and reranker on card~1.
+\end{itemize}
+The load generator is closed-loop: each virtual user sends dev questions back to back for $30$\,s, and times are measured client-side through the streaming endpoint. GPU utilisation and temperature are sampled every second, and a run stops at $85^\circ$C. The target is the $95$th percentile of total latency; $p_{99}$ is shown beside it.
+
+The first load test exposed a defect that unit tests had missed. Under concurrent requests, dozens of fresh threads calling FAISS made OpenBLAS raise ``too many memory regions'', and the API process aborted. Retrieval now runs on a bounded thread pool with one BLAS thread each, and every run below has zero errors and zero API restarts.
 \begin{table}[H]
 \centering
 \caption{Closed-loop sweep (dev questions, $n$ users, $30$\,s per level). req/s = completed requests per second; latencies are end-to-end seconds.}\label{tab:capacity}
@@ -603,9 +890,37 @@ users & req/s & $p_{95}$ & $p_{99}$ & req/s & $p_{95}$ & $p_{99}$ & req/s & $p_{
 \end{tikzpicture}
 \caption{Throughput and $p_{95}$ latency versus concurrent users; the dotted line is the $10$\,s target.}\label{fig:capacity}
 \end{figure}
-\paragraph{Maximum concurrency.} The largest number of users that keeps $p_{95}<10$\,s, no error and no rejection (found by doubling then bisecting) is $6$--$7$ for one card (two settings of the LLM memory share gave $7$ and $6$), $15$ and $18$ for B (two independent measurements) and $18$ for C, i.e.\ about $2.5$ to $3\times$ the single card. B and C are indistinguishable in capacity; C keeps the second card at only $25$--$50\%$ utilisation. We keep B as the default because the replicas fail independently (the balancer routes around a dead stack) and C as the choice when the second card is shared with other work.
-\paragraph{Bursts.} In an open-loop run (Poisson arrivals at $0.5$\,req/s, then $4$\,req/s for $15$\,s, then $0.5$\,req/s) every layout served all requests without errors; the $p_{95}$ during the burst was $12.2$\,s on one card against $9.0$\,s (B) and $9.2$\,s (C), and the post-burst $p_{95}$ returned to $0.86$--$0.92$ of the pre-burst value. Releasing $64$ requests at the same instant took $22.1$\,s to drain on one card, $15.4$\,s (B) and $16.4$\,s (C), with $p_{99}$ of $22.1$, $15.4$ and $16.4$\,s. Each level contains only $8$ to $220$ requests, so $p_{99}$ is close to the maximum and noisy; measurements repeated for B agree within about $0.3$\,s at $p_{95}$ except near the threshold, where the maximum concurrency varied between $15$ and $18$.
-\paragraph{Engine settings.} On the single-card layout we varied the vLLM settings one at a time (Table~\ref{tab:flags}; $30$\,s per level, no errors in any run). The number of concurrently decoded sequences ($32$--$256$) and the per-step token budget ($8$k--$32$k) change nothing within run-to-run noise: the card is saturated by decoding, not by scheduling. FP8 key--value cache gives the same throughput at lower utilisation (the model's context is short, so the memory saved is not needed). Disabling prefix caching lowers throughput at $32$ users by about $9\%$ ($2.70$ against $2.98$\,req/s) and lengthens the tail, because every request shares the instruction and the two demonstrations as a common prefix; it is kept on, and the defaults of the deployed stack are therefore unchanged.
+\paragraph{Maximum concurrency.} We define it as the largest number of users that keeps $p_{95}<10$\,s with no error and no rejection, found by doubling and then bisecting.
+
+\begin{center}
+\small
+\begin{tabular}{@{}lc@{}}
+\toprule
+Layout & Maximum users\\
+\midrule
+A$'$ (one card) & $6$--$7$ (two settings of the LLM memory share)\\
+B (two replicas) & $15$ and $18$ (two independent measurements)\\
+C (split) & $18$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Two cards thus serve about $2.5$ to $3\times$ as many users as one. B and C cannot be told apart in capacity, but C keeps the second card at only $25$--$50\%$ utilisation. We keep B as the default because the replicas fail independently (the balancer routes around a dead stack); C is the choice when the second card is shared with other work.
+
+\paragraph{Bursts.} Every layout served all requests without errors in both burst tests.
+\begin{itemize}[leftmargin=*]
+\item \textbf{Open-loop run} (Poisson arrivals at $0.5$\,req/s, then $4$\,req/s for $15$\,s, then $0.5$\,req/s). The $p_{95}$ during the burst was $12.2$\,s on one card, against $9.0$\,s (B) and $9.2$\,s (C). After the burst, the $p_{95}$ returned to $0.86$--$0.92$ of its pre-burst value.
+\item \textbf{$64$ requests released at once.} Draining them took $22.1$\,s on one card, $15.4$\,s (B) and $16.4$\,s (C).
+\end{itemize}
+Each level contains only $8$ to $220$ requests, so $p_{99}$ is close to the maximum and noisy. Repeated measurements for B agree within about $0.3$\,s at $p_{95}$, except near the threshold.
+
+\paragraph{Engine settings.} On the single-card layout we varied the vLLM settings one at a time (Table~\ref{tab:flags}; no errors in any run):
+\begin{itemize}[leftmargin=*]
+\item \textbf{Scheduling limits do not matter.} The number of concurrently decoded sequences ($32$--$256$) and the per-step token budget ($8$k--$32$k) change nothing beyond run-to-run noise: decoding, not scheduling, saturates the card.
+\item \textbf{FP8 key--value cache} gives the same throughput at lower memory use; the context is short, so the saved memory is not needed.
+\item \textbf{Prefix caching should stay on.} Disabling it lowers throughput at $32$ users by about $9\%$ ($2.70$ against $2.98$\,req/s) and lengthens the tail, because every request shares the instruction and the two demonstrations as a common prefix.
+\end{itemize}
+The defaults of the deployed stack are therefore unchanged.
 \begin{table}[H]
 \centering
 \caption{vLLM settings on one card (A), requests/s and $p_{95}$ latency (s) at $16$ and $32$ concurrent users. $^\dagger$64 sequences, 16k batched tokens, prefix caching on.}\label{tab:flags}
@@ -625,38 +940,87 @@ FP8 KV cache & 2.14 & 16.2 & 2.99 & 20.6\\
 \end{tabular}
 \end{table}
 
+\paragraph{Speculative decoding (exploratory).}\label{sec:spec}
+Answers quote the passages in the prompt, so n-gram prompt lookup \cite{vllm} could propose many tokens for free. We served a 2B model of the PiSSA chain (same architecture as the deployed one) on one card and generated $40$ dev answers per setting (Table~\ref{tab:spec}).
+\begin{itemize}[leftmargin=*]
+\item \textbf{One request at a time:} decoding becomes $1.5$--$2.4\times$ faster, and $p_{95}$ drops from $6.2$\,s to $2.4$\,s with $8$ proposed tokens.
+\item \textbf{$16$ concurrent requests:} throughput falls to $0.52$--$0.95\times$, because the card is already saturated and rejected proposals waste compute.
+\item \textbf{Correctness not established:} only $11$--$15$ of the $40$ answers were identical to plain decoding, although speculative decoding should not change greedy output. Until that is explained, it is not part of the deployed stack.
+\end{itemize}
+\begin{table}[H]
+\centering
+\caption{N-gram speculative decoding, generated tokens per second (speed-up against no speculation), $40$ dev prompts.}\label{tab:spec}
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Proposed tokens (lookup window) & 1 request & 16 concurrent\\
+\midrule
+none & 160 & 1380\\
+3 (2--3) & 242 ($1.51\times$) & 722 ($0.52\times$)\\
+5 (2--4) & 312 ($1.95\times$) & 1099 ($0.80\times$)\\
+8 (2--5) & 382 ($2.39\times$) & 1305 ($0.95\times$)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%------------------------------------------------------------------------------
 \section{Limitations and Threats to Validity}\label{sec:limits}
 \begin{itemize}[leftmargin=*]
-\item \textbf{Selection on dev.} Up to about ten variants were compared in several stages on a $300$-question dev set; intervals are paired but not corrected for multiple comparisons, and the \texttt{dev\_clean} (166) and \texttt{dev\_strict} (74) subsets are small. Round~2 DPO is replicated by a second DPO seed on both dev and test, other gains are single-run. The SFT stage itself is seed-sensitive (three seeds: $.633$, $.603$, $.613$ greedy dev \rl{}); the reported system starts from the best of the three, and repeating the DPO rounds from another SFT seed reproduces the first-round gain but not the second (Section~\ref{sec:further}), so the absolute level $.664$ is optimistic by a few hundredths.
-\item \textbf{Selection among the later recipes.} The PiSSA-based recipes of Section~\ref{sec:pissa} were compared on dev and on test, so test is no longer an untouched estimate for the chosen recipe; whole chains started from the same data and differing only in the seed differ by up to $.016$ \rl{} (pooled), as much as the claimed gains, and none of the post-training variants is distinguishable from another within that spread.
-\item \textbf{Test-set history.} The $200$-question test set was also scored for earlier configurations (Table~\ref{tab:testold}); the final configuration was fixed on dev beforehand. Test \rl{} differences below $\approx0.02$ are within bootstrap noise.
-\item \textbf{Reference-style metric.} All metrics are lexical or embedding similarity to references written in a fixed template; they do not measure legal correctness, and models fine-tuned on the same template are favoured. Train and test answers share $13$-grams in $32\%$ of test questions.
-\item \textbf{Retrieval store.} The index was extended with laws cited by the QA set (permitted by the protocol: the store may hold laws but no test QA pairs); law-hit is $0.62$ on test; for the remaining questions (including those without an extractable law identifier) the answer must rely on related passages.
-\item \textbf{Non-determinism.} Greedy decoding varies by $\pm0.003$ \rl{} across identical vLLM runs; MBR by $\pm0.006$.
-\item \textbf{Legal validity.} Answers are generated from retrieved texts that may be outdated or superseded and are not legal advice; correctness was not assessed by legal experts. The automatic checks of Table~\ref{tab:checks} bound only citation agreement and faithfulness to the retrieved text, not currency or legal soundness.
-\item \textbf{Scope of deployment test.} Latency was measured on one shared GPU; no multi-user load test has been run.
+\item \textbf{Selection on dev.} Up to about ten variants were compared at several stages on a $300$-question dev set. Intervals are paired but not corrected for multiple comparisons, and the \texttt{dev\_clean} ($166$) and \texttt{dev\_strict} ($74$) subsets are small.
+\item \textbf{Seed dependence.} The reported chain starts from the best of three SFT seeds, so its absolute dev level ($.664$) is optimistic by a few hundredths. Whole chains differing only in the seed differ by up to $.016$ \rl{} (pooled), as much as most claimed gains. Round~2 DPO was reproduced with a second DPO seed on the same supervised model, but not from another supervised seed.
+\item \textbf{Use of test.} Test was scored for earlier configurations (not used for selection), used together with dev to compare the PiSSA recipes, and scored once for the configuration fixed in advance. Test differences below $\approx0.02$ are within bootstrap noise.
+\item \textbf{Reference-style metric.} All metrics measure lexical or embedding similarity to references written in a fixed template. They do not measure legal correctness, and they favour models fine-tuned on the same template. Train and test answers share $13$-grams in $32\%$ of test questions.
+\item \textbf{Retrieval store.} The index was extended with laws that the QA set cites; the protocol permits this, since the store may hold laws but no test QA pairs. Law-hit is $0.62$ on test. For the remaining questions, including those without an extractable law identifier, the answer must rely on related passages.
+\item \textbf{Non-determinism.} Identical vLLM runs differ by $\pm0.003$ \rl{} with greedy decoding and by $\pm0.006$ with MBR.
+\item \textbf{Legal validity.} Answers are generated from retrieved texts that may be outdated or superseded and are not legal advice; legal experts did not assess correctness. The automatic checks of Table~\ref{tab:checks} cover only citation agreement and faithfulness to the retrieved text, not currency or legal soundness.
+\item \textbf{Load tests.} Capacity was measured with synthetic closed-loop and burst traffic made of dev questions, on a machine shared with other users' jobs. No real user traffic was observed. The speculative-decoding test covers $40$ prompts and changed the greedy output.
 \end{itemize}
 
 \section{Future Work}\label{sec:future}
-We surveyed two directions that the present system does not implement, and state the protocol under which each would be tested; neither was run, and the literature gives no direct evidence that either raises \rl{}.
+The following directions were not run. For each we state the protocol under which it would be tested and the effect we expect.
 
-\paragraph{Checker with feedback to retrieval, reranking and generation.}
-Retrieval-side critics such as Self-RAG \cite{selfrag} and Corrective RAG \cite{crag} report gains in accuracy, FactScore and citation precision, but the only lexical-overlap result we found (Self-RAG on ASQA, ROUGE $35.7$ vs.\ $35.8$ for a plain fine-tuned model) shows no change, and the smallest generators evaluated are $7$B. Self-correction without reliable external feedback gives no gain or a loss, and weaker models lose more \cite{selfcorrect,kamoi}; a claim-level verifier for Vietnamese labour-law QA improved citation preservation by only $+0.02$ to $+0.03$ \cite{nllp26}. In our setting an oracle gold passage at rank~1 adds only $+0.004$ \rl{} (Section~\ref{sec:retrieval}), which bounds what any retrieval-side correction can contribute, and a critic that rewrites answers would drift from the reference template. We therefore expect a checker to improve citation agreement and faithfulness (Table~\ref{tab:checks}) rather than \rl{}. Proposed protocol: (i)~\emph{selection only}: a frozen sub-4B verifier chooses among the $8$ samples that MBR already scores, compared with MBR and with the best-of-$8$ oracle as ceiling; (ii)~\emph{abstention only}: the verifier gates answers that are unsupported by the retrieved articles, replacing the reranker-score guard; (iii)~no rewriting step. Each variant is judged on dev \rl{} (paired bootstrap, \texttt{dev\_clean}/\texttt{dev\_strict} not worse) with citation and number-grounding rates as secondary outcomes, and the expected null effect on \rl{} is stated beforehand.
+\paragraph{Choosing the clause, not the article.}
+The remaining error is mostly which \textit{khoản} is quoted and how much of it. The oracle quotations show $+.05$--$.06$ of headroom; a lexical hint and a learned selector did not capture it. A small cross-encoder trained to score (question, \textit{khoản}) pairs on the training references could supply a ranked clause list to the prompt or to a selector over samples. It would be judged on dev \rl{} with the usual bootstrap, and on whether it beats the model's own clause choice ($52\%$ at rank one).
 
-\paragraph{Chunking beyond one chunk per article.}
-We only used one chunk per \dieu{} (long articles split at $2{,}000$ characters). Semantic chunking did not beat fixed-size chunking on natural documents and costs far more to compute \cite{vectara}, structure-aware chunking is reported to be among the best strategies for statutes, and the methods aimed at long documents (contextual retrieval \cite{contextual}, late chunking \cite{latechunk}, proposition indexing \cite{densex}, hierarchical auto-merging) have little to correct when the unit is already a short article. Since \dieu{}@5 is already $.905$, the expected effect on \rl{} is small. Proposed protocol, retrieval first: re-index with (a)~the current per-\dieu{} chunks (control); (b)~long articles split at $512$ and at $1{,}000$ characters, retrieving the small piece but passing its whole parent \dieu{} to the generator (small-to-big); (c)~clause-level (\textit{khoản}) chunks with the parent article; (d)~a rule-based header (document title and article heading) prefixed to each chunk, with no LLM pass. Stage~1 compares \dieu{}@1/5 and document MRR on dev and test with the same bootstrap; only a variant whose \dieu{}@5 interval excludes zero proceeds to Stage~2, the frozen final generator on dev \rl{} (greedy, $\pm.003$ run-to-run noise). The re-embedding of $\approx7\times10^5$ chunks per variant is the main cost.
+\paragraph{A checker for selection and abstention.}
+Retrieval-side critics such as Self-RAG \cite{selfrag} and Corrective RAG \cite{crag} report gains in accuracy and citation precision. However, the only lexical-overlap result we found (Self-RAG on ASQA: ROUGE $35.7$ against $35.8$ for a plain fine-tuned model) shows no change, and self-correction without reliable external feedback tends to hurt smaller models \cite{selfcorrect,kamoi}. A claim-level verifier for Vietnamese labour-law QA improved citation preservation by only $+0.02$ to $+0.03$ \cite{nllp26}. We therefore expect a frozen sub-4B verifier to improve citation agreement and grounding (Table~\ref{tab:checks}) rather than \rl{}. Proposed protocol:
+\begin{enumerate}[leftmargin=*,label=(\roman*)]
+\item \emph{selection}: choose among the $8$ samples that MBR already scores, compared with MBR and with the best-of-$8$ oracle;
+\item \emph{abstention}: gate answers that the retrieved articles do not support, replacing the reranker-score guard;
+\item no rewriting step.
+\end{enumerate}
+
+\paragraph{Length-controlled preference rewards.}
+Round~3 of DPO fails by lengthening answers, and the standard pairs favour shorter answers. A reward with an explicit length term relative to the reference, or a length-normalised objective \cite{simpo}, could allow a third round without collapse. It would be tested on two seeds against the round-2 model.
+
+\paragraph{Speculative decoding for single users.}
+Before n-gram speculation is used to cut single-user latency by up to $2.4\times$, its outputs must be shown to equal plain greedy decoding on the full dev set. The mismatch observed on $40$ prompts must be traced first.
 
 \section{Conclusion}
-A $2.3$B model with a well-covered index, a supervised recipe that teaches the answer register, and two rounds of on-policy DPO on its own best-versus-worst samples reaches test \rl{} $0.643$ with a single generation per question ($0.652$ with MBR-8), up from $0.171$ for the course baseline. A later PiSSA-based chain reached $0.644$--$0.647$ on test once but did not reproduce from scratch ($0.630$), so we keep the first recipe as the reported system (Section~\ref{sec:pissa}). The decisive factors are, in order, \emph{retrieval coverage}, \emph{supervised register learning}, and \emph{metric-aligned preference optimisation}; additional retrieval training, domain-specific base models, agents and quantisation did not improve results. Future work (Section~\ref{sec:future}): a verifier-based candidate selector, alternative chunking granularities, length-controlled preference rewards to prevent round-3 collapse, streaming for time-to-first-token SLOs, and a multi-user capacity study.
+A $2.3$B model reaches test \rl{} $0.643$ with a single generation per question ($0.652$ with MBR-8), up from $0.171$ for the course baseline. It combines a well-covered index, a supervised recipe that teaches the answer register, and two rounds of on-policy DPO on its own best-versus-worst samples. The decisive factors are, in order:
+\begin{enumerate}[leftmargin=*]
+\item \emph{retrieval coverage};
+\item \emph{supervised register learning};
+\item \emph{metric-aligned preference optimisation}.
+\end{enumerate}
+A second adapter recipe (PiSSA), several new pair sets and a configuration fixed in advance and trained on train plus dev all land within the seed spread of this system ($0.640$/$0.646$ for the latter). This suggests the recipe is at its limit with the available data. None of the following improved the score:
+\begin{itemize}[leftmargin=*]
+\item additional retrieval training;
+\item legal-domain base models and continued pre-training;
+\item thinking-mode training;
+\item agents;
+\item quantisation.
+\end{itemize}
+What remains is the choice of clause and of quotation extent, which no deployable selector has yet captured. The system runs as a containerised service: one L40S serves $6$--$7$ concurrent users and two serve $15$--$18$ within a $10$\,s p95.
 
 \section*{Reproducibility}
-Code, configurations, the container stack and a step-by-step manual are in the repository (\texttt{README.md}, \texttt{docs/ops/docker.md}); every number above corresponds to a run directory with its configuration and predictions, and the experiment log is in \texttt{docs/CHANGELOG.md}.
+Code, configurations, the container stack and a step-by-step manual are in the repository (\texttt{README.md}, \texttt{docs/ops/docker.md}). Every number above corresponds to a run directory with its configuration and predictions; the experiment log is in \texttt{docs/CHANGELOG.md}.
 
 \appendix
 \section{Earlier test-split evaluations}\label{app:test}
 \begin{table}[H]
 \centering
-\caption{Test \rl{} ($n{=}200$) of configurations evaluated before the final one (2-shot unless noted; all $k{=}5$ unless noted).}\label{tab:testold}
+\caption{Test \rl{} ($n{=}200$) of configurations of the main development line evaluated before the final one (2-shot and $k{=}5$ unless noted).}\label{tab:testold}
 \begin{tabular}{@{}lcc@{}}
 \toprule
 Configuration & \rl{} & Cosine\\
@@ -671,44 +1035,40 @@ v0 + MBR-8 & .6451 & --\\
 \bottomrule
 \end{tabular}
 \end{table}
-All variants fall in $.607$--$.621$ (greedy), within the $\pm0.02$ bootstrap noise of one another, which is why test was not used for selection.
+All variants fall in $.607$--$.621$ (greedy), within $\pm0.02$ bootstrap noise of one another, so test could not and did not guide the choice among them.
 
 \section{Worked examples, from easy to hard}\label{app:examples}
-Twelve test questions are shown, evenly spread over the \rl{} range of the final system (greedy), from the easiest (top) to the hardest (bottom), each with its ground-truth answer. Long texts are truncated (``\ldots''). The header gives the per-question \rl{}, whether the answer cites the same article and law as the ground truth, and the share of its numbers found in the retrieved passages. Easy cases reproduce the template and quote the right article; middle cases cite the right law but a different article or paraphrase more; the hardest cases are questions whose reference is not supported by the retrieved text (the law is missing from the store) or asks something the retrieved article does not contain.
+Twelve test questions are shown, spread evenly over the \rl{} range of the final system (greedy), from the easiest (top) to the hardest (bottom), each with its ground-truth answer. Long texts are truncated (``\ldots''). Each header gives the per-question \rl{}, whether the answer cites the same article and law as the ground truth, and the share of its numbers found in the retrieved passages.
+\begin{itemize}[leftmargin=*]
+\item \textbf{Easy cases} reproduce the template and quote the right article.
+\item \textbf{Middle cases} cite the right law but a different article, or paraphrase more.
+\item \textbf{The hardest cases} are questions whose reference the retrieved text does not support (the law is missing from the store), or that ask something the retrieved article does not contain.
+\end{itemize}
 \input{appendix_examples}
 
-
-\section{Experiments that did not work, in detail}\label{app:failed}
-This appendix records the attempts of the last experimental round that moved nothing, with the numbers that ended each line of work, so that nobody has to repeat them. All scores are \rl{}; ``fb'' is the feedback set (train-split questions, never dev or test).
-
-\paragraph{At a glance.}
-\begin{table}[H]
-\centering
-\small
-\begin{tabular}{@{}p{4.2cm}p{4.6cm}p{5.7cm}@{}}
-\toprule
-Attempt & Result (\rl{}) & Why it did not work\\
-\midrule
-Agent edits weights (two searches, $42$ requests) & best $+.004\pm.005$ (stop-token bias); every other edit $\le+.002$ or negative & Remaining loss differs question by question; a global weight change cannot target it\\
-Perfect retrieval (gold passage injected) & dev $.6743\to.6815$ ($+.007$) & Missed questions are intrinsically hard: $.46$ even with the gold passage, against $.72$ for hits\\
-Where retrieval misses & $90.5\%$ hit; $6.8\%$ lost to reranker/cut or a sibling article; $1.5\%$ law missing from corpus & Little room left in retrieval\\
-Quote completion by rules & $-.002$ to $-.006$ & The reference also quotes only part of a list\\
-Clause hint (lexical) & hint right at rank one $21\%$, model alone $52\%$ & The model chooses the khoản better than the hint\\
-Gold answers as DPO chosen & $-.019$ & Off-policy text hurts the correctly cited group\\
-Own best-of-8 SFT instead of DPO & $-.015$ & No rejected examples, so no contrast\\
-Cite-contrast pairs, $n{=}16$ samples, balanced-length pairs & $-.001$ to $+.005$ & Inside the seed spread\\
-Continued pre-training (209M tokens) & cloze $+15$ points, \rl{} unchanged & Extent and style, not knowledge, limit the score\\
-\bottomrule
-\end{tabular}
-\end{table}
+\section{Post-training and weight-editing attempts, in detail}\label{app:failed}
+This appendix records the attempts that moved nothing, with the numbers that ended each line of work, so that nobody has to repeat them. All scores are \rl{}. ``Feedback set'' means train-split questions, never dev or test.
 
 \subsection{Letting an agent edit the weights}
-\paragraph{Set-up.} Following the idea of \cite{wsp}, a language-model agent was given a loaded copy of the best DPO checkpoint and the right to overwrite any tensor with code it wrote itself, but no gradient step. It could look at the model only through a metered tool: $50$ generation or teacher-forcing requests (one request may carry many questions), and at most $300$ small Python analyses. The feedback set held $300$ questions from the tail and middle groups ($150$ for searching, $150$ fresh for confirming) and $100$ from the head group as a guard; an edit was to be kept only if it beat its paired standard error twice on the fresh questions without hurting the guard. Two searches ran side by side on two GPUs.
-\paragraph{Findings that held.} (i)~With a generation cap of $400$ new tokens, $131$ of $300$ tail/middle answers were cut off; the cap, not the weights, depressed the first baseline ($.437$ at $400$ tokens, $.440$/$.448$ at $1{,}024$ for search/confirm questions, head $.831$). (ii)~Per-head attribution at about $2{,}300$ points where the model's choice departed from the reference showed no head whose effect is specific to hard questions: effects were below $0.16$ logit and had the same sign on hard and easy questions.
+\paragraph{Set-up.} Following the idea of \cite{wsp}, a language-model agent was given:
+\begin{itemize}[leftmargin=*]
+\item a loaded copy of the best DPO checkpoint and the right to overwrite any tensor with code it wrote itself, but no gradient step;
+\item a metered view of the model: $50$ generation or teacher-forcing requests (one request may carry many questions) and at most $300$ small Python analyses;
+\item a feedback set of $300$ questions from the tail and middle groups ($150$ for searching, $150$ fresh for confirming), plus $100$ from the high group as a guard.
+\end{itemize}
+An edit was to be kept only if it beat twice its paired standard error on the fresh questions without hurting the guard. Two searches ran side by side on two GPUs.
+
+\paragraph{Findings that held.}
+\begin{enumerate}[leftmargin=*,label=(\roman*)]
+\item \textbf{The generation cap, not the weights, depressed the first baseline.} With a cap of $400$ new tokens, $131$ of the $300$ tail and middle answers were cut off. The baseline was $.437$ at $400$ tokens and $.440$/$.448$ at $1{,}024$ (search/confirm questions); the high group scored $.831$.
+\item \textbf{No attention head is specific to hard questions.} Per-head attribution at about $2{,}300$ points where the model's choice departed from the reference found effects below $0.16$ logit, with the same sign on hard and easy questions.
+\end{enumerate}
+
 \paragraph{Edits tried.}
 \begin{table}[H]
 \centering
 \caption{First search, requests that changed weights (paired difference to the unedited model, mean $\pm$ standard error, on the questions named).}\label{tab:wspfail}
+\small
 \begin{tabular}{@{}p{6.6cm}rr@{}}
 \toprule
 Edit & Questions & $\Delta$\rl{}\\
@@ -723,31 +1083,88 @@ Closed-form ridge fit of one MLP output to the reference, rank $4$ / rank $32$ &
 \bottomrule
 \end{tabular}
 \end{table}
-A second round on the same model measured each candidate by teacher forcing only (the mean log-probability of the reference, deterministic, standard error about $.001$) and screened the decay of the linear-attention layers and the gates of the attention outputs: scaling the decay by $0.5$ or $1.5$ lowered the reference log-probability on hard questions by $.014$ and $.004$, and every gate shift lowered it by $.010$ to $.109$, always two to four times more on hard questions than on the head group. The agent therefore stopped after $8$ requests with the original weights, having found no global change that favours hard questions.
-An independent second search used other families. Scaling the output columns of the three heads that carry most of the copying from the context (by $0.5$, $0.7$ and $1.3$) and fifteen MLP columns tied to answer difficulty changed \rl{} by $-.005$ to $+.002$ (standard errors $.004$--$.007$, $150$ questions each); heads selected as ``favouring the right article'' lost $.044\pm.014$ when scaled by $2.5$, exactly as much as an equally sized random set of heads ($-.044\pm.014$), so they carried no article-specific signal. Its accounting of where hard questions lose: the reference's article is absent from the context for $47$ of $150$ questions (\rl{} $.39$), present but not the one cited for $27$ ($.38$), and the model's logit for its own article number exceeds the correct one by $2.9$ on average; shortening or extending the quote, dropping the closing sentence or the citation header all lowered the score in simulation.
-The reversed control moving by $+.016$ at one strength and by $-.004$ on a second sample of questions is a reminder of how little a $64$-question request can resolve: with a paired standard error of $.009$--$.017$, only effects above about $.02$ are visible, and the whole search stayed below that. Direction edits did not leave a trace in length either (length ratios $1.22$--$1.55$ against $1.28$ for the original on the same questions), so the behaviours the method controlled well in \cite{wsp} (hesitation and loops in long reasoning) are not what separates good from bad answers here: our answers quote a legal text and the open question is how much of it and from which clause.
+\paragraph{Second round, by teacher forcing.} A second round on the same model measured each candidate by teacher forcing only: the mean log-probability of the reference, which is deterministic with a standard error of about $.001$. It screened the decay of the linear-attention layers and the gates of the attention outputs.
+\begin{itemize}[leftmargin=*]
+\item Scaling the decay by $0.5$ or $1.5$ lowered the reference log-probability on hard questions by $.014$ and $.004$.
+\item Every gate shift lowered it by $.010$ to $.109$.
+\item Both hurt hard questions two to four times more than the high group.
+\end{itemize}
+The agent stopped after $8$ requests with the original weights, having found no global change that favours hard questions.
+
+\paragraph{Independent second search.} This search used other families of edits:
+\begin{itemize}[leftmargin=*]
+\item \textbf{Copying heads and difficulty-tied MLP columns.} Scaling the output columns of the three heads that carry most of the copying from the context (by $0.5$, $0.7$ and $1.3$), and fifteen MLP columns tied to answer difficulty, changed \rl{} by $-.005$ to $+.002$ (standard errors $.004$--$.007$, $150$ questions each).
+\item \textbf{``Right-article'' heads carried no article-specific signal.} Heads selected as ``favouring the right article'' lost $.044\pm.014$ when scaled by $2.5$, exactly as much as an equally sized random set of heads.
+\end{itemize}
+Its accounting of where the hard questions lose:
+\begin{itemize}[leftmargin=*]
+\item the reference's article is absent from the context for $47$ of $150$ questions (\rl{} $.39$);
+\item it is present but not the one cited for $27$ ($.38$);
+\item the model's logit for its own article number exceeds the correct one by $2.9$ on average;
+\item shortening or extending the quote, dropping the closing sentence or dropping the citation header all lowered the score in simulation.
+\end{itemize}
+
+\paragraph{How much a request can resolve.} The reversed control moved by $+.016$ at one strength and by $-.004$ on a second sample of questions. With a paired standard error of $.009$--$.017$, a $64$-question request resolves only effects above about $.02$, and the whole search stayed below that. Direction edits did not change length either (length ratios $1.22$--$1.55$ against $1.28$ for the original on the same questions). The behaviours this method controlled well in \cite{wsp}, hesitation and loops in long reasoning, are not what separates good from bad answers here. Our answers quote a legal text, and the open question is how much of it to quote and from which clause.
 
 \subsection{Pairs and data for preference training}
-\paragraph{Where the pairs were.} Counting by mean score of the eight samples per training question, the tail group ($346$ questions, mean below $.45$) received $0.84$ pairs per question and $73$ of them none, the middle group ($299$) $1.34$ and $56$ none, the head group ($807$) $0.78$. A re-balanced set was built from the first-round samples: real pairs in which a good answer (\rl{}$\ge.65$, length $.75$--$1.3\times$ reference) is set against the worst shorter one ($86$), the worst longer one ($115$) and the worst same-length one with \rl{} $.35$--$.6$ ($122$), plus $300$ synthetic negatives (the chosen answer cut at a line boundary to $35$--$60\%$, or followed by a paragraph of the prompt it does not contain). It trained as stably as the plain recipe (Table~\ref{tab:pissa}) and not better.
-\paragraph{Gold answers as chosen.} For the $129$ tail/middle questions that had no pair, the reference answer was used as chosen and the model's worst sample as rejected. Pooled \rl{} fell by $.019$; in the stage table of dev, the group ``retrieved and cited'' lost $.025$ and ``cites no article'' grew from $3$ to $8$ questions. The model is moved toward text it would not generate itself, and the DPO objective has no term that tells it which part of that text matters.
+\paragraph{Where the pairs were.} Grouping the training questions by the mean score of their eight samples:
 
-\subsection{Other negatives of this round}
+\begin{center}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Group & Questions & Pairs per question & Questions with no pair\\
+\midrule
+Tail (mean below $.45$) & $346$ & $0.84$ & $73$\\
+Middle & $299$ & $1.34$ & $56$\\
+High & $807$ & $0.78$ & --\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{The mixed set.} We re-balanced the pairs from the first-round samples. Real pairs set a good answer (\rl{} $\ge.65$, length $.75$--$1.3\times$ the reference) against:
 \begin{itemize}[leftmargin=*]
-\item \textbf{Third on-policy round.} Starting from the best second-round model the third round lowered dev from $.6743$ to $.6453$ and test from $.6435$ to $.6166$; answers grew to $1.11\times$ the reference. As before, two rounds are the limit.
-\item \textbf{Same recipe, other seed.} Re-running both rounds with a second seed from the same first-round data gave $.6586$ / $.6299$; the spread between whole chains equals the claimed gain, so single-chain differences below $.02$ must not be read as improvements.
-\item \textbf{Completing the quoted unit by post-processing.} Answer lines were aligned to the lines of the passage they quote (token $F_1\ge.8$) and, when a khoản was quoted only in part, the missing lines (items a), b), \ldots) were appended in passage order. On the $300$ dev answers of the best model this lowered \rl{} in every setting: completing every unit $.6743\to.6680$ ($23$ of $94$ changed answers better, $71$ worse); only when at least $60\%$ of the unit was already quoted and one line was missing, $-.002$ \ci{-.004}{-.000}; with $75\%$/two lines $-.0015$, with $50\%$/three lines $-.005$. When the model quotes part of a list the reference usually does too, so extent errors are not a premature stop that a structural rule repairs.
-\item \textbf{Clause hint.} A prompt line naming the one to three khoản whose words overlap the question most (inverse-document-frequency weighting over the khoản of the retrieved passages) would need a hint that beats the model's own choice. On the $174$ dev questions whose reference names a khoản, the model's answer names it in $90$ ($52\%$), whereas the hint is right at rank one for $37$ ($21\%$) and within three for $80$ ($46\%$); the experiment was stopped before any training.
-\item \textbf{Weights as a dial.} Interpolating or extrapolating along (DPO checkpoint $-$ SFT checkpoint) was prepared but not run: the agent experiments above already probed one-dimensional weight directions without a gain, and the idea was withdrawn.
-\item \textbf{Continued pre-training.} $209$M tokens (statutes, regulations, translated and web-derived legal text, filtered and deduplicated) trained for one epoch with rank-$64$ adapters lifted a closed-book cloze test by $15$ points, yet answer overlap with the reference did not move; the model knows more text but not better where to stop quoting.
+\item the worst shorter answer ($86$ pairs);
+\item the worst longer answer ($115$);
+\item the worst same-length answer with \rl{} $.35$--$.6$ ($122$).
+\end{itemize}
+To these we added $300$ synthetic negatives: the chosen answer either cut at a line boundary to $35$--$60\%$ of its length, or followed by a paragraph of the prompt that it does not contain. The set trained as stably as the plain recipe (Table~\ref{tab:pissa}) and not better.
+
+\paragraph{Gold answers as chosen.} For the $129$ tail and middle questions that had no pair, the reference answer was used as chosen and the model's worst sample as rejected.
+\begin{itemize}[leftmargin=*]
+\item Pooled \rl{} fell by $.019$.
+\item On dev, the group ``retrieved and cited'' lost $.025$.
+\item The group ``cites no article'' grew from $3$ to $8$ questions.
+\end{itemize}
+The model is pushed toward text it would not generate itself, and the DPO objective has no term that tells it which part of that text matters.
+
+\subsection{Other attempts}
+\begin{itemize}[leftmargin=*]
+\item \textbf{Completing the quoted unit by post-processing.} Answer lines were aligned to the passage lines they quote (token $F_1\ge.8$). When a \textit{khoản} was quoted only in part, the missing lines (items a), b), \ldots) were appended in passage order. On the $300$ dev answers of the best model this lowered \rl{} in every setting:
+  \begin{itemize}[leftmargin=*]
+  \item completing every unit: $.6743\to.6680$ ($23$ of $94$ changed answers better, $71$ worse);
+  \item only when at least $60\%$ of the unit was quoted and one line was missing: $-.002$ \ci{-.004}{-.000};
+  \item $75\%$ quoted, two lines missing: $-.0015$;
+  \item $50\%$ quoted, three lines missing: $-.005$.
+  \end{itemize}
+  When the model quotes part of a list, the reference usually does too, so extent errors are not a premature stop that a structural rule can repair.
+\item \textbf{Clause hint.} A prompt line would name the one to three \textit{khoản} whose words overlap the question most (inverse-document-frequency weighting over the \textit{khoản} of the retrieved passages). It would only help if the hint beat the model's own choice. On the $174$ dev questions whose reference names a \textit{khoản}, the model's answer names it in $90$ ($52\%$); the hint is right at rank one for $37$ ($21\%$) and within three for $80$ ($46\%$). We stopped the experiment before any training.
+\item \textbf{Weights as a dial.} Interpolating or extrapolating along (DPO checkpoint $-$ SFT checkpoint) was prepared but not run. The agent experiments above had already probed one-dimensional weight directions without a gain.
 \end{itemize}
 
 \section{Data and corpus details}
-Reference answers fail the grounded-citation check in $17\%$ of dev questions. Public auxiliary datasets (legal QA, a retrieval benchmark and a Zalo legal set) were screened for overlap with the QA set before any training use (exact matches $0$; near-duplicates $\le 52$ rows). Reranker training groups: $4{,}015$ (course $1{,}137$, Zalo $2{,}878$).
+\begin{itemize}[leftmargin=*]
+\item Reference answers fail the grounded-citation check in $17\%$ of dev questions.
+\item Public auxiliary datasets (legal QA, a retrieval benchmark and a Zalo legal set) were screened for overlap with the QA set before any training use: $0$ exact matches and at most $52$ near-duplicate rows.
+\item Reranker training groups: $4{,}015$ ($1{,}137$ from the course data, $2{,}878$ from Zalo).
+\end{itemize}
 
 \begin{thebibliography}{99}\small
 \bibitem{vilegallm} T.-P.\,Nguyen, Q.-N.\,Nguyen, M.-T.\,Nguyen. ViLegalLM: Vietnamese pretrained language models for legal text. \textit{Findings of ACL}, 2026.
 \bibitem{wsp} J.\,Hu et al. Exploring weight-space programming: capabilities, generalization, and limitations. \textit{arXiv:2611.09382}, 2026.
 \bibitem{lora} E.\,J.\,Hu et al. LoRA: Low-rank adaptation of large language models. \textit{ICLR}, 2022.
+\bibitem{pissa} F.\,Meng, Z.\,Wang, M.\,Zhang. PiSSA: principal singular values and singular vectors adaptation of large language models. \textit{NeurIPS}, 2024.
+\bibitem{star} E.\,Zelikman, Y.\,Wu, J.\,Mu, N.\,D.\,Goodman. STaR: bootstrapping reasoning with reasoning. \textit{NeurIPS}, 2022.
 \bibitem{dpo} R.\,Rafailov et al. Direct preference optimization: your language model is secretly a reward model. \textit{NeurIPS}, 2023.
 \bibitem{grpo} Z.\,Shao et al. DeepSeekMath: pushing the limits of mathematical reasoning in open language models. arXiv:2402.03300, 2024.
 \bibitem{mbr} S.\,Kumar and W.\,Byrne. Minimum Bayes-risk decoding for statistical machine translation. \textit{HLT-NAACL}, 2004.
@@ -790,8 +1207,5 @@ Reference answers fail the grounded-citation check in $17\%$ of dev questions. P
 \bibitem{kamoi} R.\,Kamoi et al. When can LLMs actually correct their own mistakes? A critical survey of self-correction of LLMs. \textit{TACL}, 2024.
 \bibitem{nllp26} Claim-level citation verification for Vietnamese labour-law question answering. \textit{Natural Legal Language Processing Workshop}, 2026 (ACL Anthology 2026.nllp-1.21).
 \bibitem{vectara} R.\,Qu, R.\,Tu, F.\,Bao. Is semantic chunking worth the computational cost? \textit{Findings of NAACL}, 2025.
-\bibitem{contextual} Anthropic. Introducing contextual retrieval. Blog post, 2024.
-\bibitem{latechunk} M.\,G\"unther et al. Late chunking: contextual chunk embeddings using long-context embedding models. arXiv:2409.04701, 2024.
-\bibitem{densex} T.\,Chen et al. Dense X retrieval: what retrieval granularity should we use? \textit{EMNLP}, 2024.
 \end{thebibliography}
 \end{document}
