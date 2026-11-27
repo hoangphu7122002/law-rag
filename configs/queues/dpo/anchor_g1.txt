@@ -1,0 +1,21 @@
+# Anchored DPO round 1 (user 2026-11-27): 19 % of the round-1 pairs teach a chosen answer below ROUGE-L .5. Same cands as dpo_a (no resampling), from q35_v3b, dev greedy.
+#   drop: remove pairs with chosen < .5                 ref: chosen = reference when the best of 8 is < .5 (also prompts with no pair), + SFT term 0.2 (off-policy chosen)
+# Baseline: dpo_a dev .654 greedy. Runs on GPU1 after Triton releases the GPUs, before the 4B lane (q4b_g1 waits for it).
+wait ! tmux ls 2>/dev/null | grep -q "triton-"
+sh anchorpairs cd /home/app/phunguyen/law_rag && PYTHONPATH=src .venv/bin/python scripts/train/anchor_pairs.py --cands data/train/pref_v3b/cands.jsonl --pairs data/train/pref_v3b/pairs.jsonl --out data/train/pref_v3b/pairs_anchor_drop.jsonl --mode drop > data/runs/logs/anchorpairs.log 2>&1 && PYTHONPATH=src .venv/bin/python scripts/train/anchor_pairs.py --cands data/train/pref_v3b/cands.jsonl --pairs data/train/pref_v3b/pairs.jsonl --out data/train/pref_v3b/pairs_anchor_ref.jsonl --mode ref >> data/runs/logs/anchorpairs.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-anchorpairs"
+sh dpoanc_drop cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/preference/dpo.py --pairs data/train/pref_v3b/pairs_anchor_drop.jsonl --base data/models/q35_v3b --out /home/app/phunguyen/law_rag/data/models/dpo_anc_drop --lr 2e-5 --beta 0.1 > data/runs/logs/dpoanc_drop.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpoanc_drop"
+do sleep 60
+serve /home/app/phunguyen/law_rag/data/models/dpo_anc_drop --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_anc_drop --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1
+sh dpoanc_ref cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/preference/dpo.py --pairs data/train/pref_v3b/pairs_anchor_ref.jsonl --base data/models/q35_v3b --out /home/app/phunguyen/law_rag/data/models/dpo_anc_ref --lr 2e-5 --beta 0.1 --sft-weight 0.2 > data/runs/logs/dpoanc_ref.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpoanc_ref"
+do sleep 60
+serve /home/app/phunguyen/law_rag/data/models/dpo_anc_ref --gpu 1 --share 0.45
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/dpo_anc_ref --set backend.base_url=http://localhost:8001/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g1"
+do tmux kill-session -t lawrag-llm-g1
+do touch data/runs/logs/anchor_g1.done

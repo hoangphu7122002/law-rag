@@ -125,3 +125,25 @@ def contrast_pair(row: dict, min_margin: float = 0.05) -> dict | None:
     if best[0] - worst[0] < min_margin:
         return None
     return {"qid": row["qid"], "prompt": row["prompt"], "chosen": best[1], "rejected": worst[1], "margin": round(best[0] - worst[0], 4), "source": "cite_contrast"}
+
+
+def anchor_pairs(rows: list[dict], pairs: list[dict], min_chosen: float = 0.5, mode: str = "ref") -> list[dict]:
+    """Keep DPO from teaching a poor answer as the target (2026-11-27: 19 % of the round-1 pairs had a chosen answer below ROUGE-L .5, mostly the wrong Điều).
+    A standard pair is kept when its chosen answer has ROUGE-L >= min_chosen against the reference (source "standard").
+    mode "drop": the other pairs are removed.
+    mode "ref":  for every prompt whose best sample is below min_chosen (with or without a standard pair, e.g. all samples equally poor) the pair becomes
+                 chosen = the reference, rejected = the worst sample (source "reference"); train it with an SFT term, the reference is off-policy."""
+    ref_of = {r["qid"]: r["reference"] for r in rows}
+    out = [dict(p, source="standard") for p in pairs if rouge_l_score(p["chosen"], ref_of[p["qid"]]) >= min_chosen]
+    if mode == "drop":
+        return out
+    for r in rows:
+        ref = r["reference"]
+        if is_refusal(ref):
+            continue
+        scored = [(rouge_l_score(c, ref), c) for c in dict.fromkeys(r["cands"]) if c.strip()]
+        if not scored or max(s for s, _ in scored) >= min_chosen:
+            continue
+        lo, worst = min(scored, key=lambda s: s[0])
+        out.append({"qid": r["qid"], "prompt": r["prompt"], "chosen": ref, "rejected": worst, "margin": round(1.0 - lo, 4), "source": "reference"})
+    return out

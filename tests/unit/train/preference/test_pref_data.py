@@ -124,3 +124,39 @@ def test_contrast_pair_sets_a_candidate_citing_the_gold_dieu_against_one_citing_
     assert contrast_pair({**row, "cands": [right]}, 0.05) is None                       # nothing to contrast with
     assert contrast_pair({**row, "reference": "Tôi không thể trả lời."}, 0.05) is None   # refusal reference
     assert contrast_pair({**row, "reference": "Nội dung không nêu điều nào."}, 0.05) is None   # reference cites no Điều
+
+
+# ---- anchored pairs: a low-quality "best" sample must not be taught as the target (user 2026-11-27) ----
+A_REF = row([])["reference"]          # row() binds the first REF; later tests in this file rebind REF
+LOW1 = "Căn cứ Điều 9 quy định về thủ tục đăng ký."
+LOW2 = "Căn cứ Điều 9 quy định khác về thủ tục hồ sơ đăng ký kinh doanh."
+
+
+def test_anchor_drop_removes_pairs_whose_chosen_is_far_from_the_reference():
+    from train.preference.pref_data import anchor_pairs
+    rows = [row([GOOD, BAD]), {**row([LOW1, BAD]), "qid": 2}]
+    std = build_pairs(rows, min_margin=0.1)
+    out = anchor_pairs(rows, std, min_chosen=0.5, mode="drop")
+    assert [p["qid"] for p in out] == [1] and out[0]["chosen"] == GOOD
+
+
+def test_anchor_ref_uses_the_reference_as_chosen_when_every_sample_is_poor():
+    from train.preference.pref_data import anchor_pairs
+    rows = [row([GOOD, BAD]), {**row([LOW1, LOW2, BAD]), "qid": 2}]
+    out = {p["qid"]: p for p in anchor_pairs(rows, build_pairs(rows, min_margin=0.1), min_chosen=0.5, mode="ref")}
+    assert out[1]["chosen"] == GOOD and out[1]["source"] == "standard"
+    assert out[2]["chosen"] == A_REF and out[2]["rejected"] == BAD and out[2]["source"] == "reference"
+
+
+def test_anchor_ref_also_covers_prompts_that_had_no_pair_because_all_samples_were_equally_poor():
+    from train.preference.pref_data import anchor_pairs
+    rows = [row([LOW1, LOW1 + " "])]                         # margin < 0.1 -> no standard pair
+    assert build_pairs(rows, min_margin=0.1) == []
+    out = anchor_pairs(rows, [], min_chosen=0.5, mode="ref")
+    assert len(out) == 1 and out[0]["chosen"] == A_REF and out[0]["rejected"].strip() == LOW1
+
+
+def test_anchor_skips_refusal_references():
+    from train.preference.pref_data import anchor_pairs
+    refusal = "Dựa trên các ngữ cảnh được cung cấp, chưa tìm thấy quy định liên quan."
+    assert anchor_pairs([row([LOW1, BAD], ref=refusal)], [], min_chosen=0.5, mode="ref") == []

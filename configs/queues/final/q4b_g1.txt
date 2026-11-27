@@ -1,8 +1,10 @@
 # 4B scaling point (user 2026-11-27: "train đầy đủ hết"): the reported 2B recipe (dpo_a2 = SFT v3b -> on-policy DPO r1 -> r2) re-run unchanged on Qwen/Qwen3.5-4B, GPU1.
 # Question: is the remaining ceiling model size (4B >> 2B) or data/clause choice (4B ~ 2B)? Dev greedy + MBR8 at every stage; test ONCE at the end (greedy + MBR8), pre-declared, disclosed.
+# Runs after the anchored-DPO lane (configs/queues/dpo/anchor_g1.txt) on the same GPU.
 # Disk (user OK 2026-11-27): the merged SFT model is deleted once r1 is saved, r1 once r2 is saved (dev scores stay in the run logs).
 # Starts only after Triton hands back the GPUs (no triton-* tmux). Shares GPU1 with embed/rerank (as the 2B runs did); runs in parallel with the 9B lane on GPU0.
 wait ! tmux ls 2>/dev/null | grep -q "triton-"
+wait test -f /home/app/phunguyen/law_rag/data/runs/logs/anchor_g1.done
 sh sft4 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft/sft_lora.py --data data/train/q35_v3b --base Qwen/Qwen3.5-4B --out /home/app/phunguyen/law_rag/data/models/q4_v3b --epochs 3 --max-length 12288 --batch 1 --accum 16 > data/runs/logs/sft4.log 2>&1
 wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-sft4"
 do sleep 60
