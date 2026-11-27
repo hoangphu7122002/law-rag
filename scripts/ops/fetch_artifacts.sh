@@ -9,7 +9,8 @@ HF_MODEL=${HF_MODEL:-hoangphu7122002ai/law-rag-qwen3.5-2b-dpo}
 cd "$(dirname "$0")/../.."
 hf download "$HF_DATA" --repo-type dataset --local-dir data/hf_data
 mkdir -p data/processed data/train
-cp -rn data/hf_data/processed/. data/processed/
+cp -n data/hf_data/processed/*.parquet data/hf_data/processed/*.json data/processed/
+for x in corpus vbpl_cited web; do [ -d data/processed/$x ] || tar xzf data/hf_data/processed/$x.tar.gz -C data/processed; done
 cp -rn data/hf_data/train/. data/train/
 [ "${1:-}" = "--no-model" ] || hf download "$HF_MODEL" --local-dir data/models/dpo_a2
 echo "done: data/processed, data/train$([ "${1:-}" = "--no-model" ] || echo ', data/models/dpo_a2')"
