@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # Build the LMS submission folder (gitignored): report, manual, source snapshot, small dataset files, one zip of it all.
-#   scripts/ops/make_submission.sh [HF_USER]     -> submission/ and submission.zip
+#   scripts/ops/make_submission.sh      -> submission/ and submission.zip
 # Big files (corpus, training data, weights) are on the Hugging Face Hub; docs/MANUAL.md points to them.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
-HF_USER=${1:-__HF_USER__}
+HF_USER=${1:-hoangphu7122002ai}
 OUT=submission
 rm -rf "$OUT" submission.zip
 mkdir -p "$OUT/source" "$OUT/dataset"
 
 cp docs/report/report.pdf "$OUT/report.pdf"
-sed "s/__HF_USER__/$HF_USER/g" docs/MANUAL.md > "$OUT/MANUAL.md"
+cp docs/MANUAL.md "$OUT/MANUAL.md"
 
 # source: exactly the committed tree (no data, no weights, no local state)
 git archive --format=zip --prefix=law-rag/ -o "$OUT/source/law-rag-src.zip" HEAD

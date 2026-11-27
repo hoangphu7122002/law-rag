@@ -7,8 +7,8 @@ How to install, run and reproduce the submitted system: a Vietnamese legal quest
 | Report | `report.pdf` (LaTeX source: `docs/report/paper/`) |
 | Source code | this repository (`source/law-rag-src.zip` in the submission) |
 | Dataset (small files) | `dataset/` in the submission |
-| Dataset (corpus, training data) | Hugging Face dataset `__HF_USER__/law-rag-data` |
-| Model weights (final model, merged, bf16) | Hugging Face model `__HF_USER__/law-rag-qwen3.5-2b-dpo` |
+| Dataset (corpus, training data) | Hugging Face dataset `hoangphu7122002ai/law-rag-data` |
+| Model weights (final model, merged, bf16) | Hugging Face model `hoangphu7122002ai/law-rag-qwen3.5-2b-dpo` |
 
 Main result (200 held-out test questions, ROUGE-L): course baseline .171, **final system .643 (greedy)**, .652 with MBR-8.
 
@@ -59,7 +59,7 @@ scripts/ops/fetch_artifacts.sh --no-model   # data only
 
 | Folder | Content |
 |---|---|
-| `data/processed/` | `qa.parquet` (questions and references), `split.json`, `gold.parquet` (cited articles), `corpus/` (law texts, one file per document), `web/` |
+| `data/processed/` | `qa.parquet` (questions and references), `split.json`, `gold.parquet` (cited articles), and the law texts, one file per document: `corpus/` (course), `vbpl_cited/` (laws since 2000 and every cited law), `web/` (cited laws from public portals) |
 | `data/train/q35_v3b/` | SFT rows (prompt as seen at inference + reference answer), decontaminated against test |
 | `data/train/pref_v3b/`, `data/train/pref_dpoa/` | DPO pairs of rounds 1 and 2 |
 
