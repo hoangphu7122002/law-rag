@@ -9,7 +9,7 @@ How to install, run and reproduce the submitted system: a Vietnamese legal quest
 | Dataset (small files) | `dataset/` in the submission |
 | Dataset (corpus, training data) | Hugging Face dataset `hoangphu7122002ai/law-rag-data` |
 | Model weights (final model, merged, bf16) | Hugging Face model `hoangphu7122002ai/law-rag-qwen3.5-2b-dpo` |
-| Intermediate models | `hoangphu7122002ai/law-rag-qwen3.5-2b-sft` (SFT stage of the final model); `…-trainval-sft`, `…-trainval-dpo1`, `…-trainval-dpo2` (the fixed configuration trained on train+dev, report section "Final configuration") |
+| Intermediate models | `hoangphu7122002ai/law-rag-qwen3.5-2b-sft` (SFT stage of the final model); `…-pissa-sft` (best SFT-only model, PiSSA, report section "Post-training from the PiSSA supervised model"); `…-trainval-sft`, `…-trainval-dpo1`, `…-trainval-dpo2` (the fixed configuration trained on train+dev, report section "Final configuration") |
 
 Main result (200 held-out test questions, ROUGE-L): course baseline .171, **final system .643 (greedy)**, .652 with MBR-8.
 
