@@ -460,3 +460,9 @@ Test split (200 questions, 0 errors, 0 empty), retrieval as in the dev runs (den
   - ref (984 + 257 reference-as-chosen pairs, SFT weight .2): dev .591, −.063 [−.079, −.047].
   - Both over-lengthen (median 1863 / 2148 chars vs 1563 for dpo_a, reference mean 1583). Low-scoring pairs still carry the "avoid worse" signal. Standard pairs kept; no round 2. Paper: DPO-design ablation table + failed-ideas table.
 - Scaling runs launched with the dpo_a2 recipe (analysis only, the submission stays 2B): Qwen3.5-9B on GPU0 (`configs/queues/final/q9b_g0.txt`), Qwen3.5-4B on GPU1 (`q4b_g1.txt`). 9B SFT smoke at max-length 12288: no OOM, ~37 s/step.
+- Scaling results (same recipe, analysis only, test scored once at the end per decoding mode; models verified in each run's config):
+  - 4B: dev SFT .636 → r1 .669 → r2 .679, MBR-8 .686; test .666 / .672 (pairs 1219 / 861).
+  - 9B: dev .664 → .693 → .700, MBR-8 .705; test .677 / .686 (pairs 1167 / 979; r2 DPO 99 min).
+  - vs 2B .643 / .652: +.023 / +.034 test. The 9B recovers ~60 % of the dev gap to the clause oracle (.722). Paper section "Is model size the limit?" (tab:scaling). Models on HF: law-rag-qwen3.5-{4b,9b}-dpo.
+- HF: PiSSA SFT (law-rag-qwen3.5-2b-pissa-sft) uploaded. Every model version is linked from the report (Reproducibility), the manual and the submission README.
+- Ops: evals read the retrieval cache, so embed/rerank are not needed once a split is cached. GPUs handed to Triton: GPU1 at 23:45, GPU0 at 00:40 via box-side `lawrag-handoff-g0` (touches Triton's GPU0_OK).

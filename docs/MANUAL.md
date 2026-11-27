@@ -18,6 +18,8 @@ How to install, run and reproduce the submitted system: a Vietnamese legal quest
 | Fixed configuration on train+dev, SFT (report "Final configuration") | https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-trainval-sft | – / – |
 | … + DPO round 1 | https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-trainval-dpo1 | – / – |
 | … + DPO round 2 | https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-trainval-dpo2 | – / .640 |
+| Scaling point, same recipe on Qwen3.5-4B (4.66B, over the limit: analysis only) | https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-4b-dpo | .679 / .666 |
+| Scaling point, same recipe on Qwen3.5-9B (9.65B, analysis only) | https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-9b-dpo | .700 / .677 |
 
 Main result (200 held-out test questions, ROUGE-L): course baseline .171, **final system .643 (greedy)**, .652 with MBR-8.
 
@@ -142,6 +144,7 @@ Every experiment is one YAML file in `configs/exp/` (only its differences from `
 | SFT variants, learning curve | `configs/queues/sft/` |
 | DPO, ablations, replications | `configs/queues/dpo/` |
 | Final pre-declared configuration | `configs/queues/final/`, `docs/research/final-run-plan.md` |
+| Scaling to 4B / 9B | `configs/queues/final/q4b_g1.txt`, `configs/queues/final/q9b_g0.txt` |
 | Load tests | `scripts/serve/serve_bench.sh`, `scripts/serve/load_test.py` |
 
 ## 8. Troubleshooting

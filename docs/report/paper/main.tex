@@ -52,7 +52,7 @@ We treat the task as an empirical systems problem. We split the pipeline into re
   \item a third round degrades the model;
   \item across seeds, the first round is robust, but the second round's extra gain is not always reproduced (Section~\ref{sec:posttrain}).
   \end{itemize}
-\item \textbf{A record of what did not help}, with an oracle analysis showing that the remaining error lies in which clause is quoted and how much of it, not in retrieval (Sections~\ref{sec:analysis} and~\ref{sec:negative}).
+\item \textbf{A record of what did not help}, with an oracle analysis showing that the remaining error lies in which clause is quoted and how much of it, not in retrieval (Sections~\ref{sec:analysis} and~\ref{sec:negative}). A scaling check with the same recipe on 4B and 9B models adds only $+0.023$ and $+0.034$ test \rl{} (Section~\ref{sec:scaling}).
 \item \textbf{A containerised QA service} with separate LLM, embedding and reranking endpoints and a refusal guard for off-topic questions, with measured latency, capacity and engine settings (Section~\ref{sec:deploy}).
 \end{enumerate}
 
@@ -691,6 +691,29 @@ Reported system, MBR-8 & .918 & .681 & .728 & .587 & .652 \\
 \end{table}
 \noindent Adding dev to the training data does not move test: both differences ($-.003$ greedy, $-.006$ MBR-8) are well inside the seed spread, as the learning curve predicted ($\approx+.003$). The reported system therefore stays the first recipe (v3b with two DPO rounds).
 
+\subsection{Is model size the limit? A 4B and a 9B scaling point}\label{sec:scaling}
+To separate model size from data and clause choice, we re-ran the reported recipe unchanged on Qwen3.5-4B ($4.66$B) and Qwen3.5-9B ($9.65$B). The recipe is SFT v3b followed by two on-policy DPO rounds, with the same data, hyper-parameters, retrieval and shots. Dev was scored after every stage, and test once at the end per decoding mode. Both models exceed the 4B limit, so they are analysis only and not candidates for the submitted system.
+
+\begin{table}[H]
+\centering\small
+\caption{Scaling the reported recipe (\rl{}). Dev $n{=}300$, test $n{=}200$; greedy unless stated.}\label{tab:scaling}
+\begin{tabular}{@{}lccccccc@{}}
+\toprule
+Base model & Params & SFT & DPO r1 & DPO r2 & Dev MBR-8 & Test & Test MBR-8\\
+\midrule
+\best{Qwen3.5-2B (reported)} & \best{2.27B} & \best{.633} & \best{.654} & \best{.664} & \best{.672} & \best{.643} & \best{.652}\\
+Qwen3.5-4B & 4.66B & .636 & .669 & .679 & .686 & .666 & .672\\
+Qwen3.5-9B & 9.65B & .664 & .693 & .700 & .705 & .677 & .686\\
+\bottomrule
+\end{tabular}
+\end{table}
+\begin{itemize}[leftmargin=*]
+\item \textbf{Size helps, but little.} About $4\times$ the parameters add $.034$ test \rl{} ($.643\to.677$); 4B adds $.023$. This is about the gain of one DPO round, and only twice the spread between seeds ($.016$).
+\item \textbf{The recipe transfers.} DPO adds $+.036$ to $+.043$ on dev at every size, so its gain is not specific to the 2B model.
+\item \textbf{Most of the gap opens in post-training.} After SFT the 4B model is level with the 2B ($.636$ against $.633$). Only the 9B starts higher ($.664$, the level the 2B reaches after two DPO rounds).
+\item \textbf{A larger model chooses clauses somewhat better.} On dev the 9B ($.700$) recovers about $60\%$ of the gap between the 2B ($.664$) and the oracle that picks, per question, the better of the answer and a verbatim gold quotation ($.722$, Section~\ref{sec:analysis}). Part of the clause-choice error is therefore capacity. The price is $4\times$ the parameters for $+.034$ on test, and no model inside the 4B limit is available to buy it. Within the limit, the 2B system is close to what this recipe can reach.
+\end{itemize}
+
 %------------------------------------------------------------------------------
 \section{Analysis}\label{sec:analysis}
 \paragraph{Where the error is.}
@@ -1007,7 +1030,7 @@ A $2.3$B model reaches test \rl{} $0.643$ with a single generation per question 
 \item \emph{supervised register learning};
 \item \emph{metric-aligned preference optimisation}.
 \end{enumerate}
-A second adapter recipe (PiSSA), several new pair sets and a configuration fixed in advance and trained on train plus dev all land within the seed spread of this system ($0.640$/$0.646$ for the latter). This suggests the recipe is at its limit with the available data. None of the following improved the score:
+A second adapter recipe (PiSSA), several new pair sets and a configuration fixed in advance and trained on train plus dev all land within the seed spread of this system ($0.640$/$0.646$ for the latter). This suggests the recipe is at its limit with the available data. Model size is not the main limit either. The same recipe on Qwen3.5-4B and 9B, both beyond the 4B rule and run as analysis only, reaches test $0.666$ and $0.677$, only $+0.02$ to $+0.03$ above the 2B system. None of the following improved the score:
 \begin{itemize}[leftmargin=*]
 \item additional retrieval training;
 \item legal-domain base models and continued pre-training;
@@ -1032,6 +1055,8 @@ PiSSA SFT (best supervised model) & \href{https://huggingface.co/hoangphu7122002
 Fixed configuration, train+dev: SFT & \href{https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-trainval-sft}{\texttt{law-rag-qwen3.5-2b-trainval-sft}} & -- / --\\
 \quad + DPO round 1 & \href{https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-trainval-dpo1}{\texttt{law-rag-qwen3.5-2b-trainval-dpo1}} & -- / --\\
 \quad + DPO round 2 & \href{https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-trainval-dpo2}{\texttt{law-rag-qwen3.5-2b-trainval-dpo2}} & -- / .640\\
+Scaling point, Qwen3.5-4B (analysis only) & \href{https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-4b-dpo}{\texttt{law-rag-qwen3.5-4b-dpo}} & .679 / .666\\
+Scaling point, Qwen3.5-9B (analysis only) & \href{https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-9b-dpo}{\texttt{law-rag-qwen3.5-9b-dpo}} & .700 / .677\\
 \bottomrule
 \end{tabular}
 \end{center}

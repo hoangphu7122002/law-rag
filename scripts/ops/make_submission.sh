@@ -51,6 +51,8 @@ Hugging Face Hub (all models merged, bf16; dev / test ROUGE-L, greedy):
   fixed config on train+dev: SFT            https://huggingface.co/$HF_USER/law-rag-qwen3.5-2b-trainval-sft
     + DPO round 1                           https://huggingface.co/$HF_USER/law-rag-qwen3.5-2b-trainval-dpo1
     + DPO round 2                           https://huggingface.co/$HF_USER/law-rag-qwen3.5-2b-trainval-dpo2    - / .640
+  scaling point 4B (analysis only, >4B)   https://huggingface.co/$HF_USER/law-rag-qwen3.5-4b-dpo            .679 / .666
+  scaling point 9B (analysis only)        https://huggingface.co/$HF_USER/law-rag-qwen3.5-9b-dpo            .700 / .677
 EOF
 
 (cd "$OUT" && zip -qr ../submission.zip .)
