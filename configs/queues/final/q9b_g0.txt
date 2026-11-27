@@ -1,0 +1,39 @@
+# 9B scaling point (user 2026-11-27: "train đầy đủ hết"): the reported 2B recipe (dpo_a2 = SFT v3b -> on-policy DPO r1 -> r2) re-run unchanged on Qwen/Qwen3.5-9B, GPU0.
+# Question: is the remaining ceiling model size (9B >> 2B) or data/clause choice (9B ~ 2B)? Dev greedy + MBR8 at every stage; test ONCE at the end (greedy + MBR8), pre-declared, disclosed.
+# Starts only after Triton hands back the GPUs (no triton-* tmux). Embed/rerank on GPU1 must be up.
+wait ! tmux ls 2>/dev/null | grep -q "triton-"
+sh sft9 cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/sft/sft_lora.py --data data/train/q35_v3b --base Qwen/Qwen3.5-9B --out /home/app/phunguyen/law_rag/data/models/q9_v3b --epochs 3 --max-length 12288 --batch 1 --accum 16 > data/runs/logs/sft9.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-sft9"
+do sleep 60
+serve /home/app/phunguyen/law_rag/data/models/q9_v3b --gpu 0 --share 0.85
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q9_v3b --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
+sh samp9a cd /home/app/phunguyen/law_rag && PYTHONPATH=src .venv/bin/python scripts/train/pref_sample.py --data data/train/q35_v3b --out data/train/pref_q9a/cands.jsonl --base-url http://localhost:8000/v1 --model /home/app/phunguyen/law_rag/data/models/q9_v3b --n 8 > data/runs/logs/samp9a.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-samp9a"
+do tmux kill-session -t lawrag-llm-g0
+sh pairs9a cd /home/app/phunguyen/law_rag && PYTHONPATH=src .venv/bin/python scripts/train/build_pairs.py data/train/pref_q9a/cands.jsonl data/train/pref_q9a/pairs.jsonl --min-margin 0.1 > data/runs/logs/pairs9a.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pairs9a"
+sh dpo9a cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/preference/dpo.py --pairs data/train/pref_q9a/pairs.jsonl --base /home/app/phunguyen/law_rag/data/models/q9_v3b --out /home/app/phunguyen/law_rag/data/models/q9_dpo_a --lr 2e-5 --beta 0.1 > data/runs/logs/dpo9a.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo9a"
+do sleep 60
+serve /home/app/phunguyen/law_rag/data/models/q9_dpo_a --gpu 0 --share 0.85
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q9_dpo_a --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
+sh samp9b cd /home/app/phunguyen/law_rag && PYTHONPATH=src .venv/bin/python scripts/train/pref_sample.py --data data/train/q35_v3b --out data/train/pref_q9b/cands.jsonl --base-url http://localhost:8000/v1 --model /home/app/phunguyen/law_rag/data/models/q9_dpo_a --n 8 > data/runs/logs/samp9b.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-samp9b"
+do tmux kill-session -t lawrag-llm-g0
+sh pairs9b cd /home/app/phunguyen/law_rag && PYTHONPATH=src .venv/bin/python scripts/train/build_pairs.py data/train/pref_q9b/cands.jsonl data/train/pref_q9b/pairs.jsonl --min-margin 0.1 > data/runs/logs/pairs9b.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-pairs9b"
+sh dpo9b cd /home/app/phunguyen/law_rag && /home/app/phunguyen/train_env/bin/python src/train/preference/dpo.py --pairs data/train/pref_q9b/pairs.jsonl --base /home/app/phunguyen/law_rag/data/models/q9_dpo_a --out /home/app/phunguyen/law_rag/data/models/q9_dpo_a2 --lr 2e-5 --beta 0.1 > data/runs/logs/dpo9b.log 2>&1
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-dpo9b"
+do sleep 60
+serve /home/app/phunguyen/law_rag/data/models/q9_dpo_a2 --gpu 0 --share 0.85
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q9_dpo_a2 --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
+configs/exp/A6_mbrv3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q9_dpo_a2 --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbrv3b.*-g0"
+configs/exp/A5_v3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q9_dpo_a2 --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A5_v3b.*-g0"
+configs/exp/A6_mbrv3b.yaml --set generate.model=/home/app/phunguyen/law_rag/data/models/q9_dpo_a2 --set backend.base_url=http://localhost:8000/v1 --set backend.embed_url=http://localhost:8101/v1 --set backend.rerank_url=http://localhost:8201 --set generate.shots=2 --set split=test
+wait ! tmux ls 2>/dev/null | grep -q "lawrag-run-A6_mbrv3b.*-g0"
+do tmux kill-session -t lawrag-llm-g0
