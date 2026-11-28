@@ -443,7 +443,7 @@ Vi-Qwen2-3B, SFT & .599 & +.176 over raw\\
 Qwen3.5-2B, SFT v0 (5 ep., no shots) & .603 & +.202 over raw Qwen3.5-2B\\
 v2 (dynamic $k$, gold injection) & .594 & no gain alone\\
 v3b + fine-tuned reranker & .625 & negative (retrieval gain does not transfer)\\
-hp (higher LoRA rank, lr $2\!\times\!10^{-4}$) & .599 & negative\\
+hp (LoRA $\alpha{=}64$, lr $2\!\times\!10^{-4}$, 2 ep.) & .599 & negative\\
 v3 (+ demonstrations, 2 shots) & .627 & \\
 \best{v3b (+ refusal rows), 2 shots} & \best{.633} & \best{+.030 over v0}\\
 v3b, 0 shots / $k{=}10$ & .594 / .612 & demonstrations matter\\
@@ -470,7 +470,7 @@ DoRA & diverged\\
 \end{tabular}
 \end{center}
 
-\noindent Section~\ref{sec:pissa} asks whether the PiSSA gain survives preference training.
+\noindent A higher rank (64) or full fine-tuning does not beat PiSSA at rank $32$; ranks below $32$ or above $64$ were not tried, and DPO always used rank $32$. Section~\ref{sec:pissa} asks whether the PiSSA gain survives preference training.
 
 \paragraph{Data size.}
 Training on $25\%$, $50\%$ and $100\%$ of the questions (three seeds each) gives $.585$, $.603$ and $.616$, i.e.\ about $+0.016$ \rl{} per doubling. Adding the development questions ($+13\%$) should then add about $+0.003$, so more data of the same kind is a slow lever. Section~\ref{sec:finalchain} confirms this.

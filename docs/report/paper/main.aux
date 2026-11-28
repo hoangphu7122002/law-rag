@@ -133,12 +133,12 @@
 \newlabel{tab:mbrn}{{9}{11}{MBR-$n$ with the SFT model (v3b, 2 shots, \texttt {dev\_clean}, $n{=}166$). Mean single sample $.604$. Best-of-$n$ picks with the reference and is therefore an \emph {oracle}}{table.caption.37}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces MBR recovers only $17\%$ of the gap between greedy ($.630$) and the oracle ($.726$); MBR-4 keeps $\approx \!76\%$ of the MBR-8 gain.}}{11}{figure.caption.38}\protected@file@percent }
 \newlabel{fig:mbrn}{{3}{11}{MBR recovers only $17\%$ of the gap between greedy ($.630$) and the oracle ($.726$); MBR-4 keeps $\approx \!76\%$ of the MBR-8 gain}{figure.caption.38}{}}
-\@writefile{toc}{\contentsline {paragraph}{Post-training ladder.}{11}{section*.39}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Post-training ladder.}{12}{section*.39}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces Post-training ladder on dev ($n{=}300$, 2 shots, ROUGE-L{}). Intervals are paired-bootstrap differences against the row marked $\dagger $ ({\scriptsize  [lo,\,hi]}).}}{12}{table.caption.40}\protected@file@percent }
 \newlabel{tab:ladder}{{10}{12}{Post-training ladder on dev ($n{=}300$, 2 shots, \rl {}). Intervals are paired-bootstrap differences against the row marked $\dagger $ (\ci {lo}{hi})}{table.caption.40}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Iterated DPO on self-samples: gains in rounds 1--2, collapse in round 3.}}{12}{figure.caption.41}\protected@file@percent }
 \newlabel{fig:dpo}{{4}{12}{Iterated DPO on self-samples: gains in rounds 1--2, collapse in round 3}{figure.caption.41}{}}
-\@writefile{toc}{\contentsline {paragraph}{How robust is the DPO gain?}{12}{section*.42}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{How robust is the DPO gain?}{13}{section*.42}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Post-training from the PiSSA supervised model}{13}{subsection.5.5}\protected@file@percent }
 \newlabel{sec:pissa}{{5.5}{13}{Post-training from the PiSSA supervised model}{subsection.5.5}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces Post-training from the PiSSA supervised model $V_p$ (greedy, 2 shots, ROUGE-L{}). Pooled = dev$+$test; interval = paired bootstrap against $\mathrm  {dpo}_{a2}$. Round~2 always starts from the round-1 model.}}{13}{table.caption.43}\protected@file@percent }
@@ -161,9 +161,9 @@
 \newlabel{sec:scaling}{{6.2}{16}{Is model size the limit? A 4B and a 9B scaling point}{subsection.6.2}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces Scaling the reported recipe (ROUGE-L{}). Dev $n{=}300$, test $n{=}200$; greedy unless stated.}}{16}{table.caption.48}\protected@file@percent }
 \newlabel{tab:scaling}{{14}{16}{Scaling the reported recipe (\rl {}). Dev $n{=}300$, test $n{=}200$; greedy unless stated}{table.caption.48}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Why DPO on self-samples works here}{16}{subsection.6.3}\protected@file@percent }
 \citation{hinton}
 \citation{react}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Why DPO on self-samples works here}{17}{subsection.6.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {6.4}What can be checked automatically}{17}{subsection.6.4}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces Automatic checks of the final system's test answers ($n{=}200$). Agreement rates are over the questions whose reference contains an article or a law identifier; grounding is over the answers that contain numbers.}}{17}{table.caption.49}\protected@file@percent }
 \newlabel{tab:checks}{{15}{17}{Automatic checks of the final system's test answers ($n{=}200$). Agreement rates are over the questions whose reference contains an article or a law identifier; grounding is over the answers that contain numbers}{table.caption.49}{}}
