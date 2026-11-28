@@ -14,7 +14,7 @@ How to install, run and reproduce the submitted system: a Vietnamese legal quest
 |---|---|---|
 | **Reported system**: SFT v3b + 2 DPO rounds | https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-dpo | **.664 / .643** |
 | SFT v3b (supervised stage of the reported system) | https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-sft | .633 / .607 |
-| PiSSA SFT (best supervised model, report "Post-training from the PiSSA supervised model") | https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-pissa-sft | .641 / – |
+| PiSSA SFT (best supervised model, report "Post-training from the PiSSA supervised model") | https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-pissa-sft | .641 / .631 |
 | Fixed configuration on train+dev, SFT (report "Final configuration") | https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-trainval-sft | – / – |
 | … + DPO round 1 | https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-trainval-dpo1 | – / – |
 | … + DPO round 2 | https://huggingface.co/hoangphu7122002ai/law-rag-qwen3.5-2b-trainval-dpo2 | – / .640 |

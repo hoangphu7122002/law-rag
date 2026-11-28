@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999993 (MiKTeX 22.1) (preloaded format=xelatex 2026.10.7)  26 NOV 2026 22:46
+This is XeTeX, Version 3.141592653-2.6-0.999993 (MiKTeX 22.1) (preloaded format=xelatex 2026.10.7)  28 NOV 2026 07:45
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1157,219 +1157,126 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 [2]
 LaTeX Font Info:    Font shape `TU/Menlo(0)/m/n' will be
-(Font)              scaled to size 9.63605pt on input line 73.
-
-Overfull \hbox (7.41737pt too wide) in paragraph at lines 107--108
-\TU/TimesNewRoman(0)/m/n/10.95 fine-tuned for Vietnamese) into an inner-product
- FAISS index [[]]; the top $\OT1/cmr/m/n/10.95 50$ \TU/TimesNewRoman(0)/m/n/10.
-95 are re-scored by the AITeamVN
- []
-
+(Font)              scaled to size 9.63605pt on input line 116.
 
 
 [3]
 
 [4]
-Package pgfplots info on input line 187: Using 'lua backend=false' for axis: x 
-coord trafo unsupported.
-
 
 [5]
+Package pgfplots info on input line 260: Using 'lua backend=false' for axis: x 
+coord trafo unsupported.
+
 
 [6]
 
 [7]
-Overfull \hbox (11.89453pt too wide) in paragraph at lines 323--341
- [][] 
+Overfull \hbox (0.41483pt too wide) in paragraph at lines 360--361
+[]\TU/TimesNewRoman(0)/b/n/10.95 Packing whole clauses \TU/TimesNewRoman(0)/m/n
+/10.95 up to $\OT1/cmr/m/n/10.95 2[]000$ \TU/TimesNewRoman(0)/m/n/10.95 charact
+ers cannot be distinguished from the control ($\OT1/cmr/m/n/10.95 +\OML/cmm/m/i
+t/10.95 :\OT1/cmr/m/n/10.95 004$ \TU/TimesNewRoman(0)/m/n/8 [-.011,+.019]\TU/Ti
+mesNewRoman(0)/m/n/10.95 ). 
  []
 
 
 
 [8]
+LaTeX Font Info:    Font shape `TU/Menlo(0)/m/n' will be
+(Font)              scaled to size 8.80005pt on input line 427.
+
 
 [9]
-Underfull \hbox (badness 10000) in paragraph at lines 407--407
-[]|$\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 585$ \TU/TimesNewRoman(0)/m/n/10 / $\OML/
-cmm/m/it/10 :\OT1/cmr/m/n/10 603$ \TU/TimesNewRoman(0)/m/n/10 / $\OML/cmm/m/it/
-10 :\OT1/cmr/m/n/10 616$
- []
-
-
 
 [10]
 
 [11]
 
 [12]
-Underfull \hbox (badness 10000) in paragraph at lines 488--488
-[]|\TU/TimesNewRoman(0)/m/n/10.95 ReAct agent [[]] with
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 488--488
-\TU/TimesNewRoman(0)/m/n/10.95 4 tools (search, article
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 488--488
-[]|\TU/TimesNewRoman(0)/m/n/10.95 dev_clean $\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/
-10.95 537$ \TU/TimesNewRoman(0)/m/n/10.95 (trained 2B),
- []
-
-
-Underfull \hbox (badness 1735) in paragraph at lines 488--488
-\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.95 574$ \TU/TimesNewRoman(0)/m/n/10.95 wit
-h question-seeded search;
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 488--488
-\TU/TimesNewRoman(0)/m/n/10.95 RAG+SFT $\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.95
- 633$\TU/TimesNewRoman(0)/m/n/10.95 /$\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.95 6
-34$\TU/TimesNewRoman(0)/m/n/10.95 ; $\OMS/cmsy/m/n/10.95 ^^@\OT1/cmr/m/n/10.95 
-0\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.95 060$
- []
-
-
-Underfull \hbox (badness 1242) in paragraph at lines 488--489
-[]|\TU/TimesNewRoman(0)/m/n/10.95 Own queries find the gold ar-
- []
-
-
-Underfull \hbox (badness 4726) in paragraph at lines 488--489
-\TU/TimesNewRoman(0)/m/n/10.95 ticle in $\OT1/cmr/m/n/10.95 66$\TU/TimesNewRoma
-n(0)/m/n/10.95 –$\OT1/cmr/m/n/10.95 72[]$ \TU/TimesNewRoman(0)/m/n/10.95 of que
-stions
- []
-
-
-Underfull \hbox (badness 5652) in paragraph at lines 488--489
-\TU/TimesNewRoman(0)/m/n/10.95 (ROUGE-L $\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.9
-5 65$ \TU/TimesNewRoman(0)/m/n/10.95 vs $\OML/cmm/m/it/10.95 :\OT1/cmr/m/n/10.9
-5 32$ \TU/TimesNewRoman(0)/m/n/10.95 when
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 495--495
-[]|\TU/TimesNewRoman(0)/m/n/10.95 Continued pre-training
- []
-
-
-Underfull \hbox (badness 1292) in paragraph at lines 495--495
-[]|\TU/TimesNewRoman(0)/m/n/10.95 cloze $\OT1/cmr/m/n/10.95 +15$ \TU/TimesNewRo
-man(0)/m/n/10.95 points, ROUGE-L un-
- []
-
-
 
 [13]
 
 [14]
-Package pgfplots info on input line 576: Using 'lua backend=false' for axis: xm
-ode=log unsupported (yet).
-Package pgfplots info on input line 581: Using 'lua backend=false' for axis: xm
-ode=log unsupported (yet).
-
 
 [15]
 
 [16]
 
-[17] (appendix_examples.tex
+[17]
+Overfull \vbox (51.89998pt too high) has occurred while \output is active []
+
+
 
 [18]
 
 [19]
+Package pgfplots info on input line 910: Using 'lua backend=false' for axis: xm
+ode=log unsupported (yet).
+Package pgfplots info on input line 915: Using 'lua backend=false' for axis: xm
+ode=log unsupported (yet).
+
 
 [20]
 
-[21])
+[21]
 
 [22]
-Underfull \hbox (badness 10000) in paragraph at lines 676--676
-[]|\TU/TimesNewRoman(0)/m/n/10 Agent edits weights (two
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 678--678
-[]|$\OT1/cmr/m/n/10 90\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 5[]$ \TU/TimesNewRoman(
-0)/m/n/10 hit; $\OT1/cmr/m/n/10 6\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 8[]$ \TU/Tim
-esNewRoman(0)/m/n/10 lost to
- []
-
-
-Underfull \hbox (badness 7925) in paragraph at lines 678--678
-\TU/TimesNewRoman(0)/m/n/10 reranker/cut or a sibling ar-
- []
-
-
-Underfull \hbox (badness 1810) in paragraph at lines 678--678
-\TU/TimesNewRoman(0)/m/n/10 ticle; $\OT1/cmr/m/n/10 1\OML/cmm/m/it/10 :\OT1/cmr
-/m/n/10 5[]$ \TU/TimesNewRoman(0)/m/n/10 law missing from
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 683--683
-[]|\TU/TimesNewRoman(0)/m/n/10 Cite-contrast pairs, $\OML/cmm/m/it/10 n[]\OT1/c
-mr/m/n/10 16$
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 683--683
-\TU/TimesNewRoman(0)/m/n/10 samples, balanced-length
- []
-
-
-Underfull \hbox (badness 1067) in paragraph at lines 700--700
-\TU/TimesNewRoman(0)/m/n/10.95 put along (gold $\OMS/cmsy/m/n/10.95 ^^@$ \TU/Ti
-mesNewRoman(0)/m/n/10.95 own answer) hidden
- []
-
-
-Overfull \hbox (11.00754pt too wide) in paragraph at lines 696--709
- [][] 
+Overfull \hbox (11.89413pt too wide) in paragraph at lines 1048--1049
+\TU/TimesNewRoman(0)/m/n/10.95 dictions; the experiment log is in \TU/Menlo(0)/
+m/n/10.95 docs/CHANGELOG.md\TU/TimesNewRoman(0)/m/n/10.95 . Code: [][]$[][][][]
+[] [] [] [] [][][][][][] [] [][][] [] [][][][][][][][][][][][][][][] []
  []
 
 
 
-[23]
+[23] (appendix_examples.tex
 
 [24]
-Underfull \hbox (badness 10000) in paragraph at lines 733--734
+
+[25]
+
+[26]
+
+[27])
+
+[28]
+
+[29]
+
+[30]
+Underfull \hbox (badness 10000) in paragraph at lines 1213--1214
 []\TU/TimesNewRoman(0)/m/n/10 J.Hu et al. Exploring weight-space programming: c
 apabilities, generalization, and limitations.
  []
 
 
 
-[25]
-Underfull \hbox (badness 2689) in paragraph at lines 761--762
+[31]
+Underfull \hbox (badness 2689) in paragraph at lines 1243--1244
 []\TU/TimesNewRoman(0)/m/n/10 DeepSeek-AI. DeepSeek-R1: incentivizing reasoning
  capability in LLMs via reinforcement learning.
  []
 
 
 
-[26]
-LaTeX Font Info:    Font shape `TU/Menlo(0)/m/n' will be
-(Font)              scaled to size 8.80005pt on input line 770.
+[32]
 
-
-[27] (main.aux)
+[33] (main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-03-20>
  ***********
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: BC62D3EA1263F6881BFFC2038EDD4A48;6411.
+(rerunfilecheck)             Checksum: E39A127D4D379C4AA73C4670C294F10D;7475.
  ) 
 Here is how much of TeX's memory you used:
- 36530 strings out of 402809
- 884394 string characters out of 5440814
- 1466747 words of memory out of 5000000
- 64887 multiletter control sequences out of 15000+600000
+ 36541 strings out of 402809
+ 884597 string characters out of 5440814
+ 1466562 words of memory out of 5000000
+ 64898 multiletter control sequences out of 15000+600000
  637862 words of font info for 122 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 99i,18n,108p,1650b,2517s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 99i,18n,108p,2027b,2517s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main.xdv (27 pages, 956812 bytes).
+Output written on main.xdv (33 pages, 1060100 bytes).

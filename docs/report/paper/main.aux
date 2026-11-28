@@ -5,7 +5,6 @@
 \citation{rag_survey}
 \HyPL@Entry{0<</S/D>>}
 \@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Contributions.}{1}{section*.1}\protected@file@percent }
 \citation{lewis2020rag}
 \citation{rag_survey}
 \citation{lexglue}
@@ -22,6 +21,7 @@
 \citation{rrf}
 \citation{lostmiddle}
 \citation{lora}
+\citation{pissa}
 \citation{raft}
 \citation{ppo}
 \citation{instructgpt}
@@ -31,247 +31,267 @@
 \citation{simpo}
 \citation{soups}
 \citation{taskarith}
+\citation{star}
 \citation{mbr}
 \citation{freitag}
 \citation{selfcons}
 \citation{react}
 \citation{selfrag}
 \citation{searchr1}
+\@writefile{toc}{\contentsline {paragraph}{Contributions.}{2}{section*.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {2}Related Work}{2}{section.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Retrieval-augmented generation and legal NLP.}{2}{section*.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Retrieval and reranking.}{2}{section*.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Adapting small generators.}{2}{section*.4}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Decoding and agents.}{2}{section*.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3}Task, Data and Evaluation Protocol}{2}{section.3}\protected@file@percent }
-\newlabel{sec:data}{{3}{2}{Task, Data and Evaluation Protocol}{section.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Corpus}{2}{subsection.3.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Question--answer set and splits}{2}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Task, Data and Evaluation Protocol}{3}{section.3}\protected@file@percent }
+\newlabel{sec:data}{{3}{3}{Task, Data and Evaluation Protocol}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Corpus}{3}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Question--answer set and splits}{3}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Corpus--question mismatch.}{3}{section*.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Decontamination.}{3}{section*.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Development subsets.}{3}{section*.8}\protected@file@percent }
 \citation{rouge}
 \citation{bootstrap}
 \citation{bergk}
 \citation{bgem3}
 \citation{faiss}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces The deployed pipeline. Embedder, reranker and LLM are independent inference endpoints; the QA service holds only the index and the few-shot pool.}}{4}{figure.caption.10}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:pipeline}{{1}{4}{The deployed pipeline. Embedder, reranker and LLM are independent inference endpoints; the QA service holds only the index and the few-shot pool}{figure.caption.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Metrics and significance}{4}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Use of the test split.}{4}{section*.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Method}{4}{section.4}\protected@file@percent }
+\newlabel{sec:method}{{4}{4}{Method}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Retrieval}{4}{subsection.4.1}\protected@file@percent }
 \citation{monobert}
 \citation{vllm}
 \citation{llamaindex}
 \citation{trl}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces The deployed pipeline. Embedder, reranker and LLM are independent inference endpoints; the QA service holds only the index and the few-shot pool.}}{3}{figure.caption.10}\protected@file@percent }
-\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
-\newlabel{fig:pipeline}{{1}{3}{The deployed pipeline. Embedder, reranker and LLM are independent inference endpoints; the QA service holds only the index and the few-shot pool}{figure.caption.10}{}}
-\@writefile{toc}{\contentsline {paragraph}{Corpus--question mismatch.}{3}{section*.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Decontamination.}{3}{section*.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Development subsets.}{3}{section*.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Metrics and significance}{3}{subsection.3.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Protocol.}{3}{section*.9}\protected@file@percent }
 \citation{qwen3}
 \citation{lora}
 \citation{raft}
+\citation{pissa}
 \citation{mbr}
 \citation{grpo}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Generator and supervised fine-tuning}{5}{subsection.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Decoding}{5}{subsection.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Post-training with the evaluation metric as reward}{5}{subsection.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Reward.}{5}{section*.11}\protected@file@percent }
 \citation{dpo}
 \citation{soups}
 \citation{taskarith}
-\@writefile{toc}{\contentsline {section}{\numberline {4}Method}{4}{section.4}\protected@file@percent }
-\newlabel{sec:method}{{4}{4}{Method}{section.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Retrieval}{4}{subsection.4.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Generator and supervised fine-tuning}{4}{subsection.4.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Decoding}{4}{subsection.4.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Post-training with the evaluation metric as reward}{4}{subsection.4.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{GRPO.}{4}{section*.11}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{On-policy DPO.}{4}{section*.12}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Weight-space merging.}{4}{section*.13}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}Serving}{5}{subsection.4.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5}Results}{5}{section.5}\protected@file@percent }
-\newlabel{sec:results}{{5}{5}{Results}{section.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Main results on the test split}{5}{subsection.5.1}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Test split ($n{=}200$, no errors). The first row is the course baseline (answer-only decoding). All five metrics are reported for every row.}}{5}{table.caption.14}\protected@file@percent }
-\newlabel{tab:main}{{1}{5}{Test split ($n{=}200$, no errors). The first row is the course baseline (answer-only decoding). All five metrics are reported for every row}{table.caption.14}{}}
-\@writefile{toc}{\contentsline {paragraph}{Significance on test.}{5}{section*.15}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Paired bootstrap on the test split ($n{=}200$): mean difference (B$-$A) with $95\%$ interval.}}{5}{table.caption.16}\protected@file@percent }
-\newlabel{tab:testboot}{{2}{5}{Paired bootstrap on the test split ($n{=}200$): mean difference (B$-$A) with $95\%$ interval}{table.caption.16}{}}
+\@writefile{toc}{\contentsline {paragraph}{GRPO.}{6}{section*.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{On-policy DPO.}{6}{section*.13}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Weight-space merging.}{6}{section*.14}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Results}{6}{section.5}\protected@file@percent }
+\newlabel{sec:results}{{5}{6}{Results}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Main results on the test split}{6}{subsection.5.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Test split ($n{=}200$, no errors). The first row is the course baseline (answer-only decoding). The final system is SFT v3b followed by two DPO rounds.}}{6}{table.caption.15}\protected@file@percent }
+\newlabel{tab:main}{{1}{6}{Test split ($n{=}200$, no errors). The first row is the course baseline (answer-only decoding). The final system is SFT v3b followed by two DPO rounds}{table.caption.15}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Test ROUGE-L{} along the development of the system. The final system builds on SFT v3b; SFT v0 is the plain fine-tuned model.}}{6}{figure.caption.16}\protected@file@percent }
+\newlabel{fig:ladder}{{2}{6}{Test \rl {} along the development of the system. The final system builds on SFT v3b; SFT v0 is the plain fine-tuned model}{figure.caption.16}{}}
 \citation{lostmiddle}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Test ROUGE-L{} along the development of the system.}}{6}{figure.caption.17}\protected@file@percent }
-\newlabel{fig:ladder}{{2}{6}{Test \rl {} along the development of the system}{figure.caption.17}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Retrieval study}{6}{subsection.5.2}\protected@file@percent }
-\newlabel{sec:retrieval}{{5.2}{6}{Retrieval study}{subsection.5.2}{}}
-\@writefile{toc}{\contentsline {paragraph}{Corpus coverage is the dominant factor.}{6}{section*.18}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Effect of the retrieval store (dev $n{=}300$; test in parentheses). Law-hit = fraction of questions whose cited law is among the retrieved passages.}}{6}{table.caption.19}\protected@file@percent }
-\newlabel{tab:corpus}{{3}{6}{Effect of the retrieval store (dev $n{=}300$; test in parentheses). Law-hit = fraction of questions whose cited law is among the retrieved passages}{table.caption.19}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Retrieval quality of the stack (dense top-50, then reranker top-5). \textit  {Điều}{}@$k$ = gold article in the top $k$.}}{6}{table.caption.20}\protected@file@percent }
-\newlabel{tab:retr}{{4}{6}{Retrieval quality of the stack (dense top-50, then reranker top-5). \dieu {}@$k$ = gold article in the top $k$}{table.caption.20}{}}
-\@writefile{toc}{\contentsline {paragraph}{Trained retrieval components did not help generation.}{6}{section*.21}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Retrieval variants (retrieval only, top-10 returned; dev / test; documents $n{=}281/193$, articles $n{=}264/177$ with a recoverable gold). ``+rr$N$'' = reranker over $N$ candidates; the fine-tuned reranker was trained on $4{,}015$ groups (gold \textit  {Điều}{} positives, dense hard negatives) and raises \textit  {Điều}{}@1 but not generation (Table~\ref {tab:abl}); hybrid = reciprocal-rank fusion of dense and BM25.}}{7}{table.caption.22}\protected@file@percent }
-\newlabel{tab:retrabl}{{5}{7}{Retrieval variants (retrieval only, top-10 returned; dev / test; documents $n{=}281/193$, articles $n{=}264/177$ with a recoverable gold). ``+rr$N$'' = reranker over $N$ candidates; the fine-tuned reranker was trained on $4{,}015$ groups (gold \dieu {} positives, dense hard negatives) and raises \dieu {}@1 but not generation (Table~\ref {tab:abl}); hybrid = reciprocal-rank fusion of dense and BM25}{table.caption.22}{}}
-\@writefile{toc}{\contentsline {paragraph}{Retrieval is not the bottleneck for the fine-tuned model.}{7}{section*.23}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Generator study}{7}{subsection.5.3}\protected@file@percent }
-\newlabel{sec:generator}{{5.3}{7}{Generator study}{subsection.5.3}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Raw (not fine-tuned) generators, dev $n{=}300$, same retrieval store (A2e), each with its default prompt.}}{7}{table.caption.24}\protected@file@percent }
-\newlabel{tab:raw}{{6}{7}{Raw (not fine-tuned) generators, dev $n{=}300$, same retrieval store (A2e), each with its default prompt}{table.caption.24}{}}
-\citation{vilegallm}
-\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Supervised fine-tuning variants (dev $n{=}300$, greedy, $k{=}5$ unless stated).}}{8}{table.caption.25}\protected@file@percent }
-\newlabel{tab:sft}{{7}{8}{Supervised fine-tuning variants (dev $n{=}300$, greedy, $k{=}5$ unless stated)}{table.caption.25}{}}
-\@writefile{toc}{\contentsline {paragraph}{Legal-domain base models.}{8}{section*.26}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Decoding and post-training}{8}{subsection.5.4}\protected@file@percent }
-\newlabel{sec:posttrain}{{5.4}{8}{Decoding and post-training}{subsection.5.4}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces MBR-$n$ with the SFT model (v3b, 2 shots, dev\_clean, $n{=}166$). Mean single sample $.604$; best-of-$n$ uses the reference and is an \emph  {oracle}.}}{8}{table.caption.27}\protected@file@percent }
-\newlabel{tab:mbrn}{{8}{8}{MBR-$n$ with the SFT model (v3b, 2 shots, dev\_clean, $n{=}166$). Mean single sample $.604$; best-of-$n$ uses the reference and is an \emph {oracle}}{table.caption.27}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces MBR recovers only $17\%$ of the gap between greedy ($.630$) and the oracle ($.726$); MBR-4 keeps $\approx \!76\%$ of the MBR-8 gain.}}{8}{figure.caption.28}\protected@file@percent }
-\newlabel{fig:mbrn}{{3}{8}{MBR recovers only $17\%$ of the gap between greedy ($.630$) and the oracle ($.726$); MBR-4 keeps $\approx \!76\%$ of the MBR-8 gain}{figure.caption.28}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces Recipe ladder on dev ($n{=}300$, 2 shots, ROUGE-L{}). Intervals are paired-bootstrap differences against the row marked $\dagger $ ({\scriptsize  [lo,\,hi]}).}}{9}{table.caption.29}\protected@file@percent }
-\newlabel{tab:ladder}{{9}{9}{Recipe ladder on dev ($n{=}300$, 2 shots, \rl {}). Intervals are paired-bootstrap differences against the row marked $\dagger $ (\ci {lo}{hi})}{table.caption.29}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Iterated DPO on self-samples: gains in rounds 1--2, collapse in round 3 (answers grow to $2{,}000$ characters against a reference mean of $1{,}583$, i.e.\ reward exploitation).}}{9}{figure.caption.30}\protected@file@percent }
-\newlabel{fig:dpo}{{4}{9}{Iterated DPO on self-samples: gains in rounds 1--2, collapse in round 3 (answers grow to $2{,}000$ characters against a reference mean of $1{,}583$, i.e.\ reward exploitation)}{figure.caption.30}{}}
-\@writefile{toc}{\contentsline {paragraph}{Findings.}{9}{section*.31}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Ablations of the final system and best combined configuration}{9}{subsection.5.5}\protected@file@percent }
-\newlabel{sec:ablation}{{5.5}{9}{Ablations of the final system and best combined configuration}{subsection.5.5}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces One-factor ablations on dev ($n{=}300$, greedy, final model unless stated). Difference is against the final system ($.6637$) with a paired-bootstrap interval; $\ast $ = interval excludes zero (worse). $^\dagger $Fine-tuned reranker (rr\_v0) evaluated on the SFT v3b model, compared with the stock reranker on that model.}}{10}{table.caption.32}\protected@file@percent }
-\newlabel{tab:abl}{{10}{10}{One-factor ablations on dev ($n{=}300$, greedy, final model unless stated). Difference is against the final system ($.6637$) with a paired-bootstrap interval; $\ast $ = interval excludes zero (worse). $^\dagger $Fine-tuned reranker (rr\_v0) evaluated on the SFT v3b model, compared with the stock reranker on that model}{table.caption.32}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.6}Further attempts to raise the score}{10}{subsection.5.6}\protected@file@percent }
-\newlabel{sec:further}{{5.6}{10}{Further attempts to raise the score}{subsection.5.6}{}}
-\@writefile{toc}{\contentsline {paragraph}{Where the loss is.}{10}{section*.33}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Significance on test.}{7}{section*.17}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Paired bootstrap on the test split ($n{=}200$): mean difference (B$-$A) with $95\%$ interval.}}{7}{table.caption.18}\protected@file@percent }
+\newlabel{tab:testboot}{{2}{7}{Paired bootstrap on the test split ($n{=}200$): mean difference (B$-$A) with $95\%$ interval}{table.caption.18}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Retrieval study}{7}{subsection.5.2}\protected@file@percent }
+\newlabel{sec:retrieval}{{5.2}{7}{Retrieval study}{subsection.5.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{Corpus coverage is the dominant factor.}{7}{section*.19}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Effect of the retrieval store (dev $n{=}300$; test in parentheses, not used for selection). Law-hit (dev) = fraction of questions whose cited law is among the retrieved passages.}}{7}{table.caption.20}\protected@file@percent }
+\newlabel{tab:corpus}{{3}{7}{Effect of the retrieval store (dev $n{=}300$; test in parentheses, not used for selection). Law-hit (dev) = fraction of questions whose cited law is among the retrieved passages}{table.caption.20}{}}
+\@writefile{toc}{\contentsline {paragraph}{The two-stage stack.}{7}{section*.21}\protected@file@percent }
 \citation{vectara}
-\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces Attempts to raise the score (greedy dev ROUGE-L{} unless stated; reference $.6637$ or the stated baseline).}}{11}{table.caption.34}\protected@file@percent }
-\newlabel{tab:further}{{11}{11}{Attempts to raise the score (greedy dev \rl {} unless stated; reference $.6637$ or the stated baseline)}{table.caption.34}{}}
-\@writefile{toc}{\contentsline {paragraph}{More data.}{11}{section*.35}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Chunking.}{11}{section*.36}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces Chunking variants, retrieval only (dense top-50 $\to $ reranker top-5). \textit  {Điều}{}@5 with the paired difference to the control (one chunk per article, split at $2{,}000$ characters) and its $95\%$ interval.}}{11}{table.caption.37}\protected@file@percent }
-\newlabel{tab:chunk}{{12}{11}{Chunking variants, retrieval only (dense top-50 $\to $ reranker top-5). \dieu {}@5 with the paired difference to the control (one chunk per article, split at $2{,}000$ characters) and its $95\%$ interval}{table.caption.37}{}}
-\@writefile{toc}{\contentsline {paragraph}{Passage order and LLM re-ranking (exploratory).}{11}{section*.38}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Seed sensitivity.}{12}{section*.39}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.7}Later experiments: a PiSSA generator and new training pairs}{12}{subsection.5.7}\protected@file@percent }
-\newlabel{sec:pissa}{{5.7}{12}{Later experiments: a PiSSA generator and new training pairs}{subsection.5.7}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces Post-training from the PiSSA generator $V_p$ (greedy, 2 shots, ROUGE-L{}). Pooled = dev$+$test; interval = paired bootstrap against $\mathrm  {dpo}_{a2}$. Round~2 always starts from the round-1 model.}}{12}{table.caption.40}\protected@file@percent }
-\newlabel{tab:pissa}{{13}{12}{Post-training from the PiSSA generator $V_p$ (greedy, 2 shots, \rl {}). Pooled = dev$+$test; interval = paired bootstrap against $\mathrm {dpo}_{a2}$. Round~2 always starts from the round-1 model}{table.caption.40}{}}
-\@writefile{toc}{\contentsline {paragraph}{What the table shows.}{12}{section*.41}\protected@file@percent }
-\citation{wsp}
-\citation{react}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Retrieval variants (retrieval only, top-10 returned; dev / test). Documents $n{=}281/193$ and articles $n{=}264/177$ have a recoverable gold. ``+rr$N$'' = reranker over $N$ candidates; hybrid = reciprocal-rank fusion of dense and BM25. The fine-tuned reranker was trained on $4{,}015$ groups (gold \textit  {Điều}{} positives, dense hard negatives).}}{8}{table.caption.22}\protected@file@percent }
+\newlabel{tab:retrabl}{{4}{8}{Retrieval variants (retrieval only, top-10 returned; dev / test). Documents $n{=}281/193$ and articles $n{=}264/177$ have a recoverable gold. ``+rr$N$'' = reranker over $N$ candidates; hybrid = reciprocal-rank fusion of dense and BM25. The fine-tuned reranker was trained on $4{,}015$ groups (gold \dieu {} positives, dense hard negatives)}{table.caption.22}{}}
+\@writefile{toc}{\contentsline {paragraph}{Better ranking does not reach the answer.}{8}{section*.23}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Chunking.}{8}{section*.24}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Chunking variants, retrieval only (dense top-50 $\to $ reranker top-5). \textit  {Điều}{}@5 with the paired difference to the control (one chunk per article, split at $2{,}000$ characters) and its $95\%$ interval. Test is shown for reference only. The two $1{,}000$-character clause and fixed variants happen to find the same number of test articles ($155$ of $177$).}}{9}{table.caption.25}\protected@file@percent }
+\newlabel{tab:chunk}{{5}{9}{Chunking variants, retrieval only (dense top-50 $\to $ reranker top-5). \dieu {}@5 with the paired difference to the control (one chunk per article, split at $2{,}000$ characters) and its $95\%$ interval. Test is shown for reference only. The two $1{,}000$-character clause and fixed variants happen to find the same number of test articles ($155$ of $177$)}{table.caption.25}{}}
+\@writefile{toc}{\contentsline {paragraph}{Retrieval is not the bottleneck for the fine-tuned model.}{9}{section*.26}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Generator study}{9}{subsection.5.3}\protected@file@percent }
+\newlabel{sec:generator}{{5.3}{9}{Generator study}{subsection.5.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{Raw models.}{9}{section*.27}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Raw (not fine-tuned) generators, dev $n{=}300$, same retrieval store (A2e), each with its default prompt.}}{9}{table.caption.28}\protected@file@percent }
+\newlabel{tab:raw}{{6}{9}{Raw (not fine-tuned) generators, dev $n{=}300$, same retrieval store (A2e), each with its default prompt}{table.caption.28}{}}
+\@writefile{toc}{\contentsline {paragraph}{Supervised recipe.}{9}{section*.29}\protected@file@percent }
+\citation{pissa}
+\citation{vilegallm}
+\citation{star}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Supervised fine-tuning variants (dev $n{=}300$, greedy, $k{=}5$ unless stated).}}{10}{table.caption.30}\protected@file@percent }
+\newlabel{tab:sft}{{7}{10}{Supervised fine-tuning variants (dev $n{=}300$, greedy, $k{=}5$ unless stated)}{table.caption.30}{}}
+\@writefile{toc}{\contentsline {paragraph}{Adapter variants.}{10}{section*.31}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Data size.}{10}{section*.32}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Legal-domain knowledge does not transfer to the score.}{10}{section*.33}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Thinking mode.}{10}{section*.34}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces Thinking mode (greedy; dev $n{=}300$ unless stated; SFT v0 without shots, the PiSSA models with 2 shots).}}{11}{table.caption.35}\protected@file@percent }
+\newlabel{tab:think}{{8}{11}{Thinking mode (greedy; dev $n{=}300$ unless stated; SFT v0 without shots, the PiSSA models with 2 shots)}{table.caption.35}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Decoding and post-training}{11}{subsection.5.4}\protected@file@percent }
+\newlabel{sec:posttrain}{{5.4}{11}{Decoding and post-training}{subsection.5.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{MBR decoding.}{11}{section*.36}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces MBR-$n$ with the SFT model (v3b, 2 shots, \texttt  {dev\_clean}, $n{=}166$). Mean single sample $.604$. Best-of-$n$ picks with the reference and is therefore an \emph  {oracle}.}}{11}{table.caption.37}\protected@file@percent }
+\newlabel{tab:mbrn}{{9}{11}{MBR-$n$ with the SFT model (v3b, 2 shots, \texttt {dev\_clean}, $n{=}166$). Mean single sample $.604$. Best-of-$n$ picks with the reference and is therefore an \emph {oracle}}{table.caption.37}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces MBR recovers only $17\%$ of the gap between greedy ($.630$) and the oracle ($.726$); MBR-4 keeps $\approx \!76\%$ of the MBR-8 gain.}}{11}{figure.caption.38}\protected@file@percent }
+\newlabel{fig:mbrn}{{3}{11}{MBR recovers only $17\%$ of the gap between greedy ($.630$) and the oracle ($.726$); MBR-4 keeps $\approx \!76\%$ of the MBR-8 gain}{figure.caption.38}{}}
+\@writefile{toc}{\contentsline {paragraph}{Post-training ladder.}{11}{section*.39}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces Post-training ladder on dev ($n{=}300$, 2 shots, ROUGE-L{}). Intervals are paired-bootstrap differences against the row marked $\dagger $ ({\scriptsize  [lo,\,hi]}).}}{12}{table.caption.40}\protected@file@percent }
+\newlabel{tab:ladder}{{10}{12}{Post-training ladder on dev ($n{=}300$, 2 shots, \rl {}). Intervals are paired-bootstrap differences against the row marked $\dagger $ (\ci {lo}{hi})}{table.caption.40}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Iterated DPO on self-samples: gains in rounds 1--2, collapse in round 3.}}{12}{figure.caption.41}\protected@file@percent }
+\newlabel{fig:dpo}{{4}{12}{Iterated DPO on self-samples: gains in rounds 1--2, collapse in round 3}{figure.caption.41}{}}
+\@writefile{toc}{\contentsline {paragraph}{How robust is the DPO gain?}{12}{section*.42}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Post-training from the PiSSA supervised model}{13}{subsection.5.5}\protected@file@percent }
+\newlabel{sec:pissa}{{5.5}{13}{Post-training from the PiSSA supervised model}{subsection.5.5}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces Post-training from the PiSSA supervised model $V_p$ (greedy, 2 shots, ROUGE-L{}). Pooled = dev$+$test; interval = paired bootstrap against $\mathrm  {dpo}_{a2}$. Round~2 always starts from the round-1 model.}}{13}{table.caption.43}\protected@file@percent }
+\newlabel{tab:pissa}{{11}{13}{Post-training from the PiSSA supervised model $V_p$ (greedy, 2 shots, \rl {}). Pooled = dev$+$test; interval = paired bootstrap against $\mathrm {dpo}_{a2}$. Round~2 always starts from the round-1 model}{table.caption.43}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.6}Ablations of the final system and of the DPO design}{14}{subsection.5.6}\protected@file@percent }
+\newlabel{sec:ablation}{{5.6}{14}{Ablations of the final system and of the DPO design}{subsection.5.6}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces One-factor ablations on dev ($n{=}300$, greedy, final model unless stated). Difference against the final system ($.6637$) with a paired-bootstrap interval; $\ast $ = interval excludes zero (worse). $^\dagger $Fine-tuned reranker evaluated on the SFT v3b model, against the stock reranker on that model.}}{14}{table.caption.44}\protected@file@percent }
+\newlabel{tab:abl}{{12}{14}{One-factor ablations on dev ($n{=}300$, greedy, final model unless stated). Difference against the final system ($.6637$) with a paired-bootstrap interval; $\ast $ = interval excludes zero (worse). $^\dagger $Fine-tuned reranker evaluated on the SFT v3b model, against the stock reranker on that model}{table.caption.44}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.7}A configuration fixed in advance, trained on train and dev}{15}{subsection.5.7}\protected@file@percent }
+\newlabel{sec:finalchain}{{5.7}{15}{A configuration fixed in advance, trained on train and dev}{subsection.5.7}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces Configuration fixed in advance, trained on train$+$dev, scored once on test ($n{=}200$), next to the reported system.}}{15}{table.caption.45}\protected@file@percent }
+\newlabel{tab:finalchain}{{13}{15}{Configuration fixed in advance, trained on train$+$dev, scored once on test ($n{=}200$), next to the reported system}{table.caption.45}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Analysis}{15}{section.6}\protected@file@percent }
+\newlabel{sec:analysis}{{6}{15}{Analysis}{section.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Where the error is}{15}{subsection.6.1}\protected@file@percent }
+\newlabel{sec:where}{{6.1}{15}{Where the error is}{subsection.6.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Length.}{16}{section*.46}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Headroom.}{16}{section*.47}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Is model size the limit? A 4B and a 9B scaling point}{16}{subsection.6.2}\protected@file@percent }
+\newlabel{sec:scaling}{{6.2}{16}{Is model size the limit? A 4B and a 9B scaling point}{subsection.6.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces Scaling the reported recipe (ROUGE-L{}). Dev $n{=}300$, test $n{=}200$; greedy unless stated.}}{16}{table.caption.48}\protected@file@percent }
+\newlabel{tab:scaling}{{14}{16}{Scaling the reported recipe (\rl {}). Dev $n{=}300$, test $n{=}200$; greedy unless stated}{table.caption.48}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Why DPO on self-samples works here}{16}{subsection.6.3}\protected@file@percent }
 \citation{hinton}
-\@writefile{toc}{\contentsline {paragraph}{Other attempts that did not help.}{13}{section*.42}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Final configuration, pre-declared.}{13}{section*.43}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.8}Negative and null results}{13}{subsection.5.8}\protected@file@percent }
-\newlabel{sec:negative}{{5.8}{13}{Negative and null results}{subsection.5.8}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces Ideas that were tested and not retained (dev unless stated).}}{13}{table.caption.44}\protected@file@percent }
-\newlabel{tab:neg}{{14}{13}{Ideas that were tested and not retained (dev unless stated)}{table.caption.44}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {6}Analysis}{13}{section.6}\protected@file@percent }
-\newlabel{sec:analysis}{{6}{13}{Analysis}{section.6}{}}
-\@writefile{toc}{\contentsline {paragraph}{Where the error is.}{13}{section*.45}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{What can be checked automatically.}{14}{section*.46}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces Automatic checks of the final system's test answers ($n{=}200$). Agreement rates are over the questions whose reference contains an article or a law identifier; grounding is over the answers that contain numbers.}}{14}{table.caption.47}\protected@file@percent }
-\newlabel{tab:checks}{{15}{14}{Automatic checks of the final system's test answers ($n{=}200$). Agreement rates are over the questions whose reference contains an article or a law identifier; grounding is over the answers that contain numbers}{table.caption.47}{}}
-\@writefile{toc}{\contentsline {paragraph}{Headroom.}{14}{section*.48}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Why DPO on self-samples works here.}{14}{section*.49}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {7}Deployment and Demonstration}{14}{section.7}\protected@file@percent }
-\newlabel{sec:deploy}{{7}{14}{Deployment and Demonstration}{section.7}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {16}{\ignorespaces Measured behaviour through the HTTP API (dev questions, greedy, $k{=}5$, 2 shots).}}{14}{table.caption.50}\protected@file@percent }
-\newlabel{tab:lat}{{16}{14}{Measured behaviour through the HTTP API (dev questions, greedy, $k{=}5$, 2 shots)}{table.caption.50}{}}
-\@writefile{toc}{\contentsline {paragraph}{Demonstration.}{15}{section*.51}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Capacity under concurrent load and GPU layout}{15}{subsection.7.1}\protected@file@percent }
-\newlabel{sec:capacity}{{7.1}{15}{Capacity under concurrent load and GPU layout}{subsection.7.1}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {17}{\ignorespaces Closed-loop sweep (dev questions, $n$ users, $30$\,s per level). req/s = completed requests per second; latencies are end-to-end seconds.}}{15}{table.caption.52}\protected@file@percent }
-\newlabel{tab:capacity}{{17}{15}{Closed-loop sweep (dev questions, $n$ users, $30$\,s per level). req/s = completed requests per second; latencies are end-to-end seconds}{table.caption.52}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Throughput and $p_{95}$ latency versus concurrent users; the dotted line is the $10$\,s target.}}{16}{figure.caption.53}\protected@file@percent }
-\newlabel{fig:capacity}{{5}{16}{Throughput and $p_{95}$ latency versus concurrent users; the dotted line is the $10$\,s target}{figure.caption.53}{}}
-\@writefile{toc}{\contentsline {paragraph}{Maximum concurrency.}{16}{section*.54}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Bursts.}{16}{section*.55}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Engine settings.}{16}{section*.56}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {18}{\ignorespaces vLLM settings on one card (A), requests/s and $p_{95}$ latency (s) at $16$ and $32$ concurrent users. $^\dagger $64 sequences, 16k batched tokens, prefix caching on.}}{16}{table.caption.57}\protected@file@percent }
-\newlabel{tab:flags}{{18}{16}{vLLM settings on one card (A), requests/s and $p_{95}$ latency (s) at $16$ and $32$ concurrent users. $^\dagger $64 sequences, 16k batched tokens, prefix caching on}{table.caption.57}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {8}Limitations and Threats to Validity}{16}{section.8}\protected@file@percent }
-\newlabel{sec:limits}{{8}{16}{Limitations and Threats to Validity}{section.8}{}}
+\citation{react}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}What can be checked automatically}{17}{subsection.6.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces Automatic checks of the final system's test answers ($n{=}200$). Agreement rates are over the questions whose reference contains an article or a law identifier; grounding is over the answers that contain numbers.}}{17}{table.caption.49}\protected@file@percent }
+\newlabel{tab:checks}{{15}{17}{Automatic checks of the final system's test answers ($n{=}200$). Agreement rates are over the questions whose reference contains an article or a law identifier; grounding is over the answers that contain numbers}{table.caption.49}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.5}What did not help}{17}{subsection.6.5}\protected@file@percent }
+\newlabel{sec:negative}{{6.5}{17}{What did not help}{subsection.6.5}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {16}{\ignorespaces Ideas tested and not retained (greedy dev ROUGE-L{} unless stated; reference: the final system, $.6637$, or the stated baseline).}}{18}{table.caption.50}\protected@file@percent }
+\newlabel{tab:neg}{{16}{18}{Ideas tested and not retained (greedy dev \rl {} unless stated; reference: the final system, $.6637$, or the stated baseline)}{table.caption.50}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Deployment}{19}{section.7}\protected@file@percent }
+\newlabel{sec:deploy}{{7}{19}{Deployment}{section.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Service}{19}{subsection.7.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Refusal guard.}{19}{section*.51}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {17}{\ignorespaces Measured behaviour through the HTTP API (dev questions, greedy, $k{=}5$, 2 shots). The ROUGE-L{} values are parity checks on few questions only.}}{19}{table.caption.52}\protected@file@percent }
+\newlabel{tab:lat}{{17}{19}{Measured behaviour through the HTTP API (dev questions, greedy, $k{=}5$, 2 shots). The \rl {} values are parity checks on few questions only}{table.caption.52}{}}
+\@writefile{toc}{\contentsline {paragraph}{Demonstration.}{19}{section*.53}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}Capacity under concurrent load and GPU layout}{19}{subsection.7.2}\protected@file@percent }
+\newlabel{sec:capacity}{{7.2}{19}{Capacity under concurrent load and GPU layout}{subsection.7.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {18}{\ignorespaces Closed-loop sweep (dev questions, $n$ users, $30$\,s per level). req/s = completed requests per second; latencies are end-to-end seconds.}}{20}{table.caption.54}\protected@file@percent }
+\newlabel{tab:capacity}{{18}{20}{Closed-loop sweep (dev questions, $n$ users, $30$\,s per level). req/s = completed requests per second; latencies are end-to-end seconds}{table.caption.54}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Throughput and $p_{95}$ latency versus concurrent users; the dotted line is the $10$\,s target.}}{20}{figure.caption.55}\protected@file@percent }
+\newlabel{fig:capacity}{{5}{20}{Throughput and $p_{95}$ latency versus concurrent users; the dotted line is the $10$\,s target}{figure.caption.55}{}}
+\@writefile{toc}{\contentsline {paragraph}{Maximum concurrency.}{20}{section*.56}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Bursts.}{20}{section*.57}\protected@file@percent }
+\citation{vllm}
+\@writefile{toc}{\contentsline {paragraph}{Engine settings.}{21}{section*.58}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {19}{\ignorespaces vLLM settings on one card (layout A$'$), requests/s and $p_{95}$ latency (s) at $16$ and $32$ concurrent users. $^\dagger $64 sequences, 16k batched tokens, prefix caching on.}}{21}{table.caption.59}\protected@file@percent }
+\newlabel{tab:flags}{{19}{21}{vLLM settings on one card (layout A$'$), requests/s and $p_{95}$ latency (s) at $16$ and $32$ concurrent users. $^\dagger $64 sequences, 16k batched tokens, prefix caching on}{table.caption.59}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3}Speculative decoding (exploratory)}{21}{subsection.7.3}\protected@file@percent }
+\newlabel{sec:spec}{{7.3}{21}{Speculative decoding (exploratory)}{subsection.7.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {20}{\ignorespaces N-gram speculative decoding, generated tokens per second (speed-up against no speculation), $40$ dev prompts.}}{21}{table.caption.60}\protected@file@percent }
+\newlabel{tab:spec}{{20}{21}{N-gram speculative decoding, generated tokens per second (speed-up against no speculation), $40$ dev prompts}{table.caption.60}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Limitations and Threats to Validity}{21}{section.8}\protected@file@percent }
+\newlabel{sec:limits}{{8}{21}{Limitations and Threats to Validity}{section.8}{}}
 \citation{selfrag}
 \citation{crag}
 \citation{selfcorrect}
 \citation{kamoi}
 \citation{nllp26}
-\citation{vectara}
-\citation{contextual}
-\citation{latechunk}
-\citation{densex}
-\@writefile{toc}{\contentsline {section}{\numberline {9}Future Work}{17}{section.9}\protected@file@percent }
-\newlabel{sec:future}{{9}{17}{Future Work}{section.9}{}}
-\@writefile{toc}{\contentsline {paragraph}{Checker with feedback to retrieval, reranking and generation.}{17}{section*.58}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Chunking beyond one chunk per article.}{18}{section*.59}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {10}Conclusion}{18}{section.10}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {A}Earlier test-split evaluations}{18}{section.A}\protected@file@percent }
-\newlabel{app:test}{{A}{18}{Earlier test-split evaluations}{section.A}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {19}{\ignorespaces Test ROUGE-L{} ($n{=}200$) of configurations evaluated before the final one (2-shot unless noted; all $k{=}5$ unless noted).}}{18}{table.caption.61}\protected@file@percent }
-\newlabel{tab:testold}{{19}{18}{Test \rl {} ($n{=}200$) of configurations evaluated before the final one (2-shot unless noted; all $k{=}5$ unless noted)}{table.caption.61}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {B}Worked examples, from easy to hard}{19}{section.B}\protected@file@percent }
-\newlabel{app:examples}{{B}{19}{Worked examples, from easy to hard}{section.B}{}}
-\@writefile{toc}{\contentsline {paragraph}{Example 1 (qid 460) --- ROUGE-L{} 0.996.}{19}{section*.62}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 2 (qid 459) --- ROUGE-L{} 0.945.}{19}{section*.63}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 3 (qid 1865) --- ROUGE-L{} 0.899.}{19}{section*.64}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 4 (qid 1136) --- ROUGE-L{} 0.820.}{20}{section*.65}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 5 (qid 2213) --- ROUGE-L{} 0.751.}{20}{section*.66}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 6 (qid 1941) --- ROUGE-L{} 0.677.}{20}{section*.67}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 7 (qid 2178) --- ROUGE-L{} 0.627.}{21}{section*.68}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 8 (qid 2366) --- ROUGE-L{} 0.582.}{21}{section*.69}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 9 (qid 2339) --- ROUGE-L{} 0.501.}{21}{section*.70}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 10 (qid 2412) --- ROUGE-L{} 0.408.}{22}{section*.71}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 11 (qid 2085) --- ROUGE-L{} 0.288.}{22}{section*.72}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Example 12 (qid 572) --- ROUGE-L{} 0.063.}{22}{section*.73}\protected@file@percent }
+\citation{simpo}
+\@writefile{toc}{\contentsline {section}{\numberline {9}Future Work}{22}{section.9}\protected@file@percent }
+\newlabel{sec:future}{{9}{22}{Future Work}{section.9}{}}
+\@writefile{toc}{\contentsline {paragraph}{Choosing the clause, not the article.}{22}{section*.61}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{A checker for selection and abstention.}{22}{section*.62}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Length-controlled preference rewards.}{23}{section*.63}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Speculative decoding for single users.}{23}{section*.64}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {10}Conclusion}{23}{section.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {A}Earlier test-split evaluations}{24}{section.A}\protected@file@percent }
+\newlabel{app:test}{{A}{24}{Earlier test-split evaluations}{section.A}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {21}{\ignorespaces Test ROUGE-L{} ($n{=}200$) of configurations of the main development line evaluated before the final one (2-shot and $k{=}5$ unless noted).}}{24}{table.caption.66}\protected@file@percent }
+\newlabel{tab:testold}{{21}{24}{Test \rl {} ($n{=}200$) of configurations of the main development line evaluated before the final one (2-shot and $k{=}5$ unless noted)}{table.caption.66}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {B}Worked examples, from easy to hard}{24}{section.B}\protected@file@percent }
+\newlabel{app:examples}{{B}{24}{Worked examples, from easy to hard}{section.B}{}}
+\@writefile{toc}{\contentsline {paragraph}{Example 1 (qid 460) --- ROUGE-L{} 0.996.}{24}{section*.67}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 2 (qid 459) --- ROUGE-L{} 0.945.}{25}{section*.68}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 3 (qid 1865) --- ROUGE-L{} 0.899.}{25}{section*.69}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 4 (qid 1136) --- ROUGE-L{} 0.820.}{25}{section*.70}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 5 (qid 2213) --- ROUGE-L{} 0.751.}{26}{section*.71}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 6 (qid 1941) --- ROUGE-L{} 0.677.}{26}{section*.72}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 7 (qid 2178) --- ROUGE-L{} 0.627.}{26}{section*.73}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 8 (qid 2366) --- ROUGE-L{} 0.582.}{27}{section*.74}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 9 (qid 2339) --- ROUGE-L{} 0.501.}{27}{section*.75}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 10 (qid 2412) --- ROUGE-L{} 0.408.}{27}{section*.76}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 11 (qid 2085) --- ROUGE-L{} 0.288.}{27}{section*.77}\protected@file@percent }
 \citation{wsp}
-\@writefile{toc}{\contentsline {section}{\numberline {C}Experiments that did not work, in detail}{23}{section.C}\protected@file@percent }
-\newlabel{app:failed}{{C}{23}{Experiments that did not work, in detail}{section.C}{}}
-\@writefile{toc}{\contentsline {paragraph}{At a glance.}{23}{table.caption.75}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {C.1}Letting an agent edit the weights}{23}{subsection.C.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Set-up.}{23}{section*.76}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Findings that held.}{23}{section*.77}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Example 12 (qid 572) --- ROUGE-L{} 0.063.}{28}{section*.78}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {C}Post-training and weight-editing attempts, in detail}{28}{section.C}\protected@file@percent }
+\newlabel{app:failed}{{C}{28}{Post-training and weight-editing attempts, in detail}{section.C}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.1}Letting an agent edit the weights}{28}{subsection.C.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Set-up.}{28}{section*.79}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Findings that held.}{28}{section*.80}\protected@file@percent }
 \citation{wsp}
-\@writefile{lot}{\contentsline {table}{\numberline {20}{\ignorespaces First search, requests that changed weights (paired difference to the unedited model, mean $\pm $ standard error, on the questions named).}}{24}{table.caption.79}\protected@file@percent }
-\newlabel{tab:wspfail}{{20}{24}{First search, requests that changed weights (paired difference to the unedited model, mean $\pm $ standard error, on the questions named)}{table.caption.79}{}}
-\@writefile{toc}{\contentsline {paragraph}{Edits tried.}{24}{table.caption.79}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {C.2}Pairs and data for preference training}{24}{subsection.C.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Where the pairs were.}{24}{section*.80}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Gold answers as chosen.}{24}{section*.81}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {22}{\ignorespaces First search, requests that changed weights (paired difference to the unedited model, mean $\pm $ standard error, on the questions named).}}{29}{table.caption.82}\protected@file@percent }
+\newlabel{tab:wspfail}{{22}{29}{First search, requests that changed weights (paired difference to the unedited model, mean $\pm $ standard error, on the questions named)}{table.caption.82}{}}
+\@writefile{toc}{\contentsline {paragraph}{Edits tried.}{29}{table.caption.82}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Second round, by teacher forcing.}{29}{section*.83}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Independent second search.}{29}{section*.84}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{How much a request can resolve.}{30}{section*.85}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.2}Pairs and data for preference training}{30}{subsection.C.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Where the pairs were.}{30}{section*.86}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{The mixed set.}{30}{section*.87}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Gold answers as chosen.}{30}{section*.88}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.3}Other attempts}{30}{subsection.C.3}\protected@file@percent }
 \bibcite{vilegallm}{1}
 \bibcite{wsp}{2}
 \bibcite{lora}{3}
-\bibcite{dpo}{4}
-\bibcite{grpo}{5}
-\bibcite{mbr}{6}
-\@writefile{toc}{\contentsline {subsection}{\numberline {C.3}Other negatives of this round}{25}{subsection.C.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {D}Data and corpus details}{25}{section.D}\protected@file@percent }
-\bibcite{raft}{7}
-\bibcite{vllm}{8}
-\bibcite{rouge}{9}
-\bibcite{bootstrap}{10}
-\bibcite{react}{11}
-\bibcite{taskarith}{12}
-\bibcite{faiss}{13}
-\bibcite{lewis2020rag}{14}
-\bibcite{rag_survey}{15}
-\bibcite{dpr}{16}
-\bibcite{sbert}{17}
-\bibcite{bgem3}{18}
-\bibcite{monobert}{19}
-\bibcite{bm25}{20}
-\bibcite{rrf}{21}
-\bibcite{lostmiddle}{22}
-\bibcite{qwen3}{23}
-\bibcite{qwen25}{24}
-\bibcite{phobert}{25}
-\bibcite{legalbench}{26}
-\bibcite{lexglue}{27}
-\bibcite{instructgpt}{28}
-\bibcite{ppo}{29}
-\bibcite{r1}{30}
-\bibcite{simpo}{31}
-\bibcite{soups}{32}
-\bibcite{selfcons}{33}
-\bibcite{freitag}{34}
-\bibcite{selfrag}{35}
-\bibcite{searchr1}{36}
-\bibcite{bergk}{37}
-\bibcite{hinton}{38}
-\bibcite{trl}{39}
-\bibcite{llamaindex}{40}
-\bibcite{crag}{41}
-\bibcite{selfcorrect}{42}
-\bibcite{kamoi}{43}
-\bibcite{nllp26}{44}
-\bibcite{vectara}{45}
-\bibcite{contextual}{46}
-\bibcite{latechunk}{47}
-\bibcite{densex}{48}
-\gdef \@abspage@last{27}
+\bibcite{pissa}{4}
+\bibcite{star}{5}
+\bibcite{dpo}{6}
+\bibcite{grpo}{7}
+\bibcite{mbr}{8}
+\bibcite{raft}{9}
+\bibcite{vllm}{10}
+\bibcite{rouge}{11}
+\bibcite{bootstrap}{12}
+\bibcite{react}{13}
+\bibcite{taskarith}{14}
+\bibcite{faiss}{15}
+\bibcite{lewis2020rag}{16}
+\bibcite{rag_survey}{17}
+\bibcite{dpr}{18}
+\bibcite{sbert}{19}
+\@writefile{toc}{\contentsline {section}{\numberline {D}Data and corpus details}{31}{section.D}\protected@file@percent }
+\newlabel{app:data}{{D}{31}{Data and corpus details}{section.D}{}}
+\bibcite{bgem3}{20}
+\bibcite{monobert}{21}
+\bibcite{bm25}{22}
+\bibcite{rrf}{23}
+\bibcite{lostmiddle}{24}
+\bibcite{qwen3}{25}
+\bibcite{qwen25}{26}
+\bibcite{phobert}{27}
+\bibcite{legalbench}{28}
+\bibcite{lexglue}{29}
+\bibcite{instructgpt}{30}
+\bibcite{ppo}{31}
+\bibcite{r1}{32}
+\bibcite{simpo}{33}
+\bibcite{soups}{34}
+\bibcite{selfcons}{35}
+\bibcite{freitag}{36}
+\bibcite{selfrag}{37}
+\bibcite{searchr1}{38}
+\bibcite{bergk}{39}
+\bibcite{hinton}{40}
+\bibcite{trl}{41}
+\bibcite{llamaindex}{42}
+\bibcite{crag}{43}
+\bibcite{selfcorrect}{44}
+\bibcite{kamoi}{45}
+\bibcite{nllp26}{46}
+\bibcite{vectara}{47}
+\gdef \@abspage@last{33}

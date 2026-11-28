@@ -47,7 +47,7 @@ Hugging Face Hub (all models merged, bf16; dev / test ROUGE-L, greedy):
   dataset (corpus, split, SFT + DPO data)  https://huggingface.co/datasets/$HF_USER/law-rag-data
   REPORTED SYSTEM, SFT v3b + 2 DPO rounds   https://huggingface.co/$HF_USER/law-rag-qwen3.5-2b-dpo            .664 / .643
   SFT v3b (its supervised stage)            https://huggingface.co/$HF_USER/law-rag-qwen3.5-2b-sft            .633 / .607
-  PiSSA SFT (best supervised model)         https://huggingface.co/$HF_USER/law-rag-qwen3.5-2b-pissa-sft      .641 / -
+  PiSSA SFT (best supervised model)         https://huggingface.co/$HF_USER/law-rag-qwen3.5-2b-pissa-sft      .641 / .631
   fixed config on train+dev: SFT            https://huggingface.co/$HF_USER/law-rag-qwen3.5-2b-trainval-sft
     + DPO round 1                           https://huggingface.co/$HF_USER/law-rag-qwen3.5-2b-trainval-dpo1
     + DPO round 2                           https://huggingface.co/$HF_USER/law-rag-qwen3.5-2b-trainval-dpo2    - / .640
